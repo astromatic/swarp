@@ -1,0 +1,4 @@
+V2.15.5
+LFS (large-file) support broken on 32-bit platforms due to Autoconf problem.
+
+				Emmanuel Bertin <bertin@iap.fr>

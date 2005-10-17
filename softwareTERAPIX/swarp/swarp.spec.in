@@ -1,0 +1,68 @@
+%define name @PACKAGE_NAME@
+%define version @PACKAGE_VERSION@
+%define release 1
+
+Summary: resample and combine astronomical FITS images
+Name: %{name}
+Version: %{version}
+Release: %{release}
+Source0: ftp://ftp.iap.fr/pub/from_users/bertin/%{name}/%{name}-%{version}.tar.gz
+URL: http://terapix.iap.fr/soft/%{name}/
+License: LGPL
+Group: Sciences/Astronomy
+BuildRoot: %{_tmppath}/%{name}-buildroot
+Prefix: %{_prefix}
+
+%description
+SWarp is a program that resamples and coadd FITS images to any arbitrary astrometric projection recognized by the WCS standard.
+
+%prep
+%setup -q
+
+%build
+if test "$ICCFLAGS"; then
+./configure --enable-icc --enable-static --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/
+make CFLAGS="$ICCFLAGS -prof_genx -prof_dir "`pwd`
+src/@PACKAGE_NAME@ test/test.fits -PROJECTION_ERR 0.0
+src/@PACKAGE_NAME@ test/test.fits -PROJECTION_ERR 0.0
+src/@PACKAGE_NAME@ test/test.fits -OVERSAMPLING 4
+make clean
+make CFLAGS="$ICCFLAGS -ipo -ipo_obj -prof_use -prof_dir "`pwd`
+elif test "$GCCFLAGS"; then
+./configure --enable-static --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/
+make CFLAGS="$GCCFLAGS"
+else
+./configure --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/
+make
+fi
+
+%install
+make install
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root)
+/usr/local/bin/@PACKAGE_NAME@
+/usr/local/man/man1/@PACKAGE_NAME@.1
+/usr/local/man/manx/@PACKAGE_NAME@.x
+%doc AUTHORS ChangeLog COPYING HISTORY INSTALL README THANKS doc/swarp.pdf
+
+%changelog
+* @DATE2@ @PACKAGER@ <@PACKAGE_BUGREPORT@>
+- Automatic RPM rebuild
+* Wed Jul 09 2003 Emmanuel Bertin <bertin@iap.fr>
+- RPM build for V2.0b6
+* Tue Apr 29 2003 Emmanuel Bertin <bertin@iap.fr>
+- RPM build for V1.42
+* Wed Mar 05 2003 Emmanuel Bertin <bertin@iap.fr>
+- RPM build for V1.40
+* Sat Jan 18 2003 Emmanuel Bertin <bertin@iap.fr>
+- RPM build for V1.39
+* Thu Nov 28 2002 Emmanuel Bertin <bertin@iap.fr>
+- RPM build for V1.38
+* Thu May 09 2002 Emmanuel Bertin <bertin@iap.fr>
+- First RPM build
+
+# end of file

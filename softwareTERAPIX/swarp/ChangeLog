@@ -1,0 +1,270 @@
+/*
+                                changes.log
+
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*
+*       Part of:        SWarp
+*
+*       Author:         E. BERTIN (IAP)
+*
+*       Contents:       log of changes made to the SWarp source
+*
+*       Last modify:    15/09/2005
+*
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*/
+
+Who     When            Where(mostly)   What
+
+EB      13/03/2001      useprefs()      Allow Weighting when input weight-maps
+                                        are missing.
+
+EB      15/03/2001      coadd_pix()     Provide a specific handling of the
+                                        weights when n=2 in COMBINE_TYPE
+                                        MEDIAN mode.
+
+EB      09/04/2001      make_back()     Fixed a bug with weight-maps in
+                                        large-image mode.
+
+EB      01/08/2001      coadd_pix()     Fixed a weighting bug in MEDIAN mode.
+
+EB      06/08/2001      -               Reorganize files and directories on the
+                                        MissFITS model.
+
+EB      10/08/2001      -               Added support for header_only and
+                                        resample_only modes.
+
+EB      13/08/2001      write_wcs()     Fixed a small bug that would cause
+                                        the RADECSYS keyword to be written
+                                        twice in the header.
+                        header.c        Added read/write support for COMIN
+                                        and COMAX custom FITS keywords.
+
+EB      07/03/2002      makeit()        Make the identification of non-image
+                                        FITS data more strict for ambiguous
+                                        headers.
+
+EB      16/03/2002      resample.c      New module extracted from coadd.c
+                        resample.h      New include for resample.c
+
+EB      18/03/2002      -               Added multithreading to resampling
+                                        routine (compile with -DUSE_THREADS
+                                        option).
+
+EB      08/06/2002	printinfo_field()
+                                        Astrom/Photom displayed flux scale was
+                                        inversed.
+EB      09/06/2002      read_aschead()  Make header parsing less strict.
+                        resample_field()
+                        frame_wcs()     Fixed problem with images outside the
+                                        output frame.
+
+EB      11/06/2002      resample_field()
+                                        Fixed pthread_mutex_destroy() bug on
+                                        Alpha.
+                        field.c         New display of external header info.
+
+EB      13/06/2002      -               Removed config.h from define.h and
+                                        included explicitely in all sources
+
+EB      14/06/2002      -               Added off_t type explicitely in
+                                        fseek()s and ftell()s. KINGSIZE_T type
+                                        added in the fits library to support
+                                        large files.
+
+EB      15/06/2002      coadd_fields()  Fixed memory bug for images completely
+                                        outside the output frame.
+
+EB      17/07/2002      fitswcs.c       Added wcs_dist() function and field
+                                        radius measurement (copied from SAM).
+
+EB      24/07/2002      wcs_dist()      Fixed a units bug.
+
+EB      29/09/2002      load_weight()   Fixed WEIGHT_FROMRMSMAP bug.
+                        coadd_fields()  Removed normalization of output
+                                        weights.
+EB      08/10/2002      init_field()    Make the sign of longitude increment
+                                        negative in automatic framing.
+                        writefitsinfo_field()
+                                        Fixed FITS header bug in WRITE_FILEINFO
+                                        mode with input weight-maps
+                        main()          Changed banner.
+EB      28/11/2002      init_field()    Fixed bad propagation of longitude
+                                        increment sign.
+                        define.h        COPYRIGHT Slightly modified.
+                        configure.in    Allow NTHREADS>1 in monothreaded build.
+                        use_prefs()     Warning added.
+
+EB      10/01/2003      interpolate_pix()
+                                        linecount[n] was not initialized.
+
+EB      18/01/2003      range_wcs()     Fixed scaling sign bug for
+					non-spherical projections
+
+EB      10/04/2003      coadd_pix()
+                        fast_median()   Activate a faster version of the
+                                        median for co-addition.
+EB      17/04/2003      resample.c      New multithreaded code.
+
+EB      18/04/2003      init_field()    Handled properly case with CENTER_TYPE
+                                        MANUAL and IMAGE_SIZE 0.
+                        make_kernel()   Optimized Lanczos kernel computations.
+
+EB      19/04/2003      fast_median()   Optimized further.
+
+EB      20/04/2003      prefs.h         Fixed missing galactic coord support.
+                        load_field()
+                        init_field()    Added support for PIXEL celestial type.
+
+EB      21/04/2003      -               Added propagation of FITS keywords.
+                        addkeywordto_head()
+                                        Fixed bug when adding COMMENTs
+                        fitswrite()
+                        fitspick()      Improved handling of H_STRINGS comments
+
+EB      28/04/2003      coadd_pix()     Optimized code.
+                        -               Added opt. support for INTEL math lib.
+                        resample_field()
+                                        Changed temp. weight naming convention.
+
+EB      03/07/2003      threads.c       New modules with macro functions to
+                                        make multithreading easier.
+	
+EB      09/07/2003      coadd.c         Completely rewrote the co-addition
+                                        code. Better optimisation and multi-
+                                        threading added.
+
+EB      09/07/2003      lin.c           Replaced the <memory.h> include with an
+                                        <stdlib.h>
+
+EB      04/08/2003      threads.c       Made code compilation optional.
+
+EB      15/08/2003      -               Small fixes to avoid gcc  -Wall
+                                        warnings.
+                        addhistoryto_cat()
+                                        date in HISTORY has now dd/mm/YYYY
+                                        format
+
+EB      16/08/2003      -               Added HAVE_GETENV configure flag.
+                        header.c        Replaced getpwuid() with
+                                        getenv("LOGNAME")
+                        main()          Produce a more concise --version
+                                        output.
+
+EB      18/08/2003      coadd_fields()  Weight-map corruption bug fixed.
+
+EB      20/08/2003      field.c         Removed obsolete #includes.
+
+EB      17/10/2003      -               Made COPYSIGN and SIGNBIT conditions
+                                        the default in wcslib.
+
+EB      20/10/2003      -               Removed additional gcc -Wall warnings.
+
+EB      21/10/2003      coadd_line()    Set output pixel to one of the input
+                                        values when all input weights are zero.
+
+EB      26/10/2003      range_wcs()
+                        invert_wcs()    Fixed bug in step increment.
+                        fitswcs.*       Updated to the latest SCAMP version.
+
+EB      28/10/2003      write_wcs()     Fixed bug when writing PVs.
+
+EB      05/11/2003      read_body()
+                        read_fitsbasic()
+                        interpolate_pix()
+                        backstat()
+                        convert_data()  Added support for BLANKed pixels.
+
+EB      06/11/2003      invert_wcs()
+                        range_wcs()     Extended the automatic min and max
+                                        WCS limits of a field to pixel borders.
+                        read_body()     Fixed NaN detection.
+
+EB      09/11/2003      convert_data()
+                        read_fitsbasic()
+                        backstat()      Fixed BLANKing bugs in WEIGHTED mode.
+
+EB      16/11/2003      -               Added PROJECTION_ERR keyword and new
+                                        "approximated astrometry" mode.
+
+EB      19/11/2003      init_field()    Positioned headerflag for output field.
+
+EB      20/11/2003      fitswcs.c
+                        makeit()
+                        init_field()    Added support for heterogeneous axis
+                                        labeling.
+EB      21/11/2003      makeit()
+                        load_field()
+                        load_weight()   Reduced memory usage with MEFs.
+
+                        projapp_init()  Removed warning for small images.
+
+EB      22/11/2003      coadd_movewdata()
+                                        Copy first pixel value in output image
+                                        if all weights are 0.
+
+EB      24/11/2003      warp_line()     Fixed a HUGE bug in resampling!!!
+
+EB      28/11/2003      tnx.c           Broken TNX support rehabilitated.
+
+EB      20/12/2003      warp_line()     Fixed projection bug with oversampling.
+
+EB      04/01/2004      raw_to_pv()     Fixed bug for polynoms >= 4th degree.
+
+EB      06/02/2004	coadd_line()	Fixed bug with COADD_CHI2.
+
+EB      28/04/2004      scale_field()   Fixed BZERO scaling bug.
+
+EB      06/11/2004      range_wcs()     Fixed auto-limits with all-sky images.
+
+EB      17/11/2004      fitsutil.c      Update + replaced %e by %E format.
+                        makeit()
+                        main()          Improved display (time, # of threads..)
+                        read_aschead()  Fixed header corruption bugs with
+                                        crippled .head lines.
+                        read_prefs()    Added automatic NTHREADS on systems
+                                        with sysconf(_SC_NPROCESSORS_ONLN).
+
+EB      18/11/2004      read_aschead()  Removed debug info left by mistake
+                                        Improved robustness of header reading
+                        configure.ac    Removed icc/gcc duplicated options.
+
+EB      05/12/2004      swarp.tex       Fixed a few confusing equations.
+
+EB      09/12/2004      makeit()        Fixed a long standing bug: weights
+                                        were not scaled with the flux scale.
+
+EB      10/12/2004      -               New .spec files and rpm handling
+                                        (cross-compiling now possible on
+                                        x86_64).
+                        back.c
+                        back.h          Replaced long's by int's.
+
+EB      26/04/2005      FITS library    Upgraded to the latest version.
+
+EB      27/04/2005      makeit()        Fixed segfault with Nextensions > 8182.
+
+EB      28/04/2005      coadd_line()    Added support for summation.
+
+EB      20/06/2005      fitswcs.c       Upgraded to the latest version.
+
+EB      21/06/2005      coadd.c         Fixed segfault and positioning pb
+                                        in RESAMPLE N mode.
+
+EB      22/06/2005      init_field()    Force sexagedecimal input order to
+                                        lng,lat
+
+EB      24/06/2005      makeit()        Dropped reaxe_wcs() for lng>lat
+
+EB      19/07/2005      init_field()    Fixed non-integer CRPIXs in automatic
+                                        IMAGE_SIZE mode.
+                        dumpprefs()     Added support for "deep dump".
+
+EB      20/07/2005      makeit()        Fixed a huge bug introduced while axing
+                                        reaxe_wcs()...
+                        -               Replace Postscript version of doc with
+                                        PDF file.
+
+EB      15/09/2005      pthread_nextline()
+                                        Fixed long-standing line-swapping bug
+                                        in multi-threaded mode.
