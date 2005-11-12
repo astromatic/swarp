@@ -1,3 +1,6 @@
+V2.15.7
+prefs are not free at the end of the program!!!!!!!!
+
 V2.15.5
 LFS (large-file) support broken on 32-bit platforms due to Autoconf problem.
 

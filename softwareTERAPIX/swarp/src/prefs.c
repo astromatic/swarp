@@ -473,8 +473,16 @@ void	useprefs(void)
       {
 /*---- Weight-maps given through the WEIGHT_IMAGE keyword */
       if (prefs.ninwfield == 1)
-        warning("Several input images and a single weight-map found: ",
+	{
+	  warning("Several input images and a single weight-map found: ",
 		"applying the same weight-map to all images");
+	  prefs.ninwfield = prefs.ninfield;
+	  for (i=1; i<prefs.ninwfield; i++)
+	    {
+	      QMALLOC(prefs.inwfield_name[i], char, MAXCHAR);
+	      strcpy(prefs.inwfield_name[i],prefs.inwfield_name[0]);
+	    }
+	}
       else
         error(EXIT_FAILURE, "*Error*: the number of input images and ",
 		"weight-maps do not match");
