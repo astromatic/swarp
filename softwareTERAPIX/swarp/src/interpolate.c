@@ -9,7 +9,7 @@
 *
 *	Contents:	Function related to vignet manipulations.
 *
-*	Last modify:	05/11/2003
+*	Last modify:	31/01/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -51,7 +51,7 @@ OUTPUT	RETURN_OK if pixel falls within the input frame, RETURN_ERROR
 	otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	05/11/2003
+VERSION	31/01/2006
  ***/
 int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
 		ikernelstruct *ikernel, double *pos, PIXTYPE *outpix,
@@ -84,10 +84,10 @@ int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
 					(int)(val-0.50001):(int)val;
 /*-- Store the fractional part of the current coordinate */
     dpos[n] = val - ival;
-/*-- Check if interpolation start/end exceed image boudary... */
+/*-- Check if interpolation start/end exceed image boundary... */
     kwidth = ikernel->width[n];
     ival-=kwidth/2;
-    if (ival<0 || ival+kwidth>width)
+    if (ival<0 || ival+kwidth<=0 || ival+kwidth>width)
       {
       *outpix = 0.0;
       if (woutpix)
