@@ -178,7 +178,6 @@ VERSION	25/04/2002
  ***/
 void	signal_function(int signum)
   {
-printf("coucou\n");
   cleanup_files();
   if (exit_func)
     exit_func();
