@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	19/07/2005
+*	Last modify:	11/03/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -32,6 +32,11 @@
 
 #ifndef _PREFS_H_
 #define _PREFS_H_
+
+/*----------------------------- Internal constants --------------------------*/
+
+#define         MAXCHARL	16384	/* max. nb of chars in a string list */
+#define		MAXLIST		256	/* max. nb of list members */
 
 /*--------------------------------- typedefs --------------------------------*/
 /*------------------------------- preferences -------------------------------*/
@@ -127,10 +132,6 @@ typedef struct
   }	prefstruct;
 
 prefstruct	prefs;
-
-/*----------------------------- Internal constants --------------------------*/
-
-#define		MAXLIST		32	/* max. nb of list members */
 
 /*-------------------------------- protos -----------------------------------*/
 extern int	cistrcmp(char *cs, char *ct, int mode);

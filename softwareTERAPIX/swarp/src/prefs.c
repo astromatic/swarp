@@ -9,7 +9,7 @@
 *
 *	Contents:	Functions to handle the configuration file.
 *
-*	Last modify:	19/07/2005
+*	Last modify:	11/03/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -65,11 +65,11 @@ void    readprefs(char *filename, char **argkey, char **argval, int narg)
 
   {
    FILE          *infile;
-   char          *cp, str[MAXCHAR], *keyword, *value, **dp;
+   char          *cp, str[MAXCHARL], *keyword, *value, **dp;
    int           i, ival, nkey, warn, argi, flagc, flagd, flage, flagz;
    float         dval;
 #ifdef	HAVE_GETENV
-   static char	value2[MAXCHAR],envname[MAXCHAR];
+   static char	value2[MAXCHARL],envname[MAXCHAR];
    char		*dolpos;
 #endif
 
