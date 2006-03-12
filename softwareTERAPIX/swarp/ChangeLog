@@ -9,7 +9,7 @@
 *
 *       Contents:       log of changes made to the SWarp source
 *
-*       Last modify:    15/09/2005
+*       Last modify:    12/03/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -268,3 +268,14 @@ EB      20/07/2005      makeit()        Fixed a huge bug introduced while axing
 EB      15/09/2005      pthread_nextline()
                                         Fixed long-standing line-swapping bug
                                         in multi-threaded mode.
+
+CM      12/11/2005      useprefs()      Propagate duplicate weight-map in case
+                                        of multiple input images.
+
+EB      31/01/2006      interpolate_pix()
+                                        Added additional boundary check to
+                                        prevent bogus astrometric solutions
+					from crashing SWarp.
+
+EB      11/03/2006      prefs.c         Allow very long arrays of strings to
+                                        be given as arguments to swarp.
