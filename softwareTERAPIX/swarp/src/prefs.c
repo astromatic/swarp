@@ -9,7 +9,7 @@
 *
 *	Contents:	Functions to handle the configuration file.
 *
-*	Last modify:	11/03/2006
+*	Last modify:	08/06/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -110,7 +110,7 @@ void    readprefs(char *filename, char **argkey, char **argval, int narg)
         flagd = 0;
       }
     if (!flagc && !flagd)
-      if (flage || !fgets(str, MAXCHAR, infile))
+      if (flage || !fgets(str, MAXCHARL, infile))
         flagc=1;
 
     if (flagc)
