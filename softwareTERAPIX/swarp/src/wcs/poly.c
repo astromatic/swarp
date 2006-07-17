@@ -9,7 +9,7 @@
 *
 *	Contents:	Polynomial fitting
 *
-*	Last modify:	28/10/2003
+*	Last modify:	08/03/2005
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -151,13 +151,13 @@ INPUT   polystruct pointer,
 OUTPUT  Polynom value.
 NOTES   Values of the basis functions are updated in poly->basis.
 AUTHOR  E. Bertin (IAP)
-VERSION 07/04/2000
+VERSION 03/03/2004
  ***/
 double	poly_func(polystruct *poly, double *pos)
   {
    double	xpol[POLY_MAXDIM+1];
-   double      	*post, *xpolt, *basis, *coeff, val, xval;
-
+   double      	*post, *xpolt, *basis, *coeff, xval;
+   long double	val;
    int		expo[POLY_MAXDIM+1], gexpo[POLY_MAXDIM+1];
    int	       	*expot, *degree,*degreet, *group,*groupt, *gexpot,
 			d,g,t, ndim;
@@ -193,6 +193,8 @@ double	poly_func(polystruct *poly, double *pos)
 /*-- xpol[0] contains the current product of the x^n's */
     val += (*(basis++)=*xpol)**(coeff++);
 /*-- A complex recursion between terms of the polynom speeds up computations */
+/*-- Not too good for roundoff errors (prefer Horner's), but much easier for */
+/*-- multivariate polynomials: this is why we use a long double accumulator */
     post = pos;
     groupt = group;
     expot = expo;
@@ -215,7 +217,7 @@ double	poly_func(polystruct *poly, double *pos)
         }
     }
 
-  return val;
+  return (double)val;
   }
 
 
@@ -235,17 +237,18 @@ NOTES   If different from NULL, extbasis can be provided to store the
         precomputed basis functions stored in extbasis are used (which saves
         CPU). If w is NULL, all points are given identical weight.
 AUTHOR  E. Bertin (IAP, Leiden observatory & ESO)
-VERSION 07/04/2000
+VERSION 08/03/2005
  ***/
 void	poly_fit(polystruct *poly, double *x, double *y, double *w, int ndata,
 		double *extbasis)
   {
    void	qerror(char *msg1, char *msg2);
-   double	*alpha,*alphat, *beta,*betat, *basis,*basis1,*basis2, *coeff,
-		*extbasist,
+   double	/*offset[POLY_MAXDIM],*/x2[POLY_MAXDIM],
+		*alpha,*alphat, *beta,*betat, *basis,*basis1,*basis2, *coeff,
+		*extbasist,*xt,
 		val,wval,yval;
    int		ncoeff, ndim, matsize,
-		i,j,n;
+		d,i,j,n;
 
   if (!x && !extbasis)
     qerror("*Internal Error*: One of x or extbasis should be "
@@ -258,14 +261,30 @@ void	poly_fit(polystruct *poly, double *x, double *y, double *w, int ndata,
   QCALLOC(alpha, double, matsize);
   QCALLOC(beta, double, ncoeff);
 
+/* Subtract an average offset to maintain precision (droped for now ) */
+/*
+  if (x)
+    {
+    for (d=0; d<ndim; d++)
+      offset[d] = 0.0;
+    xt = x;
+    for (n=ndata; n--;)
+      for (d=0; d<ndim; d++)
+        offset[d] += *(xt++);
+    for (d=0; d<ndim; d++)
+      offset[d] /= (double)ndata;    
+    }
+*/ 
 /* Build the covariance matrix */
+  xt = x;
   for (n=ndata; n--;)
     {
     if (x)
       {
 /*---- If x!=NULL, compute the basis functions */
-      poly_func(poly, x);
-      x+=ndim;
+      for (d=0; d<ndim; d++)
+        x2[d] = *(xt++)/* - offset[d]*/;     
+      poly_func(poly, x2);
 /*---- If, in addition, extbasis is provided, then fill it */
       if (extbasis)
         for (basis1=basis,j=ncoeff; j--;)
@@ -291,7 +310,7 @@ void	poly_fit(polystruct *poly, double *x, double *y, double *w, int ndata,
     }
 
 /* Solve the system */
-  cholsolve(alpha,beta,ncoeff);
+  poly_solve(alpha,beta,ncoeff);
 
   free(alpha);
 
@@ -300,12 +319,105 @@ void	poly_fit(polystruct *poly, double *x, double *y, double *w, int ndata,
   coeff = poly->coeff;
   for (j=ncoeff; j--;)
     *(coeff++) = *(betat++);
-
+/*
+  poly_addcste(poly, offset);
+*/
   free(beta);
 
   return;
   }
 
+
+/****** poly_addcste *********************************************************
+PROTO   void poly_addcste(polystruct *poly, double *cste)
+PURPOSE Modify matrix coefficients to mimick the effect of adding a cst to
+	the input of a polynomial.
+INPUT   Pointer to the polynomial structure,
+        Pointer to the vector of cst.
+OUTPUT  -.
+NOTES   Requires quadruple-precision. **For the time beeing, this function
+	returns completely wrong results!!**
+AUTHOR  E. Bertin (IAP)
+VERSION 03/03/2004
+ ***/
+void	poly_addcste(polystruct *poly, double *cste)
+  {
+   long double	*acoeff;
+   double	*coeff,*mcoeff,*mcoefft,
+		val;
+   int		*mpowers,*powers,*powerst,*powerst2,
+		i,j,n,p, denum, flag, maxdegree, ncoeff, ndim;
+
+  ncoeff = poly->ncoeff;
+  ndim = poly->ndim;
+  maxdegree = 0;
+  for (j=0; j<poly->ngroup; j++)
+    if (maxdegree < poly->degree[j])
+      maxdegree = poly->degree[j];
+  maxdegree++;		/* Actually we need maxdegree+1 terms */
+  QCALLOC(acoeff, long double, ncoeff);
+  QCALLOC(mcoeff, double, ndim*maxdegree);
+  QCALLOC(mpowers, int, ndim);
+  mcoefft = mcoeff;		/* To avoid gcc -Wall warnings */
+  powerst = powers = poly_powers(poly);
+  coeff = poly->coeff;
+  for (i=0; i<ncoeff; i++)
+    {
+    for (j=0; j<ndim; j++)
+      {
+      mpowers[j] = n = *(powerst++);
+      mcoefft = mcoeff+j*maxdegree+n;
+      denum = 1;
+      val = 1.0;
+      for (p=n+1; p--;)
+        {
+        *(mcoefft--) = val;
+        val *= (cste[j]*(n--))/(denum++);	/* This is C_n^p X^(n-p) */
+        }
+      }
+/*-- Update all valid coefficients */
+    powerst2 = powers;
+    for (p=0; p<ncoeff; p++)
+      {
+/*---- Check that this combination of powers is included in the series above */
+      flag = 0;
+      for (j=0; j<ndim; j++)
+        if (mpowers[j] < powerst2[j])
+	  {
+          flag = 1;
+          powerst2 += ndim;
+          break;
+          }
+      if (flag == 1)
+        continue;
+      val = 1.0;
+      mcoefft = mcoeff;
+      for (j=ndim; j--; mcoefft += maxdegree)
+        val *= mcoefft[*(powerst2++)];
+      acoeff[i] += val*coeff[p];
+/*
+printf("%g \n", val);
+*/
+      }
+    }
+
+/* Add the new coefficients to the previous ones */
+
+  for (i=0; i<ncoeff; i++)
+{
+/*
+printf("%g %g\n", coeff[i], (double)acoeff[i]);
+*/
+    coeff[i] = (double)acoeff[i];
+}
+
+  free(acoeff);
+  free(mcoeff);
+  free(mpowers);
+  free(powers);
+
+  return;
+  }
 
 /****** poly_solve ************************************************************
 PROTO   void poly_solve(double *a, double *b, int n)
@@ -317,7 +429,7 @@ INPUT   Pointer to the (pseudo 2D) matrix of coefficients,
 OUTPUT  -.
 NOTES   -.
 AUTHOR  E. Bertin (IAP, Leiden observatory & ESO)
-VERSION 28/10/2003
+VERSION 21/09/2004
  ***/
 void	poly_solve(double *a, double *b, int n)
   {

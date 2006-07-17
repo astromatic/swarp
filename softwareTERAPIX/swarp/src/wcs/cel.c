@@ -548,6 +548,7 @@ double *x, *y;
 
    /* Compute native coordinates. */
    sphfwd(lng, lat, cel->euler, phi, theta);
+
    /* Apply forward projection. */
    if ((err = cel->prjfwd(*phi, *theta, prj, x, y))) {
       return err == 1 ? 2 : 3;
@@ -578,7 +579,6 @@ double *lng, *lat;
    if ((err = cel->prjrev(x, y, prj, phi, theta))) {
       return err == 1 ? 2 : 3;
    }
-
    if (fabs(*phi)>180.0 || fabs(*theta)>90.0)
      return 2;
 

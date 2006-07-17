@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for fitswcs.c
 *
-*	Last modify:	03/05/2005
+*	Last modify:	17/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -71,7 +71,7 @@ typedef struct wcs
   double	obsdate;		/* Date of observations */
   double	equinox;		/* Equinox of observations */
   double	epoch;			/* Epoch of observations (deprec.) */
-  enum {RDSYS_FK5, RDSYS_FK4, RDSYS_FK4_NO_E, RDSYS_GAPPT}
+  enum {RDSYS_ICRS, RDSYS_FK5, RDSYS_FK4, RDSYS_FK4_NO_E, RDSYS_GAPPT}
 		radecsys;		/* FITS RADECSYS reference frame */
   enum	celsys {CSYS_EQU, CSYS_GAL, CSYS_ECL}
 		celsys;			/* Celestial coordinate system */

@@ -10,7 +10,7 @@
 *	Contents:       Handle TNX astrometric format (from IRAF).
 *
 *
-*	Last modify:	15/08/2003
+*	Last modify:	04/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -37,14 +37,14 @@ INPUT	String containing the TNX info.
 OUTPUT	TNXAXIS structure if OK, or NULL in case of error.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	15/08/2003
+VERSION	04/07/2006
  ***/
 
 tnxaxisstruct	*read_tnxaxis(char *tnxstr)
 
   {
    tnxaxisstruct	*tnxaxis;
-   char		*pstr;
+   char		*pstr, *ptr;
    double	min, max;
    int		i, order;
 
@@ -52,18 +52,21 @@ tnxaxisstruct	*read_tnxaxis(char *tnxstr)
     {
     if (!(tnxaxis=malloc(sizeof(tnxaxisstruct))))
       return NULL;
-    tnxaxis->type = (int)(atof(strtok(pstr, " "))+0.5);
-    tnxaxis->xorder = (pstr=strtok(NULL, " "))? (int)(atof(pstr)+0.5) : 0;
-    tnxaxis->yorder = (pstr=strtok(NULL, " "))? (int)(atof(pstr)+0.5) : 0;
-    tnxaxis->xterms = (pstr=strtok(NULL, " "))? (int)(atof(pstr)+0.5) : 0;
-    min = (pstr=strtok(NULL, " "))? atof(pstr) : 0.0;
-    max = (pstr=strtok(NULL, " "))? atof(pstr) : 0.0;
+    tnxaxis->type = (int)(atof(strtok_r(pstr, " ", &ptr))+0.5);
+    tnxaxis->xorder = (pstr=strtok_r(NULL, " ", &ptr))?
+			(int)(atof(pstr)+0.5) : 0;
+    tnxaxis->yorder = (pstr=strtok_r(NULL, " ", &ptr))?
+			(int)(atof(pstr)+0.5) : 0;
+    tnxaxis->xterms = (pstr=strtok_r(NULL, " ", &ptr))?
+			(int)(atof(pstr)+0.5) : 0;
+    min = (pstr=strtok_r(NULL, " ", &ptr))? atof(pstr) : 0.0;
+    max = (pstr=strtok_r(NULL, " ", &ptr))? atof(pstr) : 0.0;
     if (max <= min)
       return NULL;
     tnxaxis->xrange = 2.0 / (max - min);
     tnxaxis->xmaxmin =  - (max + min) / 2.0;
-    min = (pstr=strtok(NULL, " "))? atof(pstr) : 0.0;
-    max = (pstr=strtok(NULL, " "))? atof(pstr) : 0.0;
+    min = (pstr=strtok_r(NULL, " ", &ptr))? atof(pstr) : 0.0;
+    max = (pstr=strtok_r(NULL, " ", &ptr))? atof(pstr) : 0.0;
     if (max <= min)
       return NULL;
     tnxaxis->yrange = 2.0 / (max - min);
@@ -87,7 +90,7 @@ tnxaxisstruct	*read_tnxaxis(char *tnxstr)
 /*-- Now read the mapping coefficients */
     if (!(tnxaxis->coeff=malloc(tnxaxis->ncoeff*sizeof(double))))
       return NULL;
-    for (i=0; i<tnxaxis->ncoeff && (pstr=strtok(NULL, " ")); i++)
+    for (i=0; i<tnxaxis->ncoeff && (pstr=strtok_r(NULL, " ", &ptr)); i++)
       tnxaxis->coeff[i] = atof(pstr);
     if (i!=tnxaxis->ncoeff)
       return NULL;

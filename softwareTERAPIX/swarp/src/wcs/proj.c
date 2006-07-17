@@ -365,10 +365,7 @@ struct prjprm *prj;
 
    for (k = 99; k >= 0 && prj->p[k] == 0.0 && prj->p[k+100] == 0.0; k--);
    if (k < 0)
-     {
-     k = 2;
-     prj->p[1] = prj->p[101] = 1.0;
-     }
+     k = 0;
 
    prj->n = k;
 
@@ -421,7 +418,13 @@ double *phi, *theta;
       if (tanset(prj)) return 1;
    }
 
-   raw_to_pv(prj, x,y, &xp, &yp);
+   if (prj->n)
+     raw_to_pv(prj, x,y, &xp, &yp);
+   else
+     {
+     xp = x;
+     yp = y;
+     }
    rp = sqrt(xp*xp+yp*yp);
    if (rp == 0.0) {
       *phi = 0.0;

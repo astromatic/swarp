@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	07/03/2005
+*	Last modify:	17/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -309,7 +309,7 @@ INPUT	tab structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	03/05/2005
+VERSION	17/07/2007
  ***/
 wcsstruct	*read_wcs(tabstruct *tab)
 
@@ -453,8 +453,11 @@ wcsstruct	*read_wcs(tabstruct *tab)
 
     FITSREADF(buf, "EPOCH", wcs->epoch, 2000.0);
     FITSREADF(buf, "EQUINOX", wcs->equinox, wcs->epoch);
-    FITSREADS(buf, "RADECSYS", str, wcs->equinox<1984.0?"FK4":"FK5");
-    if (!strcmp(str, "FK5"))
+    FITSREADS(buf, "RADECSYS", str,
+	wcs->equinox >= 2000.0? "ICRS" : (wcs->equinox<1984.0? "FK4" : "FK5"));
+    if (!strcmp(str, "ICRS"))
+      wcs->radecsys = RDSYS_ICRS;
+    else if (!strcmp(str, "FK5"))
       wcs->radecsys = RDSYS_FK5;
     else if (!strcmp(str, "FK4"))
       {
@@ -486,9 +489,9 @@ wcsstruct	*read_wcs(tabstruct *tab)
       }
     else
       {
-      warning("Using FK5 instead of unknown astrometric reference frame: ",
+      warning("Using ICRS instead of unknown astrometric reference frame: ",
 		str);
-      wcs->radecsys = RDSYS_FK5;
+      wcs->radecsys = RDSYS_ICRS;
       }
 
 /*-- Projection parameters */
@@ -583,7 +586,7 @@ INPUT	tab structure,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	28/10/2003
+VERSION	17/07/2006
  ***/
 void	write_wcs(tabstruct *tab, wcsstruct *wcs)
 
@@ -607,6 +610,9 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
   addkeywordto_head(tab, "RADECSYS", "Astrometric system");
   switch(wcs->radecsys)
     {
+    case RDSYS_ICRS:
+      fitswrite(tab->headbuf, "RADECSYS", "ICRS", H_STRING, T_STRING);
+      break;
     case RDSYS_FK5:
       fitswrite(tab->headbuf, "RADECSYS", "FK5", H_STRING, T_STRING);
       break;
