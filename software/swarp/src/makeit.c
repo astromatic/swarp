@@ -9,7 +9,7 @@
 *
 *       Contents:       Main loop
 *
-*       Last modify:    20/07/2005
+*       Last modify:    18/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -114,7 +114,7 @@ void	makeit(void)
     for (j=0; j<cat->ntab; j++)
       {
       if (tab->naxis
-	&& (!(tab->tfields && tab->bitpix==8 && tab->pcount)))
+	&& (!(tab->tfields && tab->bitpix==8)))
         {
         if (k >= nfield)
 	  {

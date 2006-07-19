@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	17/07/2006
+*	Last modify:	18/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -254,13 +254,13 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	14/01/2001
+VERSION	18/07/2006
  ***/
 void	init_wcscelsys(wcsstruct *wcs)
 
   {
   double	*mat,
-		a0,d0,ap,dp,ap2,x,y;
+		a0,d0,ap,dp,ap2,y;
   int		s,lng,lat;
 
   lng = wcs->wcsprm->lng;
@@ -288,8 +288,11 @@ void	init_wcscelsys(wcsstruct *wcs)
   dp = celsyspole[s][1]*DEG;
 /* First compute in the output referential the longitude of the south pole */
   y = sin(ap - a0);
+/*
   x = cos(d0)*(cos(d0)*sin(dp)*cos(ap-a0)-sin(d0)*cos(dp));
   ap2 = atan2(y,x);
+*/
+  ap2 = asin(cos(d0)*y) ;
 /* Equatorial <=> Celestial System transformation parameters */
   mat = wcs->celsysmat;
   mat[0] = ap;
