@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	11/03/2006
+*	Last modify:	19/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -85,7 +85,7 @@ typedef struct
 /* Output image coordinates */
   char		projection_name[MAXCHAR];/* Projection WCS code */
   enum {CELSYS_NATIVE, CELSYS_PIXEL, CELSYS_EQUATORIAL, CELSYS_GALACTIC, \
-	CELSYS_ECLIPTIC}
+	CELSYS_ECLIPTIC, CELSYS_SUPERGALACTIC}
 		celsys_type		;/* Celestial system type */
   enum {CENTER_MANUAL, CENTER_ALL, CENTER_MOST}
 		center_type[INTERP_MAXDIM];/* Centering type */
