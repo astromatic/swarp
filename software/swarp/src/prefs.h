@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	19/07/2006
+*	Last modify:	20/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -123,7 +123,9 @@ typedef struct
   int		nnodes;			/* Number of nodes (for clusters) */  
   int		node_index;		/* Node index (for multiprocessing) */ 
   enum {QUIET, NORM, WARN, FULL}	verbose_type;	/* display type */
-  char		xml_name[MAXCHAR]	;/* XML file name */
+  int		xml_flag;		/* Write XML file? */
+  char		xml_name[MAXCHAR];	/* XML file name */
+  char		xsl_name[MAXCHAR];	/* XSL file name (or URL) */
   char		sdate_start[12];	/* SWarp start date */
   char		stime_start[12];	/* SWarp start time */
   char		sdate_end[12];		/* SWarp end date */

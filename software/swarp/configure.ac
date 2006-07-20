@@ -6,7 +6,7 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.15.7, [bertin@iap.fr])
+AC_INIT(swarp, 2.16b, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AM_CONFIG_HEADER(config.h)
@@ -48,18 +48,6 @@ AC_ARG_ENABLE(icc,
         use_icc="no"
 	AC_MSG_RESULT([no]))
 
-# Provide special option for the Insure++ debugger
-AC_MSG_CHECKING([for Insure++ debugger mode])
-AC_ARG_ENABLE(insure,
-	[AC_HELP_STRING([--enable-insure],
-	[Enable special mode for compilation with the Insure++ debugger \
-(off by default)])],
-        use_insure="yes"
-        cclist="insure $cclist"
-	AC_MSG_RESULT([yes]),
-        use_insure="no"
-	AC_MSG_RESULT([no]))
-
 # Provide special option for gprof profiling
 AC_MSG_CHECKING([for gprof profiler mode])
 AC_ARG_ENABLE(gprof,
@@ -69,18 +57,6 @@ AC_ARG_ENABLE(gprof,
         use_gprof="yes"
 	AC_MSG_RESULT([yes]),
         use_gprof="no"
-	AC_MSG_RESULT([no]))
-
-# Provide special option for the MPI version
-AC_MSG_CHECKING([for MPI mode])
-AC_ARG_ENABLE(mpi,
-	[AC_HELP_STRING([--enable-mpi],
-	[Enable MPI parallel processing (off by default)])],
-		use_mpi="yes"
-		AC_MSG_RESULT([yes]),
-      		use_mpi="no"
-		AC_MSG_RESULT([no]),
-	use_mpi="no"
 	AC_MSG_RESULT([no]))
 
 # Enable static linking
@@ -174,12 +150,6 @@ fi
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
-# Special options for the Insure debugger
-if test $use_insure = "yes" -a $CC = "insure"; then
-  CFLAGS="$CFLAGS -g"
-  use_static="no"
-fi
-
 # Special linking options for the INTEL C compiler
 if test $use_icc = "yes" -a $CC = "icc"; then
   LIBS="-limf $LIBS"
@@ -199,11 +169,6 @@ if test "$use_static" = "yes"; then
   LDFLAGS="$LDFLAGS -static"
 fi
 
-# Link with MPI option
-if test "$use_mpi" = "yes"; then
-  LIBS="$MPILIBS $LIBS"
-fi
-
 # Override automatic CFLAGS and LDFLAGS with those of user
 if test -n "$mycflags"; then
 CFLAGS="$mycflags"
@@ -211,6 +176,9 @@ fi
 if test -n "$myldflags"; then
 LDFLAGS="$myldflags"
 fi
+
+# href to the XSL style-sheet in preflist.h
+CFLAGS="$CFLAGS -DXSL_URL=\\\"file://$datadir/${PACKAGE_NAME}/${PACKAGE_NAME}.xsl\\\""
 
 # Display compiler and linker flags
 AC_MSG_RESULT([I will compile using:  $CC $CFLAGS])

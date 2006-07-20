@@ -9,7 +9,7 @@
 *
 *       Contents:       Main loop
 *
-*       Last modify:    18/07/2006
+*       Last modify:    20/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -54,12 +54,15 @@ void	makeit(void)
    fieldstruct		**infield,**inwfield, *outfield,*outwfield;
    catstruct		*cat, *wcat;
    tabstruct		*tab;
-   time_t		thetime, thetime2;
+   time_t		thetime, thetimef, thetime2;
    struct tm		*tm;
    double		w,w1,w2, invscale;
    int		       	*list,*next;
    int			i,j,k,l, ninfield, ntinfield, lng,lat, nfield;
    int			mpiflag, mpitask;
+
+/* Install error logging */
+  error_installfunc(write_error);
 
 /* Processing start date and time */
   thetime = time(NULL);
@@ -208,6 +211,8 @@ void	makeit(void)
     mpitask = 0;
     for (i=0; i<ninfield; i++)
       {
+/*---- Processing start date and time */
+      thetimef = time(NULL);
       for (j=0; j<next[i]; j++, k++)
         {
 #ifdef HAVE_MPI
@@ -272,6 +277,13 @@ void	makeit(void)
 		prefs.resamp_type);
           }
         }
+      thetime2 = time(NULL);
+      tm = localtime(&thetime2);
+      sprintf(infield[k]->sdate_end,"%04d-%02d-%02d",
+		tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
+      sprintf(infield[k]->stime_end,"%02d:%02d:%02d",
+		tm->tm_hour, tm->tm_min, tm->tm_sec);
+      infield[k]->time_diff = difftime(thetime2, thetimef);
       }
     }
 
@@ -336,6 +348,7 @@ the_end:
   end_field(outfield);
   end_field(outwfield);
   cleanup_files();
+
 /* Processing end date and time */
   thetime2 = time(NULL);
   tm = localtime(&thetime2);
@@ -345,6 +358,30 @@ the_end:
         tm->tm_hour, tm->tm_min, tm->tm_sec);
   prefs.time_diff = difftime(thetime2, thetime);
 
+  return;
+  }
+
+
+/****** write_error ********************************************************
+PROTO	void	write_error(char *msg1, char *msg2)
+PURPOSE	Manage files in case of a catched error
+INPUT	a character string,
+	another character string
+OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
+NOTES	-.
+AUTHOR	E. Bertin (IAP)
+VERSION	20/07/2006
+ ***/
+void    write_error(char *msg1, char *msg2)
+  {
+   char		error[MAXCHAR];
+
+  sprintf(error, "%s%s", msg1,msg2);
+/*
+  if (prefs.xml_flag)
+    write_xmlerror(prefs.xml_name, error);
+  end_xml();
+*/
   return;
   }
 

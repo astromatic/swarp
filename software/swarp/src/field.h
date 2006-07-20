@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	26/04/2005
+*	Last modify:	20/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -84,6 +84,10 @@ typedef struct field
 /* ---- image interpolation */
   PIXTYPE	weight_thresh;		/* interpolation threshold */
   struct field	*reffield;	       	/* pointer to a reference field */
+/* ---- time */
+  char		sdate_end[12];		/* SWarp end date */
+  char		stime_end[12];		/* SWarp end time */
+  int		time_diff;		/* Execution time */
   }	fieldstruct;
 
 /*------------------------------- functions ---------------------------------*/

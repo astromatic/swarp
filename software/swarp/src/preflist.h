@@ -9,7 +9,7 @@
 *
 *	Contents:	Keywords for the configuration file.
 *
-*	Last modify:	19/07/2006
+*	Last modify:	20/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -112,6 +112,9 @@ pkeystruct key[] =
    {"NONE", "BACKGROUND", "MAP_RMS", "MAP_VARIANCE", "MAP_WEIGHT",""},
    1, MAXINFIELD, &prefs.nweight_type},
   {"WRITE_FILEINFO", P_BOOL, &prefs.writefileinfo_flag},
+  {"WRITE_XML", P_BOOL, &prefs.xml_flag},
+  {"XML_NAME", P_STRING, prefs.xml_name},
+  {"XSL_URL", P_STRING, prefs.xsl_name},
   {""}
  };
 
@@ -211,6 +214,10 @@ char *default_prefs[] =
 "                                       # from the input to the output headers",
 "WRITE_FILEINFO         N               # Write information about each input",
 "                                       # file in the output image header?",
+"WRITE_XML              N               # Write XML file (Y/N)?",
+"XML_NAME               swarp.xml       # Filename for XML output",
+"*XSL_URL                " XSL_URL,
+"*                                       # Filename for XSL style-sheet",
 "VERBOSE_TYPE           NORMAL          # QUIET,NORMAL or FULL",
 "*NNODES                 1               # Number of nodes (for clusters)",
 "*NODE_INDEX             0               # Node index (for clusters)",
