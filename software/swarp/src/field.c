@@ -339,7 +339,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 19/07/2005
+VERSION 21/07/2006
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {

@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	20/07/2006
+*	Last modify:	21/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -55,6 +55,7 @@ typedef struct
   float		fscale;					/* photometric scaling*/
   float		fascale;				/* astrometric scaling*/
   float		pixscale;				/* pixel scale (deg2) */
+  int		celsys;					/* celestial system */
   double	centerpos[NAXIS]			/* center coordinates */
   double	epoch;					/* epoch of coords */
   }	xmlstruct;

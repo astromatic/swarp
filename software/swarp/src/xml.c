@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	20/07/2006
+*	Last modify:	21/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -36,6 +36,7 @@
 extern time_t		thetimet,thetimet2;	/* from makeit.c */
 extern pkeystruct	key[];			/* from preflist.h */
 extern char		keylist[][32];		/* from preflist.h */
+xmlstruct		xmlref;
 xmlstruct		*xmlstack = NULL;
 int			nxml=0, nxmlmax=0;
 
@@ -75,6 +76,7 @@ int	end_xml(void)
   return EXIT_SUCCESS;
   }
 
+
 /****** update_xml ***********************************************************
 PROTO	int	update_xml(fieldstruct *field, fieldstruct *wfield)
 PURPOSE	Update a set of meta-data kept in memory before being written to the
@@ -83,7 +85,7 @@ INPUT	-.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	20/07/2006
+VERSION	21/07/2006
  ***/
 int	update_xml(fieldstruct *field, fieldstruct *wfield)
   {
@@ -92,10 +94,8 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
    int		d;
 
   if (nxml >= nxmlmax)
-    error(EXIT_FAILURE, "*Internal Error*: too many extensions in XML stack",
-			"");
+    error(EXIT_FAILURE,"*Internal Error*: too many extensions in XML stack","");
   x = &xmlstack[nxml++];
-  x->currext = currext;
   x->fieldno = field->fieldno;
   strcpy(x->imagename, field->filename); 
   strcpy(x->weightname, wfield? wfield->filename : "(null)"); 
@@ -112,12 +112,12 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
   x->fascale = field->fascale;
   x->pixscale = field->pixscale;
   x->epoch = field->epoch;
+  x->celsys = (int)(field->wcs->celsysconvflag? field->wcs->wcscelsys : -1);
   for (d=0; d<field->wcs->naxis; d++)
     pixpos[d] = (field->wcs->naxisn[d]+1.0)/2.0;
-  raw_to_wcs(wcs, pixpos, wcspos);
+  raw_to_wcs(field->wcs, pixpos, wcspos);
   for (d=0; d<field->wcs->naxis; d++)
     x->centerpos[d] = wcspos[d];
-
 
   return EXIT_SUCCESS;
   }
@@ -240,13 +240,13 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	14/07/2006
+VERSION	21/07/2006
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
    char			*pspath,*psuser, *pshost, *str;
    struct tm		*tm;
-   int			n;
+   int			d,n, naxis;
 
 /* Processing date and time if msg error present */
   if (error)
@@ -269,6 +269,7 @@ int	write_xml_meta(FILE *file, char *error)
   pshost = getenv("HOSTNAME");
 #endif
 
+  naxis = (nxml? xmlstack[0].naxis : 2);
   fprintf(file, " <RESOURCE ID=\"MetaData\" name=\"MetaData\">\n");
   fprintf(file, "  <DESCRIPTION>%s meta-data</DESCRIPTION>\n", BANNER);
   fprintf(file, "  <INFO name=\"QUERY_STATUS\" value=\"OK\" />\n");
@@ -342,22 +343,22 @@ int	write_xml_meta(FILE *file, char *error)
 	" if an error occurred early in the processing -->\n");
   fprintf(file, "   <PARAM name=\"NExtensions\" datatype=\"int\""
 	" ucd=\"meta.number;meta.dataset\" value=\"%d\"/>\n",
-	nxmlmax);
+	nxmlmax>0? nxmlmax-1 : 0);
   fprintf(file, "   <!-- CurrExtension may differ from NExtensions"
 	" if an error occurred -->\n");
   fprintf(file, "   <PARAM name=\"CurrExtension\" datatype=\"int\""
 	" ucd=\"meta.number;meta.dataset\" value=\"%d\"/>\n",
-	nxml);
+	nxml>0? nxml-1 : 0);
   fprintf(file, "   <FIELD name=\"ExtensionIndex\" datatype=\"int\""
         " ucd=\"meta.record\"/>\n");
   fprintf(file, "   <FIELD name=\"Image_Name\" datatype=\"*\""
 	" ucd=\"obs.image;meta.fits\"/>\n");
-  fprintf(file, "   <FIELD name=\"Extension\" datatype=\"int\""
-        " ucd=\"meta.record\"/>\n");
-  fprintf(file, "   <FIELD name=\"Image_Ident\" datatype=\"char\""
-	" arraysize=\"*\" ucd=\"meta.id;obs\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Name\" datatype=\"*\""
 	" ucd=\"obs.image;meta.fits\"/>\n");
+  fprintf(file, "   <FIELD name=\"Image_Ident\" datatype=\"char\""
+	" arraysize=\"*\" ucd=\"meta.id;obs\"/>\n");
+  fprintf(file, "   <FIELD name=\"Extension\" datatype=\"int\""
+        " ucd=\"meta.record\"/>\n");
   fprintf(file, "   <FIELD name=\"Date\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.record;time.event.end\"/>\n");
   fprintf(file, "   <FIELD name=\"Time\" datatype=\"char\" arraysize=\"*\""
@@ -365,64 +366,52 @@ int	write_xml_meta(FILE *file, char *error)
   fprintf(file, "   <FIELD name=\"Duration\" datatype=\"float\""
 	" ucd=\"meta.record;time.event.end\"/>\n");
   fprintf(file, "   <FIELD name=\"Background_Mean\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.skyLevel;obs.image;stat.median\""
-	" unit=\"ct\"/>\n", prefs.nimage_name);
+	" ucd=\"instr.skyLevel;obs.image;stat.median\" unit=\"ct\"/>\n");
   fprintf(file, "   <FIELD name=\"Background_StDev\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"stat.stdev;obs.image;stat.median\""
-	" unit=\"ct\"/>\n", prefs.nimage_name);
-  fprintf(file, "   <FIELD name=\"Threshold\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.image;stat.median\""
-	" unit=\"ct\"/>\n", prefs.nimage_name);
+	" ucd=\"stat.stdev;obs.image;stat.median\" unit=\"ct\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Scaling\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"arith.factor;obs.image;stat.median\"/>\n",
-	prefs.nimage_name);
+	" ucd=\"arith.factor;obs.image;stat.median\"/>\n");
+  fprintf(file, "   <FIELD name=\"Gain\" datatype=\"float\""
+	" ucd=\"instr.calib;obs.image\"/>\n");
+  fprintf(file, "   <FIELD name=\"Photometric_Flux_Scaling\" datatype=\"float\""
+	" ucd=\"phot.calib;obs.image\"/>\n");
+  fprintf(file, "   <FIELD name=\"Astrometric_Flux_Scaling\" datatype=\"float\""
+	" ucd=\"phot.calib;obs.image\"/>\n");
+  fprintf(file, "   <FIELD name=\"Field_Coordinates\" datatype=\"float\""
+	" arraysize=\"%d\" ucd=\"phot.eq;obs.image\" unit=\"%s\"/>\n",
+	naxis, nxml? (xmlstack[0].celsys >=0? "deg":"pix") : "deg");
   fprintf(file, "   <FIELD name=\"Pixel_Scale\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.scale;obs.image;stat.mean\""
-	" unit=\"arcsec\"/>\n", prefs.nimage_name);
+	" ucd=\"instr.scale;obs.image;stat.mean\" unit=\"arcsec\"/>\n");
   fprintf(file, "   <FIELD name=\"Epoch\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"time.epoch;obs\" unit=\"yr\"/>\n",
+	" ucd=\"time.epoch;obs\" unit=\"yr\"/>\n",
 	prefs.nimage_name);
   fprintf(file, "   <DATA><TABLEDATA>\n");
-  for (n=0; n<nxml; n++)
-    if (prefs.nimage_name>1)
-      fprintf(file, "     <TR>\n"
-	"      <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>"
-	"<TD>%d</TD><TD>%d</TD>\n"
-	"      <TD>%s,%s</TD>\n"
-	"      <TD>%g %g</TD><TD>%g %g</TD><TD>%g %g</TD>"
-	"<TD>%g %g</TD><TD>%g %g</TD>\n"
-	"     </TR>\n",
-	xmlstack[n].currext,
+  for (n=1; n<=nxml; n++)
+    {
+    fprintf(file, "    <TR>\n"
+	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%s</TD>\n"
+	"      <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>\n"
+	"      <TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD>"
+	"<TD>%g</TD>\n      ",
+	n+1,
+	xmlstack[n].image_name,
+	xmlstack[n].weight_name,
+	xmlstack[n].ident,
+	xmlstack[n].extension,
 	xmlstack[n].ext_date,
 	xmlstack[n].ext_time,
 	xmlstack[n].ext_elapsed,
-	xmlstack[n].ndetect,
-	xmlstack[n].ntotal,
-	xmlstack[n].ident[0], xmlstack[n].ident[1],
-	xmlstack[n].backmean[0], xmlstack[n].backmean[1],
-	xmlstack[n].backsig[0], xmlstack[n].backsig[1],
-	xmlstack[n].sigfac[0], xmlstack[n].sigfac[1],
-	xmlstack[n].thresh[0], xmlstack[n].thresh[1],
-	xmlstack[n].pixscale[0], xmlstack[n].pixscale[1]);
-    else
-      fprintf(file, "    <TR>\n"
-	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>"
-	"<TD>%d</TD><TD>%d</TD>\n"
-	"     <TD>%s</TD>\n"
-	"     <TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD>\n"
-	"    </TR>\n",
-	xmlstack[n].currext,
-	xmlstack[n].ext_date,
-	xmlstack[n].ext_time,
-	xmlstack[n].ext_elapsed,
-	xmlstack[n].ndetect,
-	xmlstack[n].ntotal,
-	xmlstack[n].ident[0],
-	xmlstack[n].backmean[0],
-	xmlstack[n].backsig[0],
-	xmlstack[n].sigfac[0],
-	xmlstack[n].thresh[0],
-	xmlstack[n].pixscale[0]);
+	xmlstack[n].backmean,
+	xmlstack[n].backsig,
+	xmlstack[n].sigfac,
+	xmlstack[n].gain,
+	xmlstack[n].fscale,
+	xmlstack[n].fascale);
+    for (d=0; d<naxis; d++)
+      fprintf(file, "<TD>%15.10g</TD>", xmlstack[n].centerpos[d]);
+    fprintf(file, "<TD>%g</TD><TD>%g</TD>\n",
+	xmlstack[n].pixscale, xmlstack.epoch);
+    }
   fprintf(file, "   </TABLEDATA></DATA>\n");
   fprintf(file, "  </TABLE>\n");
 

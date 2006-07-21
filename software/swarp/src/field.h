@@ -74,7 +74,7 @@ typedef struct field
   PIXTYPE	*backline;		/* current interpolated bkgnd line */
   backenum     	back_type;		/* background type */
 /* ---- astrometric parameters */
-  struct wcs	*wcs;		/* astrometric data */
+  struct wcs	*wcs;			/* astrometric data */
   int		flags;			/* flags defining the field type */
   int		cflags;			/* flags defining the conversion */
   double	pixscale;		/* pixel size in arcsec.pix-1 */

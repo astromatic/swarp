@@ -167,7 +167,9 @@ void	makeit(void)
   printinfo_field(outfield, outwfield);
   NFPRINTF(OUTPUT, "Creating NEW weight-map...")
   outwfield = init_weight(prefs.outwfield_name, outfield);
-
+/*
+  update_xml(outfield, outwfield);
+*/
 /* HEADER_ONLY option: write the output FITS header and exit */
   if (prefs.headeronly_flag)
     {

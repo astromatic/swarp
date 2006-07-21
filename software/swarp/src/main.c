@@ -9,7 +9,7 @@
 *
 *	Contents:	Parsing of the command line.
 *
-*	Last modify:	19/07/2005
+*	Last modify:	21/07/2005
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -42,7 +42,6 @@ extern const char	notokstr[];
 int	main(int argc, char *argv[])
 
   {
-   static char	prefsname[MAXCHAR];
    char		**argkey, **argval, *str;
    int		a, narg, nim, opt, opt2;
 
@@ -61,9 +60,11 @@ int	main(int argc, char *argv[])
   QMALLOC(argval, char *, argc);
 
 /*default parameters */
+  prefs.command_line = argv;
+  prefs.ncommand_line = argc;
   prefs.ninfield = 1;
   prefs.infield_name[0] = "image";
-   strcpy(prefsname, "default.swarp");
+  strcpy(prefs.prefs_name, "default.swarp");
   narg = nim = 0;
 
   for (a=1; a<argc; a++)
@@ -83,7 +84,7 @@ int	main(int argc, char *argv[])
           {
           case 'c':
             if (a<(argc-1))
-              strcpy(prefsname, argv[++a]);
+              strcpy(prefs.prefs_name, argv[++a]);
             break;
           case 'd':
             dumpprefs(opt2=='d' ? 1 : 0);
@@ -118,7 +119,7 @@ int	main(int argc, char *argv[])
       }
     }
 
-  readprefs(prefsname, argkey, argval, narg);
+  readprefs(prefs.prefs_name, argkey, argval, narg);
   useprefs();
 
   free(argkey);

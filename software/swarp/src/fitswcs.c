@@ -280,7 +280,7 @@ void	init_wcscelsys(wcsstruct *wcs)
     wcs->celsysconvflag = 0;
     return;
     }
-  wcs->celsys = (enum celsys)s;
+  wcs->celsys = (celsysenum)s;
 /* Some shortcuts */
   a0 = celsysorig[s][0]*DEG;
   d0 = celsysorig[s][1]*DEG;

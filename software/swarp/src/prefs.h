@@ -9,13 +9,17 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	20/07/2006
+*	Last modify:	21/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
 
 #ifndef _FIELD_H_
 #include "field.h"
+#endif
+
+#ifndef _FITSWCS_H_
+#include "fitswcs.h"
 #endif
 
 #ifndef _COADD_H_
@@ -42,6 +46,9 @@
 /*------------------------------- preferences -------------------------------*/
 typedef struct
   {
+  char		**command_line;		/* Command line */
+  int		ncommand_line;		/* nb of params */
+  char		prefs_name[MAXCHAR];	/* prefs filename*/
   char		*(infield_name[MAXINFIELD]);/* Filename(s) of input images */
   int		ninfield;		/* Number of input images */
   char		*(inwfield_name[MAXINFIELD]);/* Filename(s) of input weights */
@@ -84,9 +91,7 @@ typedef struct
   
 /* Output image coordinates */
   char		projection_name[MAXCHAR];/* Projection WCS code */
-  enum {CELSYS_NATIVE, CELSYS_PIXEL, CELSYS_EQUATORIAL, CELSYS_GALACTIC, \
-	CELSYS_ECLIPTIC, CELSYS_SUPERGALACTIC}
-		celsys_type		;/* Celestial system type */
+  celsysenum	celsys_type;		/* Celestial system type */
   enum {CENTER_MANUAL, CENTER_ALL, CENTER_MOST}
 		center_type[INTERP_MAXDIM];/* Centering type */
   int		ncenter_type;		/* nb of params */

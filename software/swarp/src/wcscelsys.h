@@ -9,15 +9,17 @@
 *
 *	Contents:	Include file for fitswcs.c
 *
-*	Last modify:	18/07/2006
+*	Last modify:	21/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
 
 /*-------------------------------- constants --------------------------------*/
 
-/* equatorial coordinates of origin and pole and rotation sign of equatorial,*/
-/* galactic, and ecliptic reference frames, from Allen Ast. Quant., 4th ed. */
+/* Equatorial coordinates of origin and pole and rotation sign of equatorial,*/
+/* galactic, ecliptic and supergalactic reference frames, from Allen Astron. */
+/* Quantities, 4th ed. */
+
 char	celsysname[][2][8] = {  {"RA--", "DEC-"},
 				{"GLON", "GLAT"},
 				{"ELON", "ELAT"},

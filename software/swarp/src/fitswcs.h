@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for fitswcs.c
 *
-*	Last modify:	17/07/2006
+*	Last modify:	21/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -37,6 +37,11 @@
 #define		WCS_INVMAXDEG	9	/* Maximum inversion polynom degree */
 #define		WCS_INVACCURACY	0.04	/* Maximum inversion error (pixels) */
 #define		WCS_NRANGEPOINTS 32	/* Number of WCS range points / axis */
+
+/*-------------------------------- typedefs ---------------------------------*/
+
+typedef  enum {CELSYS_NATIVE, CELSYS_PIXEL, CELSYS_EQUATORIAL, CELSYS_GALACTIC,
+	CELSYS_ECLIPTIC, CELSYS_SUPERGALACTIC}	celsysenum;
 
 /*------------------------------- structures --------------------------------*/
 
@@ -73,8 +78,7 @@ typedef struct wcs
   double	epoch;			/* Epoch of observations (deprec.) */
   enum {RDSYS_ICRS, RDSYS_FK5, RDSYS_FK4, RDSYS_FK4_NO_E, RDSYS_GAPPT}
 		radecsys;		/* FITS RADECSYS reference frame */
-  enum	celsys {CSYS_EQU, CSYS_GAL, CSYS_ECL}
-		celsys;			/* Celestial coordinate system */
+  celsysenum	celsys;			/* Celestial coordinate system */
   double	celsysmat[4];		/* Equ. <=> Cel. system parameters */
   int		celsysconvflag;		/* Equ. <=> Cel. conversion needed? */
   struct wcsprm	*wcsprm;		/* WCSLIB's wcsprm structure */
