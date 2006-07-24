@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	21/07/2006
+*	Last modify:	24/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -240,7 +240,7 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	21/07/2006
+VERSION	24/07/2006
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
@@ -369,6 +369,10 @@ int	write_xml_meta(FILE *file, char *error)
 	" ucd=\"instr.skyLevel;obs.image;stat.median\" unit=\"ct\"/>\n");
   fprintf(file, "   <FIELD name=\"Background_StDev\" datatype=\"float\""
 	" ucd=\"stat.stdev;obs.image;stat.median\" unit=\"ct\"/>\n");
+  fprintf(file, "   <FIELD name=\"Weight_Type\" datatype=\"char\""
+	" arraysize=\"*\" ucd=\"stat.weight;meta.code\"/>\n");
+  fprintf(file, "   <FIELD name=\"Weight_Thresh\" datatype=\"float\""
+	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.param\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Scaling\" datatype=\"float\""
 	" ucd=\"arith.factor;obs.image;stat.median\"/>\n");
   fprintf(file, "   <FIELD name=\"Gain\" datatype=\"float\""
@@ -391,8 +395,8 @@ int	write_xml_meta(FILE *file, char *error)
     fprintf(file, "    <TR>\n"
 	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%s</TD>\n"
 	"      <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>\n"
-	"      <TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD>"
-	"<TD>%g</TD>\n      ",
+	"      <TD>%g</TD><TD>%g</TD><TD>%s</TD><TD>%g</TD><TD>%g</TD>"
+		"<TD>%g</TD><TD>%g</TD><TD>%g</TD>\n      ",
 	n+1,
 	xmlstack[n].image_name,
 	xmlstack[n].weight_name,
@@ -403,6 +407,9 @@ int	write_xml_meta(FILE *file, char *error)
 	xmlstack[n].ext_elapsed,
 	xmlstack[n].backmean,
 	xmlstack[n].backsig,
+    	key[findkeys("WEIGHT_TYPE", keylist,
+		FIND_STRICT)].keylist[prefs.weight_type[x->frameno]),
+	prefs.weight_thresh[x->frameno],
 	xmlstack[n].sigfac,
 	xmlstack[n].gain,
 	xmlstack[n].fscale,
@@ -410,7 +417,7 @@ int	write_xml_meta(FILE *file, char *error)
     for (d=0; d<naxis; d++)
       fprintf(file, "<TD>%15.10g</TD>", xmlstack[n].centerpos[d]);
     fprintf(file, "<TD>%g</TD><TD>%g</TD>\n",
-	xmlstack[n].pixscale, xmlstack.epoch);
+	xmlstack[n].pixscale, xmlstack[n].epoch);
     }
   fprintf(file, "   </TABLEDATA></DATA>\n");
   fprintf(file, "  </TABLE>\n");
@@ -451,10 +458,97 @@ int	write_xml_meta(FILE *file, char *error)
   if (!error)
     {
     fprintf(file,
-	"   <PARAM name=\"Catalog_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta\" value=\"%s\"/>\n",
-    	key[findkeys("CATALOG_TYPE",keylist,
-			FIND_STRICT)].keylist[prefs.cat_type]);
+	"   <PARAM name=\"ImageOut_Name\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.dataset;meta.file\" value=\"%s\"/>\n",
+	prefs.outfield_name);
+    fprintf(file,
+	"   <PARAM name=\"WeightOut_Name\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.dataset;meta.file\" value=\"%s\"/>\n",
+	prefs.outwfield_name);
+
+    fprintf(file,
+	"   <PARAM name=\"Header_Only\" datatype=\"boolean\""
+	" ucd=\"meta.code;obs.param\" value=\"%c\"/>\n",
+    	prefs.headeronly_flag? 'T':'F');
+    fprintf(file,
+	"   <PARAM name=\"Header_Suffix\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.dataset;meta.file\" value=\"%s\"/>\n",
+	prefs.header_suffix);
+
+    fprintf(file,
+	"   <PARAM name=\"Weight_Suffix\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.dataset;meta.file\" value=\"%s\"/>\n",
+	prefs.weight_suffix);
+    fprintf(file,
+	"   <PARAM name=\"Combine\" datatype=\"boolean\""
+	" ucd=\"meta\" value=\"%c\"/>\n",
+    	prefs.combine_flag? 'T':'F');
+    fprintf(file,
+	"   <PARAM name=\"Combine_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;obs.param\" value=\"%s\"/>\n",
+    	key[findkeys("COMBINE_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.coadd_type]);
+    fprintf(file,
+	"   <PARAM name=\"Celestial_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta;pos;obs.param\" value=\"%s\"/>\n",
+    	key[findkeys("CELESTIAL_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.celsys_type]);
+    fprintf(file,
+	"   <PARAM name=\"Projection_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta;pos;obs.param\" value=\"%s\"/>\n",
+    	prefs.projection_name);
+
+    fprintf(file, "   <PARAM name=\"Projection_Err\" datatype=\"float\""
+	" arraysize=\"%d\" ucd=\"pos.angDistance;stat.max;obs.param\""
+	" value=\"%g",
+	prefs.proj_err[1] != prefs.proj_err[0]? 2:1, prefs.proj_err[0]);
+    if (prefs.proj_err[1] != prefs.proj_err[0])
+      fprintf(file, " %g", prefs.proj_err[1]);
+    fprintf(file, "\"/>\n");
+
+    fprintf(file,
+	"   <PARAM name=\"Center_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;pos;obs.param\" value=\"%s",
+	key[findkeys("CENTER_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.center_type[0]]););
+    if (prefs.center_type[1] != prefs.center_type[0])
+      fprintf(file, ",%s",
+    	key[findkeys("CENTER_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.center_type[1]]);
+    fprintf(file, "\"/>\n");
+
+    fprintf(file,
+	"   <PARAM name=\"Center\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"pos;obs.param\" value=\"%s,%s\"/>\n",
+	prefs.image_center[0], pref.image_center[1]);
+
+    fprintf(file,
+	"   <PARAM name=\"PixelScale_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;pos;obs.param\" value=\"%s",
+	key[findkeys("PIXELSCALE_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.pixscale_type[0]]););
+    if (prefs.pixscale_type[1] != prefs.pixscale_type[0])
+      fprintf(file, ",%s",
+    	key[findkeys("PIXELSCALE_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.pixscale_type[1]]);
+    fprintf(file, "\"/>\n");
+
+    fprintf(file, "   <PARAM name=\"Pixel_Scale\" datatype=\"float\""
+	" arraysize=\"%d\" ucd=\"instr.scale;instr.pixel;obs.param\""
+	" value=\"%g",
+	prefs.pixscale[1] != prefs.pixscale[0]? 2:1, prefs.pixscale[0]);
+    if (prefs.pixscale[1] != prefs.pixscale[0])
+      fprintf(file, " %g", prefs.pixscale[1]);
+    fprintf(file, "\"/>\n");
+
+    fprintf(file, "   <PARAM name=\"Image_Size\" datatype=\"int\""
+	" arraysize=\"%d\" ucd=\"instr.scale;instr.pixel;obs.param\""
+	" value=\"%g",
+	prefs.image_size[1] != prefs.image_size[0]? 2:1, prefs.image_size[0]);
+    if (prefs.image_size[1] != prefs.image_size[0])
+      fprintf(file, " %g", prefs.image_size[1]);
+    fprintf(file, "\"/>\n");
+
     fprintf(file,
 	"   <PARAM name=\"Catalog_Name\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.dataset;meta.file\" value=\"%s\"/>\n",
