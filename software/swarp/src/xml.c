@@ -83,9 +83,9 @@ PURPOSE	Update a set of meta-data kept in memory before being written to the
 	XML file
 INPUT	-.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
-NOTES	-.
+NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	21/07/2006
+VERSION	24/07/2006
  ***/
 int	update_xml(fieldstruct *field, fieldstruct *wfield)
   {
@@ -240,7 +240,7 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	24/07/2006
+VERSION	25/07/2006
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
@@ -339,17 +339,17 @@ int	write_xml_meta(FILE *file, char *error)
   fprintf(file, "  <TABLE ID=\"Input_Image_Data\" name=\"Input_Image_Data\">\n");
   fprintf(file, "   <DESCRIPTION>Data gathered by %s for every FITS"
 	" input image</DESCRIPTION>\n", BANNER);
-  fprintf(file, "   <!-- NExtensions may be 0"
+  fprintf(file, "   <!-- NFrames may be 0"
 	" if an error occurred early in the processing -->\n");
-  fprintf(file, "   <PARAM name=\"NExtensions\" datatype=\"int\""
+  fprintf(file, "   <PARAM name=\"NFrames\" datatype=\"int\""
 	" ucd=\"meta.number;meta.dataset\" value=\"%d\"/>\n",
-	nxmlmax>0? nxmlmax-1 : 0);
-  fprintf(file, "   <!-- CurrExtension may differ from NExtensions"
+	nxmlmax);
+  fprintf(file, "   <!-- CurrFrame may differ from NFrames"
 	" if an error occurred -->\n");
-  fprintf(file, "   <PARAM name=\"CurrExtension\" datatype=\"int\""
+  fprintf(file, "   <PARAM name=\"CurrFrame\" datatype=\"int\""
 	" ucd=\"meta.number;meta.dataset\" value=\"%d\"/>\n",
-	nxml>0? nxml-1 : 0);
-  fprintf(file, "   <FIELD name=\"ExtensionIndex\" datatype=\"int\""
+	nxml);
+  fprintf(file, "   <FIELD name=\"Frame_Index\" datatype=\"int\""
         " ucd=\"meta.record\"/>\n");
   fprintf(file, "   <FIELD name=\"Image_Name\" datatype=\"*\""
 	" ucd=\"obs.image;meta.fits\"/>\n");
@@ -364,60 +364,81 @@ int	write_xml_meta(FILE *file, char *error)
   fprintf(file, "   <FIELD name=\"Time\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.record;time.event.end\"/>\n");
   fprintf(file, "   <FIELD name=\"Duration\" datatype=\"float\""
-	" ucd=\"meta.record;time.event.end\"/>\n");
+	" ucd=\"meta.record;time.event.end\" unit=\"s\"/>\n");
   fprintf(file, "   <FIELD name=\"Background_Mean\" datatype=\"float\""
-	" ucd=\"instr.skyLevel;obs.image;stat.median\" unit=\"ct\"/>\n");
+	" ucd=\"instr.skyLevel;obs.image;stat.median\" unit=\"adu\"/>\n");
   fprintf(file, "   <FIELD name=\"Background_StDev\" datatype=\"float\""
-	" ucd=\"stat.stdev;obs.image;stat.median\" unit=\"ct\"/>\n");
+	" ucd=\"stat.stdev;obs.image;stat.median\" unit=\"adu\"/>\n");
+  fprintf(file, "   <FIELD name=\"Subtract_Back\" datatype=\"boolean\""
+	" ucd=\"meta.code;obs.param\"/>\n");
+  fprintf(file, "   <FIELD name=\"Back_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;obs.param\"/>\n");
+  fprintf(file, "   <FIELD name=\"Back_Size\" datatype=\"int\""
+	" ucd=\"obs.param\" unit=\"pix\"/>\n");
+  fprintf(file, "   <FIELD name=\"Back_FilterSize\" datatype=\"int\""
+	" ucd=\"obs.param\" unit=\"pix\"/>\n");
+  fprintf(file, "   <FIELD name=\"Back_Default\" datatype=\"float\""
+	" ucd=\"obs.param\" unit=\"adu\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Type\" datatype=\"char\""
 	" arraysize=\"*\" ucd=\"stat.weight;meta.code\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Thresh\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.param\"/>\n");
+	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.param\" unit=\"adu\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Scaling\" datatype=\"float\""
 	" ucd=\"arith.factor;obs.image;stat.median\"/>\n");
   fprintf(file, "   <FIELD name=\"Gain\" datatype=\"float\""
-	" ucd=\"instr.calib;obs.image\"/>\n");
+	" ucd=\"instr.calib;obs.image\" unit=\"photon/adu\"/>\n");
   fprintf(file, "   <FIELD name=\"Photometric_Flux_Scaling\" datatype=\"float\""
 	" ucd=\"phot.calib;obs.image\"/>\n");
   fprintf(file, "   <FIELD name=\"Astrometric_Flux_Scaling\" datatype=\"float\""
 	" ucd=\"phot.calib;obs.image\"/>\n");
-  fprintf(file, "   <FIELD name=\"Field_Coordinates\" datatype=\"float\""
+  fprintf(file, "   <FIELD name=\"Field_Coordinates\" datatype=\"double\""
 	" arraysize=\"%d\" ucd=\"phot.eq;obs.image\" unit=\"%s\"/>\n",
 	naxis, nxml? (xmlstack[0].celsys >=0? "deg":"pix") : "deg");
   fprintf(file, "   <FIELD name=\"Pixel_Scale\" datatype=\"float\""
 	" ucd=\"instr.scale;obs.image;stat.mean\" unit=\"arcsec\"/>\n");
-  fprintf(file, "   <FIELD name=\"Epoch\" datatype=\"float\""
+  fprintf(file, "   <FIELD name=\"Epoch\" datatype=\"double\""
 	" ucd=\"time.epoch;obs\" unit=\"yr\"/>\n",
 	prefs.nimage_name);
   fprintf(file, "   <DATA><TABLEDATA>\n");
-  for (n=1; n<=nxml; n++)
+  for (n=0; n<nxml; n++)
     {
+    x = &xmlstack[n];
+    f = x->frameno;
     fprintf(file, "    <TR>\n"
 	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%s</TD>\n"
 	"      <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>\n"
-	"      <TD>%g</TD><TD>%g</TD><TD>%s</TD><TD>%g</TD><TD>%g</TD>"
-		"<TD>%g</TD><TD>%g</TD><TD>%g</TD>\n      ",
+	"      <TD>%g</TD><TD>%g</TD><TD>%c</TD><TD>%s</TD>"
+	"<TD>%d</TD><TD>%d</TD><TD>%g</TD>\n"
+	"      <TD>%s</TD><TD>%g</TD><TD>%c</TD>\n"
+	"      <TD>%g</TD><TD>%g</TD><TD>%g</TD>\n      ",
 	n+1,
-	xmlstack[n].image_name,
-	xmlstack[n].weight_name,
-	xmlstack[n].ident,
-	xmlstack[n].extension,
-	xmlstack[n].ext_date,
-	xmlstack[n].ext_time,
-	xmlstack[n].ext_elapsed,
-	xmlstack[n].backmean,
-	xmlstack[n].backsig,
+	x->image_name,
+	x->weight_name,
+	x->ident,
+	x->extension,
+	x->ext_date,
+	x->ext_time,
+	x->ext_elapsed,
+	x->backmean,
+	x->backsig,
+        prefs.subback_flag[f]? 'T' : 'F',
+    	key[findkeys("BACK_TYPE",keylist,
+		FIND_STRICT)].keylist[prefs.back_type[f]]),
+        prefs.back_size[f],
+        prefs.back_fsize[f];
+        prefs.back_default[f];
     	key[findkeys("WEIGHT_TYPE", keylist,
-		FIND_STRICT)].keylist[prefs.weight_type[x->frameno]),
-	prefs.weight_thresh[x->frameno],
-	xmlstack[n].sigfac,
-	xmlstack[n].gain,
-	xmlstack[n].fscale,
-	xmlstack[n].fascale);
+		FIND_STRICT)].keylist[prefs.weight_type[f]),
+	prefs.weight_thresh[f],
+	x->sigfac,
+        prefs.interp_type[f],
+	x->gain,
+	x->fscale,
+	x->fascale);
     for (d=0; d<naxis; d++)
-      fprintf(file, "<TD>%15.10g</TD>", xmlstack[n].centerpos[d]);
+      fprintf(file, "<TD>%15.10g</TD>", x->centerpos[d]);
     fprintf(file, "<TD>%g</TD><TD>%g</TD>\n",
-	xmlstack[n].pixscale, xmlstack[n].epoch);
+	x->pixscale, x->epoch);
     }
   fprintf(file, "   </TABLEDATA></DATA>\n");
   fprintf(file, "  </TABLE>\n");
@@ -481,7 +502,7 @@ int	write_xml_meta(FILE *file, char *error)
 	prefs.weight_suffix);
     fprintf(file,
 	"   <PARAM name=\"Combine\" datatype=\"boolean\""
-	" ucd=\"meta\" value=\"%c\"/>\n",
+	" ucd=\"meta.code\" value=\"%c\"/>\n",
     	prefs.combine_flag? 'T':'F');
     fprintf(file,
 	"   <PARAM name=\"Combine_Type\" datatype=\"char\" arraysize=\"*\""
@@ -504,7 +525,7 @@ int	write_xml_meta(FILE *file, char *error)
 	prefs.proj_err[1] != prefs.proj_err[0]? 2:1, prefs.proj_err[0]);
     if (prefs.proj_err[1] != prefs.proj_err[0])
       fprintf(file, " %g", prefs.proj_err[1]);
-    fprintf(file, "\"/>\n");
+    fprintf(file, "\" unit=\"pix\"/>\n");
 
     fprintf(file,
 	"   <PARAM name=\"Center_Type\" datatype=\"char\" arraysize=\"*\""
@@ -518,9 +539,12 @@ int	write_xml_meta(FILE *file, char *error)
     fprintf(file, "\"/>\n");
 
     fprintf(file,
-	"   <PARAM name=\"Center\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"pos;obs.param\" value=\"%s,%s\"/>\n",
-	prefs.image_center[0], pref.image_center[1]);
+	"   <PARAM name=\"Center\" datatype=\"double\" arraysize=\"2\""
+	" ucd=\"pos;obs.param\" value=\"%g %g\" unit=\"%s\"/>\n",
+	strchr(prefs.image_center[0], ':') ?
+		sextodegal(prefs.image_center[0]) : atof(prefs.image_center[0]),
+	strchr(prefs.image_center[1], ':') ?
+		sextodegde(prefs.image_center[1]) : atof(prefs.image_center[1]));
 
     fprintf(file,
 	"   <PARAM name=\"PixelScale_Type\" datatype=\"char\" arraysize=\"*\""
@@ -550,324 +574,125 @@ int	write_xml_meta(FILE *file, char *error)
     fprintf(file, "\"/>\n");
 
     fprintf(file,
-	"   <PARAM name=\"Catalog_Name\" datatype=\"char\" arraysize=\"*\""
+	"   <PARAM name=\"Resample\" datatype=\"boolean\""
+	" ucd=\"meta.code\" value=\"%c\"/>\n",
+    	prefs.resample_flag? 'T':'F');
+    fprintf(file,
+	"   <PARAM name=\"Resample_Dir\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.dataset\" value=\"%s\"/>\n",
+	prefs.resampdir_name);
+    fprintf(file,
+	"   <PARAM name=\"Resample_Suffix\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.dataset;meta.file\" value=\"%s\"/>\n",
-	prefs.cat_name);
-    fprintf(file,
-	"   <PARAM name=\"Parameters_Name\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"obs.param;meta.file\" value=\"%s\"/>\n",
-	prefs.param_name);
-    fprintf(file,
-	"   <PARAM name=\"Detect_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;instr.det;obs.param\" value=\"%s\"/>\n",
-    	key[findkeys("DETECT_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.detect_type]);
-    fprintf(file, "   <PARAM name=\"Detect_MinArea\" datatype=\"int\""
-	" ucd=\"phys.area;obs.param\" value=\"%d\" unit=\"pix2\"/>\n",
-    	prefs.ext_minarea);
+	prefs.resamp_suffix);
 
     fprintf(file,
-	"   <PARAM name=\"Thresh_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;instr.sensitivity;obs.param\" value=\"%s",
-    	key[findkeys("THRESH_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.thresh_type[0]]);
-    if (prefs.nthresh_type>1)
-      fprintf(file, ",%s", key[findkeys("THRESH_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.thresh_type[1]]);
+	"   <PARAM name=\"Resampling_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;pos;obs.param\" value=\"%s",
+	key[findkeys("RESAMPLING_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.resamp_type[0]]););
+    if (prefs.resamp_type[1] != prefs.resamp_type[0])
+      fprintf(file, ",%s",
+    	key[findkeys("RESAMPLING_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.resamp_type[1]]);
     fprintf(file, "\"/>\n");
 
-    fprintf(file, "   <PARAM name=\"Detect_Thresh\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.param\" value=\"%g",
-	prefs.ndthresh, prefs.dthresh[0]);
-    if (prefs.ndthresh>1)
-      fprintf(file, " %g", prefs.dthresh[1]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file, "   <PARAM name=\"Analysis_Thresh\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.param\" value=\"%g",
-	prefs.nthresh, prefs.thresh[0]);
-    if (prefs.nthresh>1)
-      fprintf(file, " %g", prefs.thresh[1]);
+    fprintf(file, "   <PARAM name=\"Oversampling\" datatype=\"int\""
+	" arraysize=\"%d\" ucd=\"arith.factor;instr.pixel;obs.param\""
+	" value=\"%g",
+	prefs.oversamp[1] != prefs.oversamp[0]? 2:1, prefs.oversamp[0]);
+    if (prefs.oversamp[1] != prefs.oversamp[0])
+      fprintf(file, " %g", prefs.oversamp[1]);
     fprintf(file, "\"/>\n");
 
     fprintf(file,
-	"   <PARAM name=\"Filter\" datatype=\"boolean\""
-	" ucd=\"meta.code;obs.param\" value=\"%c\"/>\n",
-    	prefs.filter_flag? 'T':'F');
+	"   <PARAM name=\"FScalAstro_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"phot.calib;obs.param\" value=\"%s\"/>\n",
+    	key[findkeys("FSCALASTRO_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.fscalastro_type]);
     fprintf(file,
-	"   <PARAM name=\"Filter_Name\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.dataset;meta.file;obs.param\" value=\"%s\"/>\n",
-	prefs.filter_name);
+	"   <PARAM name=\"FScale_Keyword\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;phot.calib;obs.param\" value=\"%s\"/>\n",
+	prefs.fscale_keyword);
 
-    if (prefs.nfilter_thresh)
-      {
-      fprintf(file, "   <PARAM name=\"Filter_Thresh\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.param\" value=\"%g",
-	prefs.nfilter_thresh, prefs.filter_thresh[0]);
-      if (prefs.nfilter_thresh>1)
-        fprintf(file, " %g", prefs.filter_thresh[1]);
-      fprintf(file, "\"/>\n");
-      }
-
-    fprintf(file, "   <PARAM name=\"Deblend_NThresh\" datatype=\"int\""
-	" ucd=\"meta.number;obs.param\" value=\"%d\"/>\n",
-    	prefs.deblend_nthresh);
-    fprintf(file, "   <PARAM name=\"Deblend_MinCont\" datatype=\"float\""
-	" ucd=\"obs.param;arith.ratio\" value=\"%g\"/>\n",
-    	prefs.deblend_mincont);
-    fprintf(file,
-	"   <PARAM name=\"Clean\" datatype=\"boolean\""
-	" ucd=\"meta.code;obs.param\" value=\"%c\"/>\n",
-    	prefs.clean_flag? 'T':'F');
-    fprintf(file, "   <PARAM name=\"Clean_Param\" datatype=\"float\""
-	" ucd=\"meta\" value=\"%g\"/>\n",
-    	prefs.clean_param);
-    fprintf(file,
-	"   <PARAM name=\"Mask_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;obs.param;\" value=\"%s\"/>\n",
-    	key[findkeys("MASK_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.mask_type]);
-
-    fprintf(file,
-	"   <PARAM name=\"Weight_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;obs.param\" value=\"%s",
-    	key[findkeys("WEIGHT_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.weight_type[0]]);
-    if (prefs.nweight_type>1)
-      fprintf(file, ",%s", key[findkeys("WEIGHT_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.weight_type[1]]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file, "   <PARAM name=\"Weight_Thresh\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.param\" value=\"%g",
-	prefs.nweight_thresh, prefs.weight_thresh[0]);
-    if (prefs.nweight_thresh>1)
-      fprintf(file, " %g", prefs.weight_thresh[1]);
-    fprintf(file, "\"/>\n");
-
-    if ((prefs.weight_type[0] != WEIGHT_NONE
-		&& prefs.weight_type[0] != WEIGHT_FROMBACK)
-	|| (prefs.weight_type[1] != WEIGHT_NONE
-		&& prefs.weight_type[1] != WEIGHT_FROMBACK))
-      {
-      fprintf(file,
-	"   <PARAM name=\"Weight_Image\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"obs.image;meta.fits;obs.param\" value=\"%s",
-    	(prefs.weight_type[0] != WEIGHT_NONE
-	&& prefs.weight_type[0] != WEIGHT_FROMBACK) ?
-		prefs.wimage_name[0] : NULL);
-      if (prefs.weight_type[1] != WEIGHT_NONE
-		&& prefs.weight_type[1] != WEIGHT_FROMBACK)
-        fprintf(file, ",%s", prefs.wimage_name[1]);
-      fprintf(file, "\"/>\n");
-      }
-
-    fprintf(file,
-	"   <PARAM name=\"Weight_Gain\" datatype=\"boolean\""
-	" ucd=\"meta.code;obs.param\" value=\"%c\"/>\n",
-    	prefs.weightgain_flag? 'T':'F');
-
-    if (prefs.nimaflag)
-      {
-      fprintf(file,
-	"   <PARAM name=\"Flag_Image\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"obs.image;meta.fits\" value=\"%s",
-    	prefs.fimage_name[0]);
-      for (n=1; n<prefs.nimaflag; n++)
-        fprintf(file, ",%s", prefs.fimage_name[n]);
-      fprintf(file, "\"/>\n");
-      fprintf(file,
-	"   <PARAM name=\"Flag_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code\" value=\"%s",
-    	key[findkeys("FLAG_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.flag_type[0]]);
-      for (n=1; n<prefs.nimaflag; n++)
-        fprintf(file, ",%s", key[findkeys("FLAG_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.flag_type[n]]);
-      fprintf(file, "\"/>\n");
-      }
-
-    fprintf(file, "   <PARAM name=\"Phot_Apertures\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"obs.param\" value=\"%g",
-	prefs.naper, prefs.apert[0]);
-    for (n=1; n<prefs.naper; n++)
-      fprintf(file, " %g", prefs.apert[n]);
-    fprintf(file, "\" unit=\"pix\"/>\n");
-
-    fprintf(file, "   <PARAM name=\"Phot_AutoParams\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"obs.param;phot\" value=\"%g",
-	prefs.nautoparam, prefs.autoparam[0]);
-    for (n=1; n<prefs.nautoparam; n++)
-      fprintf(file, " %g", prefs.autoparam[n]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file, "   <PARAM name=\"Phot_PetroParams\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"obs.param;phot\" value=\"%g",
-	prefs.npetroparam, prefs.petroparam[0]);
-    for (n=1; n<prefs.npetroparam; n++)
-      fprintf(file, " %g", prefs.petroparam[n]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file, "   <PARAM name=\"Phot_AutoApers\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"obs.param;phot\" value=\"%g",
-	prefs.nautoaper, prefs.autoaper[0]);
-    for (n=1; n<prefs.nautoaper; n++)
-      fprintf(file, " %g", prefs.autoaper[n]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file, "   <PARAM name=\"Phot_FluxFrac\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"arith.factor;obs.param;phot\" value=\"%g",
-	prefs.nflux_frac, prefs.flux_frac[0]);
-    for (n=1; n<prefs.nflux_frac; n++)
-      fprintf(file, " %g", prefs.flux_frac[n]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file, "   <PARAM name=\"Satur_Level\" datatype=\"float\""
-	" ucd=\"instr.saturation;phot.count;obs.param\" value=\"%g\""
-	" unit=\"ct\"/>\n", prefs.satur_level);
-    fprintf(file, "   <PARAM name=\"Mag_ZeroPoint\" datatype=\"float\""
-	" ucd=\"phot.calib;phot.mag;obs.param\" value=\"%g\" unit=\"mag\"/>\n",
-    	prefs.mag_zeropoint);
-    fprintf(file, "   <PARAM name=\"Mag_Gamma\" datatype=\"float\""
+    fprintf(file, "   <PARAM name=\"FScale_Default\" datatype=\"float\""
 	" ucd=\"phot.calib;obs.param\" value=\"%g\"/>\n",
-    	prefs.mag_gamma);
-    fprintf(file, "   <PARAM name=\"Gain\" datatype=\"float\""
-	" ucd=\"instr.param;obs.param\" value=\"%g\"/>\n",
-    	prefs.gain);
-    fprintf(file, "   <PARAM name=\"Pixel_Scale\" datatype=\"float\""
-	" ucd=\"instr.scale;obs.param\" value=\"%g\" unit=\"arcsec\"/>\n",
-    	prefs.pixel_scale);
-    fprintf(file, "   <PARAM name=\"Seeing_FWHM\" datatype=\"float\""
-	" ucd=\"instr.det.psf;stat.mean;obs.param\" value=\"%g\""
-	" unit=\"pix\"/>\n", prefs.seeing_fwhm);
-    fprintf(file,
-	"   <PARAM name=\"StarNNW_Name\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.dataset;meta.file;obs.param\" value=\"%s\"/>\n",
-	prefs.nnw_name);
+	prefs.fscale_default[0]);
 
+    fprintf(file,
+	"   <PARAM name=\"Gain_Keyword\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;phot.calib;obs.param\" value=\"%s\"/>\n",
+	prefs.gain_keyword);
+
+    fprintf(file, "   <PARAM name=\"Gain_Default\" datatype=\"float\""
+	" ucd=\"phot.calib;obs.param\" value=\"%g\"/>\n",
+	prefs.gain_default[0]);
+
+    fprintf(file,
+	"   <PARAM name=\"Subtract_Back\" datatype=\"boolean\""
+	" ucd=\"meta.code\" value=\"%c\"/>\n",
+    	prefs.subtract_flag[0]? 'T':'F');
+    fprintf(file,
+	"   <PARAM name=\"Back_Type\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;obs.param\" value=\"%s\"/>\n",
+    	key[findkeys("FSCALASTRO_TYPE",keylist,
+			FIND_STRICT)].keylist[prefs.back_type[0]]);
     fprintf(file, "   <PARAM name=\"Back_Size\" datatype=\"int\""
-	" arraysize=\"%d\" ucd=\"obs.param\" value=\"%d",
-	prefs.nbacksize, prefs.backsize[0]);
-    for (n=1; n<prefs.nbacksize; n++)
-      fprintf(file, " %d", prefs.backsize[n]);
-    fprintf(file, "\" unit=\"pix\"/>\n");
-
+	" ucd=\"obs.param\" value=\"%d\"/>\n",
+	prefs.back_size[0]);
     fprintf(file, "   <PARAM name=\"Back_FilterSize\" datatype=\"int\""
-	" arraysize=\"%d\" ucd=\"obs.param\" value=\"%d",
-	prefs.nbackfsize, prefs.backfsize[0]);
-    for (n=1; n<prefs.nbackfsize; n++)
-      fprintf(file, " %d", prefs.backfsize[n]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file,
-	"   <PARAM name=\"BackPhoto_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;obs.param;\" value=\"%s\"/>\n",
-    	key[findkeys("BACKPHOTO_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.pback_type]);
-
-    fprintf(file, "   <PARAM name=\"BackPhoto_Thick\" datatype=\"int\""
-	" ucd=\"obs.param\" value=\"%d\" unit=\"pix\"/>\n",
-    	prefs.pback_size);
-
+	" ucd=\"obs.param\" value=\"%d\"/>\n",
+	prefs.back_fsize[0]);
+    fprintf(file, "   <PARAM name=\"Back_Default\" datatype=\"float\""
+	" ucd=\"obs.param\" value=\"%g\" unit=\"adu\"/>\n",
+	prefs.back_default[0]);
     fprintf(file, "   <PARAM name=\"Back_FiltThresh\" datatype=\"float\""
 	" ucd=\"phot.count;arith.ratio;obs.param\" value=\"%g\"/>\n",
-    	prefs.backfthresh);
+    	prefs.back_fthresh);
 
     fprintf(file,
-	"   <PARAM name=\"CheckImage_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code\" value=\"%s",
-    	key[findkeys("CHECKIMAGE_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.check_type[0]]);
-    for (n=1; n<prefs.ncheck_type; n++)
+	"   <PARAM name=\"VMem_Dir\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta\" value=\"%s\"/>\n",
+	prefs.swapdir_name);
+    fprintf(file,
+	"   <PARAM name=\"VMem_Max\" datatype=\"int\""
+	" ucd=\"meta.number;stat.max\" value=\"%d\" unit=\"Mbyte\"/>\n",
+	prefs.vmem_max);
+    fprintf(file,
+	"   <PARAM name=\"Mem_Max\" datatype=\"int\""
+	" ucd=\"meta.number;stat.max\" value=\"%d\" unit=\"Mbyte\"/>\n",
+	prefs.mem_max);
+    fprintf(file,
+	"   <PARAM name=\"Combine_BufSize\" datatype=\"int\""
+	" ucd=\"meta.number;stat.max\" value=\"%d\" unit=\"Mbyte\"/>\n",
+	prefs.coaddbuf_size);
+
+    fprintf(file,
+	"   <PARAM name=\"Delete_TmpFiles\" datatype=\"boolean\""
+	" ucd=\"meta.code\" value=\"%c\"/>\n",
+    	prefs.resample_flag? 'T':'F');
+
+    if (prefs.ncopy_keywords)
+      {
       fprintf(file,
-	",%s",
-    	key[findkeys("CHECKIMAGE_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.check_type[n]]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file,
-	"   <PARAM name=\"CheckImage_Name\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.file\" value=\"%s",
-    	prefs.check_name[0]);
-    for (n=1; n<prefs.ncheck_type; n++)
-      if (prefs.check_type[n] != CHECK_NONE)
-        fprintf(file, ",%s", prefs.check_name[n]);
-    fprintf(file, "\"/>\n");
-
-    fprintf(file, "   <PARAM name=\"Memory_ObjStack\" datatype=\"int\""
-	" ucd=\"meta.number;src;obs.param\" value=\"%d\"/>\n",
-    	prefs.clean_stacksize);
-    fprintf(file, "   <PARAM name=\"Memory_PixStack\" datatype=\"int\""
-	" ucd=\"meta.number;obs.param\" value=\"%d\"/>\n",
-    	prefs.mem_pixstack);
-    fprintf(file, "   <PARAM name=\"Memory_BufSize\" datatype=\"int\""
-	" ucd=\"meta.number;obs.param\" value=\"%d\"/>\n",
-    	prefs.mem_bufsize);
-
-    fprintf(file,
-	"   <PARAM name=\"Assoc_Name\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.dataset;meta.file\" value=\"%s\"/>\n",
-	prefs.assoc_name);
-    if (prefs.nassoc_data)
-      {
-      fprintf(file, "   <PARAM name=\"Assoc_Data\" datatype=\"int\""
-	" arraysize=\"%d\" ucd=\"meta.code;obs.param\" value=\"%d",
-	prefs.nassoc_data, prefs.assoc_data[0]);
-      for (n=1; n<prefs.nassoc_data; n++)
-        fprintf(file, " %d", prefs.assoc_data[n]);
+	"   <PARAM name=\"Copy_Keywords\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta;meta.fits\" value=\"%s",
+    	prefs.copy_keywords[0]);
+      for (n=1; n<prefs.ncopy_keywords; n++)
+        fprintf(file, ",%s", prefs.copy_keywords[n]);
       fprintf(file, "\"/>\n");
       }
-    if (prefs.nassoc_param)
-      {
-      fprintf(file, "   <PARAM name=\"Assoc_Params\" datatype=\"int\""
-	" arraysize=\"%d\" ucd=\"meta.code;obs.param\" value=\"%d",
-	prefs.nassoc_param, prefs.assoc_param[0]);
-      for (n=1; n<prefs.nassoc_param; n++)
-        fprintf(file, " %d", prefs.assoc_param[n]);
-      fprintf(file, "\"/>\n");
-      }
-    fprintf(file, "   <PARAM name=\"Assoc_Radius\" datatype=\"float\""
-	" ucd=\"phys.size.radius;obs.param\" value=\"%g\" unit=\"pix\"/>\n",
-    	prefs.assoc_radius);
+
     fprintf(file,
-	"   <PARAM name=\"Assoc_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;obs.param\" value=\"%s\"/>\n",
-    	key[findkeys("ASSOC_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.assoc_type]);
-    fprintf(file,
-	"   <PARAM name=\"AssocSelec_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;obs.param\" value=\"%s\"/>\n",
-    	key[findkeys("ASSOCSELEC_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.assocselec_type]);
+	"   <PARAM name=\"Write_FileInfo\" datatype=\"boolean\""
+	" ucd=\"meta.code\" value=\"%c\"/>\n",
+    	prefs.writefileinfo_flag? 'T':'F');
 
     fprintf(file,
 	"   <PARAM name=\"Verbose_Type\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.code\" value=\"%s\"/>\n",
     	key[findkeys("VERBOSE_TYPE", keylist,
 			FIND_STRICT)].keylist[prefs.verbose_type]);
-
-    fprintf(file,
-	"   <PARAM name=\"FITS_Unsigned\" datatype=\"boolean\""
-	" ucd=\"meta.code;obs.param\" value=\"%c\"/>\n",
-    	prefs.fitsunsigned_flag? 'T':'F');
-
-    fprintf(file,
-	"   <PARAM name=\"PSF_Name\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.dataset;meta.file;obs.param\" value=\"%s\"/>\n",
-	prefs.psf_name[0]);
-    fprintf(file, "   <PARAM name=\"PSF_NMax\" datatype=\"int\""
-	" ucd=\"meta.number;obs.param\" value=\"%d\"/>\n",
-    	prefs.psf_npsfmax);
-    fprintf(file,
-	"   <PARAM name=\"PSFDisplay_Type\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;obs.param\" value=\"%s\"/>\n",
-    	key[findkeys("PSFDISPLAY_TYPE", keylist,
-			FIND_STRICT)].keylist[prefs.psfdisplay_type]);
-
-    fprintf(file,
-	"   <PARAM name=\"SOM_Name\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.dataset;meta.file;obs.param\" value=\"%s\"/>\n",
-	prefs.som_name);
     }
 
   fprintf(file, "  </RESOURCE>\n");

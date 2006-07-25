@@ -403,7 +403,8 @@ void	useprefs(void)
 #ifdef USE_THREADS
   if (!prefs.nthreads)
     {
-/* Get the number of processors for parallel builds */
+/*-- Get the number of processors for parallel builds */
+/*-- See, e.g. http://ndevilla.free.fr/threads */
     nproc = -1;
 #if defined(_SC_NPROCESSORS_ONLN)		/* AIX, Solaris, Linux */
     nproc = (int)sysconf(_SC_NPROCESSORS_ONLN);
