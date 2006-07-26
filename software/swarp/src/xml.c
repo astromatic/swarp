@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	24/07/2006
+*	Last modify:	26/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -33,7 +33,7 @@
 #include "prefs.h"
 #include "xml.h"
 
-extern time_t		thetimet,thetimet2;	/* from makeit.c */
+extern time_t		thetime,thetime2;	/* from makeit.c */
 extern pkeystruct	key[];			/* from preflist.h */
 extern char		keylist[][32];		/* from preflist.h */
 xmlstruct		xmlref;
@@ -41,14 +41,14 @@ xmlstruct		*xmlstack = NULL;
 int			nxml=0, nxmlmax=0;
 
 /****** init_xml ************************************************************
-PROTO	int	init_xml(void)
+PROTO	int	init_xml(int next)
 PURPOSE	Initialize a set of meta-data kept in memory before being written to the
 	XML file
 INPUT	Number of image extensions.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	03/07/2006
+VERSION	26/07/2006
  ***/
 int	init_xml(int next)
   {
@@ -85,7 +85,7 @@ INPUT	-.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	24/07/2006
+VERSION	26/07/2006
  ***/
 int	update_xml(fieldstruct *field, fieldstruct *wfield)
   {
@@ -93,17 +93,17 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
    double	pixpos[NAXIS], wcspos[NAXIS];
    int		d;
 
-  if (nxml >= nxmlmax)
+  if (nxml > nxmlmax)
     error(EXIT_FAILURE,"*Internal Error*: too many extensions in XML stack","");
   x = &xmlstack[nxml++];
   x->fieldno = field->fieldno;
-  strcpy(x->imagename, field->filename); 
-  strcpy(x->weightname, wfield? wfield->filename : "(null)"); 
+  strcpy(x->image_name, field->filename); 
+  strcpy(x->weight_name, wfield? wfield->filename : "(null)"); 
   x->extension = field->frameno;
   strcpy(x->ext_date, field->sdate_end);
   strcpy(x->ext_time, field->stime_end);
   x->ext_elapsed = field->time_diff;
-  strcpy(x->ident, field->ident); 
+  strcpy(x->ident, field->ident);
   x->backmean = field->backmean;
   x->backsig = field->backsig;
   x->sigfac = field->sigfac;
@@ -112,7 +112,8 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
   x->fascale = field->fascale;
   x->pixscale = field->pixscale;
   x->epoch = field->epoch;
-  x->celsys = (int)(field->wcs->celsysconvflag? field->wcs->wcscelsys : -1);
+  x->naxis = field->wcs->naxis;
+  x->celsys = (int)(field->wcs->celsysconvflag? field->wcs->celsys : -1);
   for (d=0; d<field->wcs->naxis; d++)
     pixpos[d] = (field->wcs->naxisn[d]+1.0)/2.0;
   raw_to_wcs(field->wcs, pixpos, wcspos);
@@ -130,35 +131,30 @@ INPUT	XML file name.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	14/07/2006
+VERSION	26/07/2006
  ***/
 int	write_xml(char *filename)
   {
    FILE		*file;
+   int			pipe_flag;
 
-  if (!(file = fopen(prefs.xml_name, "w")))
+  pipe_flag = 0;
+  if (!strcmp(prefs.xml_name, "STDOUT"))
+    {
+    file = stdout;
+    pipe_flag = 1;
+    }
+  else if (!(file = fopen(prefs.xml_name, "w")))
     return RETURN_ERROR;
 
   write_xml_header(file);
-  write_vo_fields(file);
-
-  fprintf(file, "   <DATA>\n");
-  if (prefs.cat_type == FITS_LDAC || prefs.cat_type == FITS_TPX
-	|| prefs.cat_type == FITS_10)
-    fprintf(file,
-	"   <FITS extnum=\"%d\"><STREAM href=\"%s%s\" /> </FITS>",
-	prefs.cat_type == FITS_10? 1:2,
-	prefs.cat_name[0] == '/'? "file://" : "file:",
-	prefs.cat_name);
-  fprintf(file, "   </DATA>\n");
-  fprintf(file, "  </TABLE>\n");
-
   write_xml_meta(file, (char *)NULL);
 
   fprintf(file, "</RESOURCE>\n");
   fprintf(file, "</VOTABLE>\n");
 
-  fclose(file);
+  if (!pipe_flag)
+    fclose(file);
 
   return RETURN_OK;
   }
@@ -171,7 +167,7 @@ INPUT	file or stream pointer.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	14/07/2006
+VERSION	26/07/2006
  ***/
 int	write_xml_header(FILE *file)
   {
@@ -196,7 +192,7 @@ int	write_xml_header(FILE *file)
   fprintf(file, "<!-- VOTable description at "
 	"http://www.ivoa.net/Documents/latest/VOT.html -->\n");
   fprintf(file, "<RESOURCE ID=\"%s\" name=\"%s\">\n", BANNER, rfilename);
-  fprintf(file, " <DESCRIPTION>Catalog of sources extracted with %s"
+  fprintf(file, " <DESCRIPTION>Data related to %s"
 	"</DESCRIPTION>\n", BANNER);
   fprintf(file, " <INFO name=\"QUERY_STATUS\" value=\"OK\" />\n");
   switch(prefs.celsys_type)
@@ -222,11 +218,6 @@ int	write_xml_header(FILE *file)
 
   fprintf(file, " <COOSYS ID=\"J2000\" equinox=\"J2000\""
 	" epoch=\"J2000\" system=\"%s\"/>\n", sysname);
-  fprintf(file, " <TABLE ID=\"Source_List\" name=\"%s/out\">\n", rfilename);
-  fprintf(file,
-	"  <DESCRIPTION>Table of sources detected in image</DESCRIPTION>\n");
-  fprintf(file,
-	"  <!-- Now comes the definition of each %s parameter -->\n", BANNER);
 
   return RETURN_OK;
   }
@@ -240,24 +231,25 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/07/2006
+VERSION	26/07/2006
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
-   char			*pspath,*psuser, *pshost, *str;
+   xmlstruct		*x;
    struct tm		*tm;
-   int			d,n, naxis;
+   char			*pspath,*psuser, *pshost, *str;
+   int			d,f,n, naxis;
 
 /* Processing date and time if msg error present */
   if (error)
     {
-    thetimet2 = time(NULL);
-    tm = localtime(&thetimet2);
+    thetime2 = time(NULL);
+    tm = localtime(&thetime2);
     sprintf(prefs.sdate_end,"%04d-%02d-%02d",
         tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
     sprintf(prefs.stime_end,"%02d:%02d:%02d",
         tm->tm_hour, tm->tm_min, tm->tm_sec);
-    prefs.time_diff = difftime(thetimet2, thetimet);
+    prefs.time_diff = difftime(thetime2, thetime);
     }
 
 /* Username */
@@ -343,17 +335,17 @@ int	write_xml_meta(FILE *file, char *error)
 	" if an error occurred early in the processing -->\n");
   fprintf(file, "   <PARAM name=\"NFrames\" datatype=\"int\""
 	" ucd=\"meta.number;meta.dataset\" value=\"%d\"/>\n",
-	nxmlmax);
+	nxmlmax>0? nxmlmax-1 : 0);
   fprintf(file, "   <!-- CurrFrame may differ from NFrames"
 	" if an error occurred -->\n");
   fprintf(file, "   <PARAM name=\"CurrFrame\" datatype=\"int\""
 	" ucd=\"meta.number;meta.dataset\" value=\"%d\"/>\n",
-	nxml);
+	nxml>0? nxml-1 : 0);
   fprintf(file, "   <FIELD name=\"Frame_Index\" datatype=\"int\""
         " ucd=\"meta.record\"/>\n");
-  fprintf(file, "   <FIELD name=\"Image_Name\" datatype=\"*\""
+  fprintf(file, "   <FIELD name=\"Image_Name\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"obs.image;meta.fits\"/>\n");
-  fprintf(file, "   <FIELD name=\"Weight_Name\" datatype=\"*\""
+  fprintf(file, "   <FIELD name=\"Weight_Name\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"obs.image;meta.fits\"/>\n");
   fprintf(file, "   <FIELD name=\"Image_Ident\" datatype=\"char\""
 	" arraysize=\"*\" ucd=\"meta.id;obs\"/>\n");
@@ -382,7 +374,7 @@ int	write_xml_meta(FILE *file, char *error)
   fprintf(file, "   <FIELD name=\"Weight_Type\" datatype=\"char\""
 	" arraysize=\"*\" ucd=\"stat.weight;meta.code\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Thresh\" datatype=\"float\""
-	" arraysize=\"%d\" ucd=\"instr.sensitivity;obs.param\" unit=\"adu\"/>\n");
+	" ucd=\"instr.sensitivity;obs.param\" unit=\"adu\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Scaling\" datatype=\"float\""
 	" ucd=\"arith.factor;obs.image;stat.median\"/>\n");
   fprintf(file, "   <FIELD name=\"Gain\" datatype=\"float\""
@@ -397,21 +389,20 @@ int	write_xml_meta(FILE *file, char *error)
   fprintf(file, "   <FIELD name=\"Pixel_Scale\" datatype=\"float\""
 	" ucd=\"instr.scale;obs.image;stat.mean\" unit=\"arcsec\"/>\n");
   fprintf(file, "   <FIELD name=\"Epoch\" datatype=\"double\""
-	" ucd=\"time.epoch;obs\" unit=\"yr\"/>\n",
-	prefs.nimage_name);
+	" ucd=\"time.epoch;obs\" unit=\"yr\"/>\n");
   fprintf(file, "   <DATA><TABLEDATA>\n");
-  for (n=0; n<nxml; n++)
+  for (n=1; n<nxml; n++)
     {
     x = &xmlstack[n];
-    f = x->frameno;
+    f = x->fieldno;
     fprintf(file, "    <TR>\n"
 	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%s</TD>\n"
-	"      <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>\n"
-	"      <TD>%g</TD><TD>%g</TD><TD>%c</TD><TD>%s</TD>"
+	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>\n"
+	"     <TD>%g</TD><TD>%g</TD><TD>%c</TD><TD>%s</TD>"
 	"<TD>%d</TD><TD>%d</TD><TD>%g</TD>\n"
-	"      <TD>%s</TD><TD>%g</TD><TD>%c</TD>\n"
-	"      <TD>%g</TD><TD>%g</TD><TD>%g</TD>\n      ",
-	n+1,
+	"     <TD>%s</TD><TD>%g</TD><TD>%g</TD><TD>%c</TD>\n"
+	"     <TD>%g</TD><TD>%g</TD><TD>%g</TD>\n      ",
+	n,
 	x->image_name,
 	x->weight_name,
 	x->ident,
@@ -422,22 +413,22 @@ int	write_xml_meta(FILE *file, char *error)
 	x->backmean,
 	x->backsig,
         prefs.subback_flag[f]? 'T' : 'F',
-    	key[findkeys("BACK_TYPE",keylist,
-		FIND_STRICT)].keylist[prefs.back_type[f]]),
+    	key[findkeys("BACK_TYPE", keylist,
+		FIND_STRICT)].keylist[prefs.back_type[f]],
         prefs.back_size[f],
-        prefs.back_fsize[f];
-        prefs.back_default[f];
+        prefs.back_fsize[f],
+        prefs.back_default[f],
     	key[findkeys("WEIGHT_TYPE", keylist,
-		FIND_STRICT)].keylist[prefs.weight_type[f]),
+		FIND_STRICT)].keylist[prefs.weight_type[f]],
 	prefs.weight_thresh[f],
 	x->sigfac,
-        prefs.interp_type[f],
+        prefs.interp_flag[f]? 'T' : 'F',
 	x->gain,
 	x->fscale,
 	x->fascale);
     for (d=0; d<naxis; d++)
-      fprintf(file, "<TD>%15.10g</TD>", x->centerpos[d]);
-    fprintf(file, "<TD>%g</TD><TD>%g</TD>\n",
+      fprintf(file, "<TD>%.10g</TD>", x->centerpos[d]);
+    fprintf(file, "<TD>%g</TD><TD>%g</TD>\n    </TR>\n",
 	x->pixscale, x->epoch);
     }
   fprintf(file, "   </TABLEDATA></DATA>\n");
@@ -494,7 +485,7 @@ int	write_xml_meta(FILE *file, char *error)
     fprintf(file,
 	"   <PARAM name=\"Header_Suffix\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.dataset;meta.file\" value=\"%s\"/>\n",
-	prefs.header_suffix);
+	prefs.head_suffix);
 
     fprintf(file,
 	"   <PARAM name=\"Weight_Suffix\" datatype=\"char\" arraysize=\"*\""
@@ -531,7 +522,7 @@ int	write_xml_meta(FILE *file, char *error)
 	"   <PARAM name=\"Center_Type\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.code;pos;obs.param\" value=\"%s",
 	key[findkeys("CENTER_TYPE",keylist,
-			FIND_STRICT)].keylist[prefs.center_type[0]]););
+			FIND_STRICT)].keylist[prefs.center_type[0]]);
     if (prefs.center_type[1] != prefs.center_type[0])
       fprintf(file, ",%s",
     	key[findkeys("CENTER_TYPE",keylist,
@@ -540,17 +531,18 @@ int	write_xml_meta(FILE *file, char *error)
 
     fprintf(file,
 	"   <PARAM name=\"Center\" datatype=\"double\" arraysize=\"2\""
-	" ucd=\"pos;obs.param\" value=\"%g %g\" unit=\"%s\"/>\n",
-	strchr(prefs.image_center[0], ':') ?
-		sextodegal(prefs.image_center[0]) : atof(prefs.image_center[0]),
-	strchr(prefs.image_center[1], ':') ?
-		sextodegde(prefs.image_center[1]) : atof(prefs.image_center[1]));
+	" ucd=\"pos;obs.param\" value=\"%15.10g",
+	xmlstack[0].centerpos[0]);
+    for (d=1; d<naxis; d++)
+      fprintf(file, " %15.10g", xmlstack[0].centerpos[d]);
+    fprintf(file, "\" unit=\"%s\"/>\n",
+	nxml? (xmlstack[0].celsys >=0? "deg":"pix") : "deg");
 
     fprintf(file,
 	"   <PARAM name=\"PixelScale_Type\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.code;pos;obs.param\" value=\"%s",
 	key[findkeys("PIXELSCALE_TYPE",keylist,
-			FIND_STRICT)].keylist[prefs.pixscale_type[0]]););
+			FIND_STRICT)].keylist[prefs.pixscale_type[0]]);
     if (prefs.pixscale_type[1] != prefs.pixscale_type[0])
       fprintf(file, ",%s",
     	key[findkeys("PIXELSCALE_TYPE",keylist,
@@ -567,10 +559,10 @@ int	write_xml_meta(FILE *file, char *error)
 
     fprintf(file, "   <PARAM name=\"Image_Size\" datatype=\"int\""
 	" arraysize=\"%d\" ucd=\"instr.scale;instr.pixel;obs.param\""
-	" value=\"%g",
+	" value=\"%d",
 	prefs.image_size[1] != prefs.image_size[0]? 2:1, prefs.image_size[0]);
     if (prefs.image_size[1] != prefs.image_size[0])
-      fprintf(file, " %g", prefs.image_size[1]);
+      fprintf(file, " %d", prefs.image_size[1]);
     fprintf(file, "\"/>\n");
 
     fprintf(file,
@@ -590,7 +582,7 @@ int	write_xml_meta(FILE *file, char *error)
 	"   <PARAM name=\"Resampling_Type\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.code;pos;obs.param\" value=\"%s",
 	key[findkeys("RESAMPLING_TYPE",keylist,
-			FIND_STRICT)].keylist[prefs.resamp_type[0]]););
+			FIND_STRICT)].keylist[prefs.resamp_type[0]]);
     if (prefs.resamp_type[1] != prefs.resamp_type[0])
       fprintf(file, ",%s",
     	key[findkeys("RESAMPLING_TYPE",keylist,
@@ -599,10 +591,10 @@ int	write_xml_meta(FILE *file, char *error)
 
     fprintf(file, "   <PARAM name=\"Oversampling\" datatype=\"int\""
 	" arraysize=\"%d\" ucd=\"arith.factor;instr.pixel;obs.param\""
-	" value=\"%g",
+	" value=\"%d",
 	prefs.oversamp[1] != prefs.oversamp[0]? 2:1, prefs.oversamp[0]);
     if (prefs.oversamp[1] != prefs.oversamp[0])
-      fprintf(file, " %g", prefs.oversamp[1]);
+      fprintf(file, " %d", prefs.oversamp[1]);
     fprintf(file, "\"/>\n");
 
     fprintf(file,
@@ -631,7 +623,7 @@ int	write_xml_meta(FILE *file, char *error)
     fprintf(file,
 	"   <PARAM name=\"Subtract_Back\" datatype=\"boolean\""
 	" ucd=\"meta.code\" value=\"%c\"/>\n",
-    	prefs.subtract_flag[0]? 'T':'F');
+    	prefs.subback_flag[0]? 'T':'F');
     fprintf(file,
 	"   <PARAM name=\"Back_Type\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta.code;obs.param\" value=\"%s\"/>\n",
@@ -702,8 +694,6 @@ int	write_xml_meta(FILE *file, char *error)
   }
 
 
-
-
 /****** write_xmlerror ******************************************************
 PROTO	int	write_xmlerror(char *error)
 PURPOSE	Save meta-data to a simplified XML file in case of a catched error
@@ -711,25 +701,30 @@ INPUT	a character string.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	14/07/2006
+VERSION	26/07/2006
  ***/
 void	write_xmlerror(char *filename, char *error)
   {
    FILE			*file;
+   int			pipe_flag;
 
-  if (!(file = fopen(filename, "w")))
+  pipe_flag = 0;
+  if (!strcmp(filename, "STDOUT"))
+    {
+    file = stdout;
+    pipe_flag = 1;
+    }
+  else if (!(file = fopen(filename, "w")))
     return;
 
   write_xml_header(file);
-
-  fprintf(file, " </TABLE>\n");
-
   write_xml_meta(file, error);
 
   fprintf(file, "</RESOURCE>\n");
   fprintf(file, "</VOTABLE>\n");
 
-  fclose(file);
+  if (!pipe_flag)
+    fclose(file);
 
   return;
   }

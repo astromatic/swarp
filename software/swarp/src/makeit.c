@@ -9,7 +9,7 @@
 *
 *       Contents:       Main loop
 *
-*       Last modify:    20/07/2006
+*       Last modify:    26/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -41,6 +41,7 @@
 #include "header.h"
 #include "prefs.h"
 #include "resample.h"
+#include "xml.h"
 
 #ifdef HAVE_MPI
 void	control_mpi(int nnodes, int ntasks);
@@ -48,13 +49,15 @@ void	control_mpi(int nnodes, int ntasks);
 
 #define	NFIELD	128	/* Increment in the number of fields */
 
+time_t	thetime, thetime2;
+
 /********************************** makeit ***********************************/
 void	makeit(void)
   {
    fieldstruct		**infield,**inwfield, *outfield,*outwfield;
    catstruct		*cat, *wcat;
    tabstruct		*tab;
-   time_t		thetime, thetimef, thetime2;
+   time_t		thetimef; 
    struct tm		*tm;
    double		w,w1,w2, invscale;
    int		       	*list,*next;
@@ -155,6 +158,10 @@ void	makeit(void)
       free_cat(&wcat, 1);
     }
 
+/* Initialize the XML stack */
+  if (prefs.xml_flag)
+    init_xml(ntinfield+1);
+
 /* Create output image (but nothing written to disk yet) */
   outwfield = NULL;
   NFPRINTF(OUTPUT, "Creating NEW output image...")
@@ -167,9 +174,11 @@ void	makeit(void)
   printinfo_field(outfield, outwfield);
   NFPRINTF(OUTPUT, "Creating NEW weight-map...")
   outwfield = init_weight(prefs.outwfield_name, outfield);
-/*
-  update_xml(outfield, outwfield);
-*/
+
+/* The first field in the XML stack is the output field */
+  if (prefs.xml_flag)
+    update_xml(outfield, outwfield);
+
 /* HEADER_ONLY option: write the output FITS header and exit */
   if (prefs.headeronly_flag)
     {
@@ -214,9 +223,9 @@ void	makeit(void)
     for (i=0; i<ninfield; i++)
       {
 /*---- Processing start date and time */
-      thetimef = time(NULL);
       for (j=0; j<next[i]; j++, k++)
         {
+        thetimef = time(NULL);
 #ifdef HAVE_MPI
         if (mpiflag)
           {
@@ -278,14 +287,16 @@ void	makeit(void)
           resample_field(&infield[k], &inwfield[k], outfield, outwfield,
 		prefs.resamp_type);
           }
-        }
-      thetime2 = time(NULL);
-      tm = localtime(&thetime2);
-      sprintf(infield[k]->sdate_end,"%04d-%02d-%02d",
+        thetime2 = time(NULL);
+        tm = localtime(&thetime2);
+        sprintf(infield[k]->sdate_end,"%04d-%02d-%02d",
 		tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
-      sprintf(infield[k]->stime_end,"%02d:%02d:%02d",
+        sprintf(infield[k]->stime_end,"%02d:%02d:%02d",
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
-      infield[k]->time_diff = difftime(thetime2, thetimef);
+        infield[k]->time_diff = difftime(thetime2, thetimef);
+        if (prefs.xml_flag)
+          update_xml(infield[k], inwfield[k]);
+        }
       }
     }
 
@@ -360,6 +371,13 @@ the_end:
         tm->tm_hour, tm->tm_min, tm->tm_sec);
   prefs.time_diff = difftime(thetime2, thetime);
 
+/* Write XML */
+  if (prefs.xml_flag)
+    {
+    write_xml(prefs.xml_name);
+    end_xml();
+    }
+
   return;
   }
 
@@ -372,18 +390,17 @@ INPUT	a character string,
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	20/07/2006
+VERSION	26/07/2006
  ***/
 void    write_error(char *msg1, char *msg2)
   {
    char		error[MAXCHAR];
 
   sprintf(error, "%s%s", msg1,msg2);
-/*
   if (prefs.xml_flag)
     write_xmlerror(prefs.xml_name, error);
   end_xml();
-*/
+
   return;
   }
 

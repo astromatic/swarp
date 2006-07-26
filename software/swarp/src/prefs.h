@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	21/07/2006
+*	Last modify:	26/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -135,7 +135,7 @@ typedef struct
   char		stime_start[12];	/* SWarp start time */
   char		sdate_end[12];		/* SWarp end date */
   char		stime_end[12];		/* SWarp end time */
-  int		time_diff;		/* Execution time */
+  double	time_diff;		/* Execution time */
   }	prefstruct;
 
 prefstruct	prefs;

@@ -342,7 +342,7 @@ void    readprefs(char *filename, char **argkey, char **argval, int narg)
 /*
 find an item within a list of keywords.
 */
-int	findkeys(char *str, char keyw[][16], int mode)
+int	findkeys(char *str, char keyw[][32], int mode)
 
   {
   int i;

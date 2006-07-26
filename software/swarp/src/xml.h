@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	21/07/2006
+*	Last modify:	26/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -41,12 +41,12 @@
 /*--------------------------------- typedefs --------------------------------*/
 typedef struct
   {
-  int		frameno;
+  int		fieldno;
   int		extension;
   char 		ext_date[16],ext_time[16];		/* date and time */
   float		ext_elapsed;				/* processing time */
-  char		imagename[MAXCHAR];			/* image filename*/
-  char		weightname[MAXCHAR];			/* weight filename */
+  char		image_name[MAXCHAR];			/* image filename*/
+  char		weight_name[MAXCHAR];			/* weight filename */
   char		ident[80];				/* identifiant */
   float		backmean;				/* mean background */
   float		backsig;				/* mean back stddev */
@@ -54,9 +54,10 @@ typedef struct
   float		gain;					/* gain (e-/ADU) */
   float		fscale;					/* photometric scaling*/
   float		fascale;				/* astrometric scaling*/
+  int		naxis;					/* number of axes */
   float		pixscale;				/* pixel scale (deg2) */
   int		celsys;					/* celestial system */
-  double	centerpos[NAXIS]			/* center coordinates */
+  double	centerpos[NAXIS];			/* center coordinates */
   double	epoch;					/* epoch of coords */
   }	xmlstruct;
 

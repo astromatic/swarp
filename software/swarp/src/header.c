@@ -171,7 +171,7 @@ INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	16/08/2003
+VERSION	26/07/2006
  ***/
 void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
 
@@ -182,8 +182,8 @@ void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
    extern pkeystruct	key[];
    h_type		htype;
    t_type		ttype;
-   extern char		keylist[][16];
-   char			comment[80],
+   extern char		keylist[][32];
+   char			comment[88],
 			*pstr;
    int			d, n, k, l;
 
@@ -347,7 +347,7 @@ INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	16/08/2003
+VERSION	26/07/2006
  ***/
 void	writefitsinfo_field(fieldstruct *field, fieldstruct *infield)
 
@@ -359,8 +359,8 @@ void	writefitsinfo_field(fieldstruct *field, fieldstruct *infield)
    extern pkeystruct	key[];
    h_type		htype;
    t_type		ttype;
-   extern char		keylist[][16];
-   char			comment[80],
+   extern char		keylist[][32];
+   char			comment[88],
 			*pstr;
    int			d, k, l, nf;
 

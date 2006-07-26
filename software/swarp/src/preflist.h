@@ -118,7 +118,7 @@ pkeystruct key[] =
   {""}
  };
 
-char			keylist[sizeof(key)/sizeof(pkeystruct)][16];
+char			keylist[sizeof(key)/sizeof(pkeystruct)][32];
 const char		notokstr[] = {" \t=,;\n\r\""};
 
 char *default_prefs[] =

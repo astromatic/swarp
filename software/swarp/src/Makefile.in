@@ -55,7 +55,7 @@ am_swarp_OBJECTS = back.$(OBJEXT) coadd.$(OBJEXT) data.$(OBJEXT) \
 	field.$(OBJEXT) fitswcs.$(OBJEXT) header.$(OBJEXT) \
 	interpolate.$(OBJEXT) main.$(OBJEXT) makeit.$(OBJEXT) \
 	prefs.$(OBJEXT) projapprox.$(OBJEXT) resample.$(OBJEXT) \
-	threads.$(OBJEXT) weight.$(OBJEXT)
+	threads.$(OBJEXT) weight.$(OBJEXT) xml.$(OBJEXT)
 swarp_OBJECTS = $(am_swarp_OBJECTS)
 swarp_DEPENDENCIES = $(top_builddir)/src/fits/libfits.a \
 	$(top_builddir)/src/wcs/libwcs_c.a
@@ -169,15 +169,15 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 # Program Makefile for SWarp
-# Copyright (C) 2002-2003 Emmanuel Bertin.
+# Copyright (C) 2002-2006 Emmanuel Bertin.
 SUBDIRS = fits wcs
 swarp_SOURCES = back.c coadd.c data.c field.c fitswcs.c header.c \
 			  interpolate.c main.c makeit.c prefs.c projapprox.c \
-			  resample.c threads.c weight.c \
+			  resample.c threads.c weight.c xml.c \
 			  back.h coadd.h data.h define.h field.h fitswcs.h \
 			  globals.h header.h interpolate.h key.h preflist.h \
 			  prefs.h projapprox.h resample.h threads.h types.h \
-			  wcscelsys.h weight.h
+			  wcscelsys.h weight.h xml.h
 
 swarp_LDADD = $(top_builddir)/src/fits/libfits.a $(top_builddir)/src/wcs/libwcs_c.a
 DATE = `date +"%Y-%m-%d"`
@@ -261,6 +261,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resample.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threads.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/weight.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
