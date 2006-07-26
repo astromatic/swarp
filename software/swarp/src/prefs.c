@@ -31,7 +31,7 @@
 #if defined(USE_THREADS) \
 && (defined(__APPLE__) || defined(FREEBSD) || defined(NETBSD))	/* BSD, Apple */
  #include	<sys/types.h>
- #include	>sys/sysctl.h>
+ #include	<sys/sysctl.h>
 #elif defined(USE_THREADS) && defined(HAVE_MPCTL)		/* HP/UX */
  #include	<sys/mpctl.h>
 #endif
