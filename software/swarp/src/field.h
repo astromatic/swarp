@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	20/07/2006
+*	Last modify:	26/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -44,7 +44,7 @@ typedef struct field
   char		*rfilename;		/* pointer to the reduced image name */
   char		hfilename[MAXCHAR];	/* header filename */
   int		headflag;		/* header found? */		
-  char		ident[MAXCHAR];		/* field identifier (read from FITS) */
+  char		ident[80];		/* field identifier (read from FITS) */
   catstruct	*cat;			/* cat structure */
   tabstruct	*tab;			/* tab structure */
 /* ---- main image parameters */
@@ -53,6 +53,7 @@ typedef struct field
   int		width, height;		/* x,y size of the field */
   size_t	npix;			/* total number of pixels */
   double	gain;			/* conversion factor e-/ADU */
+  double	exptime;		/* exposure time (s) */
   double	fscale;			/* relative photometric scale */
   double	fascale;		/* relative phot. scale from astrom. */
   double	ngamma;			/* normalized photo gamma */

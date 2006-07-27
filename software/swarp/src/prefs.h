@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	26/07/2006
+*	Last modify:	27/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -88,7 +88,7 @@ typedef struct
   interpenum	resamp_type[INTERP_MAXDIM];/* Image resampling method */
   int		nresamp_type;		/* nb of params */
   coaddenum	coadd_type;		/* Coaddition type */
-  
+  int		blank_flag;		/* Blank pixels with a weight of 0? */
 /* Output image coordinates */
   char		projection_name[MAXCHAR];/* Projection WCS code */
   celsysenum	celsys_type;		/* Celestial system type */

@@ -9,7 +9,7 @@
 *
 *       Contents:       Coaddition routines
 *
-*       Last modify:    21/06/2005
+*       Last modify:    27/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -567,7 +567,7 @@ INPUT	Current line number.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   Requires many global variables (for multithreading).
 AUTHOR  E. Bertin (IAP)
-VERSION 28/04/2005
+VERSION 27/07/2006
  ***/
 int coadd_line(int l)
 
@@ -576,8 +576,9 @@ int coadd_line(int l)
 			*pixstack, *pixt, *outpix,*outwpix;
    double		val, val2, wval,wval2,wval3;
    unsigned int		*inn;
-   int			i,x, ninput2;
+   int			i,x, ninput2, blankflag;
 
+  blankflag = prefs.blank_flag;
   inpix = multibuf+l*coadd_width*coadd_nomax;
   inwpix = multiwbuf+l*coadd_width*coadd_nomax;
   inn = multinbuf+l*coadd_width;
@@ -610,7 +611,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = val2;
+          *(outpix++) = blankflag? 0.0 : val2;
           *(outwpix++) = BIG;
           }
         }
@@ -647,7 +648,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = val2;
+          *(outpix++) = blankflag? 0.0 : val2;
           *(outwpix++) = BIG;
           }
         }
@@ -678,7 +679,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = val2;
+          *(outpix++) = blankflag? 0.0 : val2;
           *(outwpix++) = BIG;
           }
         }
@@ -708,7 +709,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = val2;
+          *(outpix++) = blankflag? 0.0 : val2;
           *(outwpix++) = BIG;
           }
         }
@@ -738,7 +739,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = val2;
+          *(outpix++) = blankflag? 0.0 : val2;
           *(outwpix++) = BIG;
           }
         }
@@ -767,7 +768,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = sqrt(val2*val2);
+          *(outpix++) = blankflag? 0.0 : sqrt(val2*val2);
           *(outwpix++) = BIG;
           }
         }
@@ -797,7 +798,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = val2;
+          *(outpix++) = blankflag? 0.0 : val2;
           *(outwpix++) = BIG;
           }
         }

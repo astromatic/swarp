@@ -85,7 +85,7 @@ INPUT	-.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/07/2006
+VERSION	27/07/2006
  ***/
 int	update_xml(fieldstruct *field, fieldstruct *wfield)
   {
@@ -97,13 +97,12 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
     error(EXIT_FAILURE,"*Internal Error*: too many extensions in XML stack","");
   x = &xmlstack[nxml++];
   x->fieldno = field->fieldno;
-  strcpy(x->image_name, field->filename); 
-  strcpy(x->weight_name, wfield? wfield->filename : "(null)"); 
   x->extension = field->frameno;
   strcpy(x->ext_date, field->sdate_end);
   strcpy(x->ext_time, field->stime_end);
   x->ext_elapsed = field->time_diff;
   strcpy(x->ident, field->ident);
+  x->exptime = field->exptime;
   x->backmean = field->backmean;
   x->backsig = field->backsig;
   x->sigfac = field->sigfac;
@@ -231,7 +230,7 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/07/2006
+VERSION	27/07/2006
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
@@ -326,6 +325,12 @@ int	write_xml_meta(FILE *file, char *error)
     fprintf(file, "  <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	"!!!!!!!!!!!!!!!!!!!! -->\n\n");
     }
+  else
+    {
+    fprintf(file, "  <PARAM name=\"ExpTime\" datatype=\"float\""
+	" ucd=\"time.expo;obs.image\" value=\"%g\" unit=\"s\"/>\n",
+	xmlstack[0].exptime);
+    }
 
 /* Meta-data for each extension */
   fprintf(file, "  <TABLE ID=\"Input_Image_Data\" name=\"Input_Image_Data\">\n");
@@ -379,6 +384,8 @@ int	write_xml_meta(FILE *file, char *error)
 	" ucd=\"arith.factor;obs.image;stat.median\"/>\n");
   fprintf(file, "   <FIELD name=\"Gain\" datatype=\"float\""
 	" ucd=\"instr.calib;obs.image\" unit=\"photon/adu\"/>\n");
+  fprintf(file, "   <FIELD name=\"ExpTime\" datatype=\"float\""
+	" ucd=\"time.expo;obs.image\" unit=\"s\"/>\n");
   fprintf(file, "   <FIELD name=\"Photometric_Flux_Scaling\" datatype=\"float\""
 	" ucd=\"phot.calib;obs.image\"/>\n");
   fprintf(file, "   <FIELD name=\"Astrometric_Flux_Scaling\" datatype=\"float\""
@@ -401,11 +408,12 @@ int	write_xml_meta(FILE *file, char *error)
 	"     <TD>%g</TD><TD>%g</TD><TD>%c</TD><TD>%s</TD>"
 	"<TD>%d</TD><TD>%d</TD><TD>%g</TD>\n"
 	"     <TD>%s</TD><TD>%g</TD><TD>%g</TD><TD>%c</TD>\n"
-	"     <TD>%g</TD><TD>%g</TD><TD>%g</TD>\n      ",
+	"     <TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD>\n      <TD>%.10g",
 	n,
-	x->image_name,
-	x->weight_name,
-	x->ident,
+	prefs.infield_name[f],
+	(prefs.inwfield_name[f] && *prefs.inwfield_name[f])?
+		prefs.inwfield_name[f] : "(null)",
+	(x->ident && *(x->ident)) ? x->ident : "(null)",
 	x->extension,
 	x->ext_date,
 	x->ext_time,
@@ -424,11 +432,13 @@ int	write_xml_meta(FILE *file, char *error)
 	x->sigfac,
         prefs.interp_flag[f]? 'T' : 'F',
 	x->gain,
+	x->exptime,
 	x->fscale,
-	x->fascale);
-    for (d=0; d<naxis; d++)
-      fprintf(file, "<TD>%.10g</TD>", x->centerpos[d]);
-    fprintf(file, "<TD>%g</TD><TD>%g</TD>\n    </TR>\n",
+	x->fascale,
+	x->centerpos[0]);
+    for (d=1; d<naxis; d++)
+      fprintf(file, " %.10g", x->centerpos[d]);
+    fprintf(file, "</TD><TD>%g</TD><TD>%g</TD>\n    </TR>\n",
 	x->pixscale, x->epoch);
     }
   fprintf(file, "   </TABLEDATA></DATA>\n");
@@ -500,6 +510,10 @@ int	write_xml_meta(FILE *file, char *error)
 	" ucd=\"meta.code;obs.param\" value=\"%s\"/>\n",
     	key[findkeys("COMBINE_TYPE",keylist,
 			FIND_STRICT)].keylist[prefs.coadd_type]);
+    fprintf(file,
+	"   <PARAM name=\"Blank_BadPixels\" datatype=\"boolean\""
+	" ucd=\"meta.code;obs.param\" value=\"%c\"/>\n",
+    	prefs.blank_flag? 'T':'F');
     fprintf(file,
 	"   <PARAM name=\"Celestial_Type\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"meta;pos;obs.param\" value=\"%s\"/>\n",

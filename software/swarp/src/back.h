@@ -19,7 +19,7 @@
 #endif
 
 /*----------------------------- Internal constants --------------------------*/
-#define	BACK_BUFSIZE		1048576		/* bkgnd buffer */
+#define	BACK_BUFSIZE		(8*1024*1024)	/* bkgnd buffer */
 #define	BACK_MINGOODFRAC	0.5		/* min frac with good weights*/
 #define	QUANTIF_NSIGMA		5		/* histogram limits */
 #define	QUANTIF_NMAXLEVELS	4096		/* max nb of quantif. levels */

@@ -9,7 +9,7 @@
 *
 *	Contents:	Keywords for the configuration file.
 *
-*	Last modify:	20/07/2006
+*	Last modify:	27/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -46,6 +46,7 @@ pkeystruct key[] =
   {"BACK_TYPE", P_KEYLIST, prefs.back_type, 0,0, 0.0,0.0,
    {"AUTO", "MANUAL", ""},
    1, MAXINFIELD, &prefs.nback_type},
+  {"BLANK_BADPIXELS", P_BOOL, &prefs.blank_flag},
   {"CELESTIAL_TYPE", P_KEY, &prefs.celsys_type, 0,0, 0.0,0.0,
    {"NATIVE", "PIXEL", "EQUATORIAL", "GALACTIC", "ECLIPTIC", "SUPERGALACTIC",
 	""}},
@@ -147,6 +148,7 @@ char *default_prefs[] =
 "COMBINE                Y               # Combine resampled images (Y/N)?",
 "COMBINE_TYPE           MEDIAN          # MEDIAN,AVERAGE,MIN,MAX,WEIGHTED,CHI2",
 "                                       # or SUM",
+"*BLANK_BADPIXELS        N              # Set to 0 pixels having a weight of 0",
 " ",
 "#-------------------------------- Astrometry ----------------------------------",
 " ",

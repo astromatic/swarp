@@ -9,7 +9,7 @@
 *
 *       Contents:       Resampling procedures
 *
-*       Last modify:    15/09/2005
+*       Last modify:    27/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -93,7 +93,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	16/11/2003
+VERSION	27/07/2006
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -134,6 +134,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   field->gain = infield->gain;
   field->fieldno = infield->fieldno;
   field->fscale = infield->fscale;
+  strcpy(field->ident, infield->ident);
 
 /* Now modify some characteristics of the output file */
 /* We use a small "dirty" trick to frame the output */

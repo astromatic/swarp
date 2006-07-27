@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	19/07/2005
+*	Last modify:	27/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -339,7 +339,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 21/07/2006
+VERSION 27/07/2006
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -348,11 +348,11 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
    fieldstruct		*field;
    tabstruct		*tab;
    wcsstruct		*wcs;
-   double		pixscale, val;
+   double		pixscale, val, exptime;
    float		*scale;
    char			*pstr;
    int			i,j,n,npstr, naxis, lat,lng, countmin0,countmax0,
-			countmin,countmax;
+			countmin,countmax, fieldno;
 
 /* First allocate memory for the new field */
   QCALLOC(field,fieldstruct, 1);
@@ -833,6 +833,14 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   field->gain = 0.0;
 
   free(scale);
+
+/* Compute maximum exposure time and */
+  fieldno = -1;
+  exptime = 0.0;
+  for (j=0; j<ninput; j++)
+    if (infield[j]->fieldno != fieldno)
+      exptime += infield[j]->exptime;
+  field->exptime = exptime;
 
   return field;
   }

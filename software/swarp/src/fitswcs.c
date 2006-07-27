@@ -312,7 +312,7 @@ INPUT	tab structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	17/07/2007
+VERSION	17/07/2006
  ***/
 wcsstruct	*read_wcs(tabstruct *tab)
 

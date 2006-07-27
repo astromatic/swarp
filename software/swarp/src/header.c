@@ -9,7 +9,7 @@
 *
 *	Contents:	Provide additional FITS header management.
 *
-*	Last modify:	18/11/2004
+*	Last modify:	27/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -117,7 +117,7 @@ INPUT	Pointer to the field structure,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	17/08/2001
+VERSION	27/07/2006
  ***/
 void	readfitsinfo_field(fieldstruct *field, tabstruct *tab)
   {
@@ -155,6 +155,8 @@ void	readfitsinfo_field(fieldstruct *field, tabstruct *tab)
   FITSREADF(buf,prefs.fscale_keyword, field->fscale, field->fscale);
 /* Set the conversion factor */
   FITSREADF(buf, prefs.gain_keyword, field->gain, field->gain);
+  FITSREADF(buf, "EXPTIME ", field->exptime, 0.0);
+  FITSREADS(buf, "OBJECT  ", field->ident, "");
 
   return;
 

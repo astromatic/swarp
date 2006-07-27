@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	26/07/2006
+*	Last modify:	27/07/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -45,9 +45,8 @@ typedef struct
   int		extension;
   char 		ext_date[16],ext_time[16];		/* date and time */
   float		ext_elapsed;				/* processing time */
-  char		image_name[MAXCHAR];			/* image filename*/
-  char		weight_name[MAXCHAR];			/* weight filename */
   char		ident[80];				/* identifiant */
+  float		exptime;				/* exposure time */
   float		backmean;				/* mean background */
   float		backsig;				/* mean back stddev */
   float		sigfac;					/* mean weight scaling*/
