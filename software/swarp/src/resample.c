@@ -9,7 +9,7 @@
 *
 *       Contents:       Resampling procedures
 *
-*       Last modify:    27/07/2006
+*       Last modify:    01/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -93,7 +93,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	27/07/2006
+VERSION	01/08/2006
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -175,8 +175,10 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
       error(EXIT_FAILURE, "*Error*: cannot open for writing ", filename);
   if (prefs.removetmp_flag && prefs.combine_flag)
     add_cleanupfilename(filename);
+  QFTELL( field->tab->headpos, field->cat->file, filename);
   QFWRITE(field->tab->headbuf, field->tab->headnblock*FBSIZE,
 	field->cat->file, filename);
+  QFTELL(field->tab->bodypos, field->cat->file, filename);
 
 /* Get resampled suffix extension if available */
   strcpy(resampext1, prefs.resamp_suffix);
@@ -208,8 +210,10 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
     error(EXIT_FAILURE, "*Error*: cannot open for writing ", filename);
   if (prefs.removetmp_flag && prefs.combine_flag)
     add_cleanupfilename(filename);
+  QFTELL(wfield->tab->headpos, wfield->cat->file, filename);
   QFWRITE(wfield->tab->headbuf, wfield->tab->headnblock*FBSIZE,
 	wfield->cat->file, filename);
+  QFTELL(wfield->tab->bodypos, wfield->cat->file, filename);
 
 /* Prepare oversampling stuff */
   ascale = 1.0;

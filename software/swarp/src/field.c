@@ -165,7 +165,7 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
 
 /****** inherit_field ********************************************************
 PROTO	fieldstruct *inherit_field(char *filename, fieldstruct *reffield,
-				int fflags)
+				int flags)
 PURPOSE	Make a copy of a field structure.
 INPUT	Reference field pointer.
 	flags.

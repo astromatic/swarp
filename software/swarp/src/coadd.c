@@ -9,7 +9,7 @@
 *
 *       Contents:       Coaddition routines
 *
-*       Last modify:    27/07/2006
+*       Last modify:    01/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -60,7 +60,6 @@
  unsigned int		*pthread_multinbuf;
  int			pthread_bufline, pthread_nbuflines, pthread_npix,
 			pthread_step, pthread_endflag, pthread_wdataflag;
-int toto;
 #endif
 
 /*------------------------------ function -----------------------------------*/
@@ -93,7 +92,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 21/06/2005
+VERSION 01/08/2006
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -135,10 +134,6 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
     max = 0;
     for (n=0; n<ninput; n++)
       {
-      infield[n]->cat->tab->bodypos = infield[n]->cat->tab->headnblock*FBSIZE;
-      if (inwfield[n])
-        inwfield[n]->cat->tab->bodypos
-		= inwfield[n]->cat->tab->headnblock*FBSIZE;
       wcs = infield[n]->wcs;
 /*---- Update input frame limits in output frame */
       wcs->outmin[d] = (int)floor(outfield->wcs->crpix[d] - wcs->crpix[d] + 1.0);
@@ -220,7 +215,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
   QCALLOC(ohist, unsigned int, ninput);
   for (n=0; n<npair*2; n++)
     ohist[pair[n]]++;
-  omax = 1;
+  omax = 0;
   for (n=0; n<ninput; n++)
     if (ohist[n]>omax)
       {
@@ -391,7 +386,6 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
     NPRINTF(OUTPUT, "\33[1M> Co-adding line:%7d / %-7d\n\33[1A", y+1,height);
 /*-- Now perform the coaddition itself */
 #ifdef USE_THREADS
-toto = 0;
     QPTHREAD_MUTEX_LOCK(&coaddmutex);
     pthread_bufline = 0;
     pthread_nbuflines = nbuflines;
@@ -399,7 +393,6 @@ toto = 0;
     threads_gate_sync(pthread_startgate);
 /* ( Slave threads process the current buffer data here ) */
     threads_gate_sync(pthread_stopgate);
-toto = 1;
 #else
     for (y2=0; y2<nbuflines; y2++)
       coadd_line(y2);
@@ -523,7 +516,7 @@ INPUT	Pointer to the thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	21/10/2003
+VERSION	30/07/2006
  ***/
 void	*pthread_coadd_lines(void *arg)
   {
@@ -534,8 +527,6 @@ void	*pthread_coadd_lines(void *arg)
   threads_gate_sync(pthread_startgate);
   while (!pthread_endflag)
     {
-if (toto)
-printf("race: %d\n", proc);
     QPTHREAD_MUTEX_LOCK(&coaddmutex);
     if (pthread_bufline<pthread_nbuflines)
       {
@@ -1254,7 +1245,7 @@ INPUT	Input Buffer,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 22/11/2003
+VERSION 01/08/2006
  ***/
 void	coadd_movewdata(PIXTYPE *linebuf, PIXTYPE *multiwbuf,
 			unsigned int *multinbuf, int npix, int step)
@@ -1273,9 +1264,14 @@ void	coadd_movewdata(PIXTYPE *linebuf, PIXTYPE *multiwbuf,
      for (x=npix; x--;  multiw += step)
        {
        n = *multin;
-       if ((val=*(wpix++)) > 0.0 || !n)
+       if ((val=*(wpix++)) > 0.0)
          {
-         *(multiw+n) =  1.0/val;
+         *(multiw+n) = 1.0/val;
+         (*(multin++))++;
+         }
+       else if (!n)
+         {
+         *(multiw+n) = BIG;
          (*(multin++))++;
          }
        else
@@ -1284,9 +1280,11 @@ void	coadd_movewdata(PIXTYPE *linebuf, PIXTYPE *multiwbuf,
      }
   else
 /*-- Resampled weight-map not present: weight is 1 within frame limits */
-    for (x=npix; x--;  multiw += step)
-      *(multiw+(*(multin++))++) =  1.0;
-
+    for (x=npix; x--; multiw += step)
+      {
+      *(multiw+*multin) =  1.0;
+      (*(multin++))++;
+      }
   return;
   }
 

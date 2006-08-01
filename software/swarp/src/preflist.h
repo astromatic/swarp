@@ -204,7 +204,7 @@ char *default_prefs[] =
 "#------------------------------ Memory management -----------------------------",
 " ",
 "VMEM_DIR               .               # Directory path for swap files",
-"VMEM_MAX		2047            # Maximum amount of virtual memory (MB)",
+"VMEM_MAX               2047            # Maximum amount of virtual memory (MB)",
 "MEM_MAX                128             # Maximum amount of usable RAM (MB)",
 "COMBINE_BUFSIZE        64              # RAM dedicated to co-addition(MB)",
 " ",
