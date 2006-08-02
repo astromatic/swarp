@@ -9,7 +9,7 @@
 *
 *       Contents:       Coaddition routines
 *
-*       Last modify:    01/08/2006
+*       Last modify:    02/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -92,7 +92,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 01/08/2006
+VERSION 02/08/2006
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -111,7 +111,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			d, n, n1,n2, flag;
    int			bufmin[NAXIS], bufmax[NAXIS], bufpos[NAXIS],
 			rawmax[NAXIS], rawpos[NAXIS], rawpos2[NAXIS],
-			min1[NAXIS],min2[NAXIS], max1[NAXIS],max2[NAXIS],
+			min1[NAXIS],max1[NAXIS],
 			*ybegbufline,*yendbufline, 
 			y, y2,dy, ybuf,ybufmax,
 			outwidth,multiwidth, width, height,min,max,
@@ -192,8 +192,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
       wcs = infield[n2]->wcs;
       flag = 1;
       for (d=0; d<naxis; d++)
-        if (((min2[d] = wcs->outmin[d]) < min1[d] || min2[d]>max1[d])
-		&& ((max2[d] = wcs->outmax[d]) < min1[d] || max2[d]>max1[d]))
+        if (wcs->outmin[d] > max1[d] || wcs->outmax[d] < min1[d])
 	  {
           flag = 0;
           break;
@@ -228,7 +227,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 
   *gstr = '\0';
   NPRINTF(OUTPUT, "-------------- Co-adding frames            \n");
-  NPRINTF(OUTPUT, "Maximum overlap density: < %d\n", omax);
+  NPRINTF(OUTPUT, "Maximum overlap density: <= %d frames\n", omax);
 
   coadd_nomax = omax;
   multiwidth = outwidth*omax;
@@ -979,7 +978,7 @@ OUTPUT	RETURN_ERROR in case no more data are worth reading,
 	RETURN_OK otherwise.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 20/06/2005
+VERSION 02/08/2006
  ***/
 int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
@@ -1008,7 +1007,9 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
     inbeg = 0;
     }
   muloffset = inbeg*multinmax;
-  width = outwidth - inbeg;
+  width = wcs->outmax[0] - bufmin[0] + 1;
+  if (width > (outwidth - inbeg))
+    width = outwidth - inbeg;
   if (width<=0)
     return RETURN_ERROR;	/* the image is not included in the output */
   else if (width > field->width)
