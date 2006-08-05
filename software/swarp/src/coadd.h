@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for coadd.c
 *
-*	Last modify:	28/04/2005
+*	Last modify:	05/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -51,7 +51,8 @@ extern PIXTYPE	hmedian(PIXTYPE *arr, int n);
 extern int	coadd_fields(fieldstruct **infield, fieldstruct **inwfield,
 			int ninput, fieldstruct *outfield,
 			fieldstruct *outwfield,
-			coaddenum coaddtype, PIXTYPE wthresh);
+			coaddenum coaddtype, PIXTYPE wthresh),
+		max_clique(unsigned int *array, int nnode, int **max);
 extern void	coadd_movedata(PIXTYPE *linebuf, PIXTYPE *multibuf,
 			unsigned int *multinbuf, int npix, int step),
 		coadd_movewdata(PIXTYPE *linebuf, PIXTYPE *multiwbuf,

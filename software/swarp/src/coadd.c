@@ -9,7 +9,7 @@
 *
 *       Contents:       Coaddition routines
 *
-*       Last modify:    02/08/2006
+*       Last modify:    05/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -43,6 +43,11 @@
 #include "weight.h"
 #include "wcs/wcs.h"
 
+#define	ARRAY_BIT(x,y)		(array[(y/(8*sizeof(unsigned int)))*nnode+x]&2 \
+					<<(y%(8*sizeof(unsigned int))))
+#define	SET_ARRAY_BIT(x,y)	(array[(y/(8*sizeof(unsigned int)))*ninput+x] \
+					|= 2<<(y%(8*sizeof(unsigned int))))
+
  coaddenum	coadd_type;
  PIXTYPE	*multibuf,*multiwbuf, *outbuf,*outwbuf,
 		coadd_wthresh;
@@ -71,6 +76,9 @@
 			unsigned int *multinbuf,
 			int *rawpos, int *rawmin, int *rawmax,
 			int nlines, int outwidth, int multinmax);
+static void	max_clique_recur(unsigned int *array, int nnode, int *old,
+			int ne, int ce, int **compsub, int *ncompsub,
+			int **best, int *nbest);
 
 #ifdef USE_THREADS
  static void	*pthread_coadd_lines(void *arg),
@@ -92,7 +100,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 02/08/2006
+VERSION 05/08/2006
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -107,17 +115,17 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
    wcsstruct		*wcs;
    PIXTYPE		*emptybuf,*outline,
 			*pix,*wpix;
-   unsigned int		*cflag,*ohist,*pair,
+   unsigned int		*cflag,*array,
 			d, n, n1,n2, flag;
    int			bufmin[NAXIS], bufmax[NAXIS], bufpos[NAXIS],
 			rawmax[NAXIS], rawpos[NAXIS], rawpos2[NAXIS],
 			min1[NAXIS],max1[NAXIS],
-			*ybegbufline,*yendbufline, 
+			*ybegbufline,*yendbufline, *maxclique,
 			y, y2,dy, ybuf,ybufmax,
 			outwidth,multiwidth, width, height,min,max,
 			naxis, nlines, nlinesmax,
 			nbuflines,nbuflines2,nbuflinesmax, size, omax,
-			offbeg, offend, npair, npairmax;
+			offbeg, offend;
 
   coadd_type = coaddtype;
   coadd_wthresh = wthresh;
@@ -176,11 +184,10 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
   coadd_width = outwidth = outfield->wcs->naxisn[0] - offend - offbeg;
 
 /* Build a graph of overlaps */
-  npair = 0;
-  npairmax = ninput;	/* A convenient first guess */
-  QMALLOC(pair, unsigned int, 2*npairmax);
+  QCALLOC(array, unsigned int, ninput*(1+ninput/(8*sizeof(unsigned int)+1)));
   for (n1=0; n1<ninput; n1++)
     {
+    SET_ARRAY_BIT(n1,n1);
     wcs = infield[n1]->wcs;
     for (d=0; d<naxis; d++)
       {
@@ -199,31 +206,16 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
           }
       if (flag)
         {
-        if (npair>=npairmax)
-	  {
-          npairmax *= 2;
-          QREALLOC(pair, unsigned int, npairmax*2);
-          }
-        pair[2*npair] = n1;
-        pair[2*(npair++)+1] = n2;
-	}
+        SET_ARRAY_BIT(n1,n2);
+	SET_ARRAY_BIT(n2,n1);
+        }
       }
     }
 
-/* Find a majorant of the densest overlap (otherwise an NP-complete pb!) */
-  QCALLOC(ohist, unsigned int, ninput);
-  for (n=0; n<npair*2; n++)
-    ohist[pair[n]]++;
-  omax = 0;
-  for (n=0; n<ninput; n++)
-    if (ohist[n]>omax)
-      {
-      omax = ohist[n];
-      }
-  omax++;	/* Include the image itself in the overlap count */
-
-  free(pair);
-  free(ohist);
+/* Find the densest overlap, that is the maximal clique (NP-complete pb!) */
+  omax = max_clique(array, ninput, &maxclique);
+  free(array);
+  free(maxclique);
 
   *gstr = '\0';
   NPRINTF(OUTPUT, "-------------- Co-adding frames            \n");
@@ -503,6 +495,154 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
     }
 
   return RETURN_OK;
+  }
+
+
+/******* max_clique *********************************************************
+PROTO	int max_clique(int *array, int nnode, int nnodes, int **max)
+PURPOSE	Return the number of nodes of the maximal clique of a subgraph. 
+INPUT	Input graph array,
+	Number of graph nodes,
+	Pointer to the list of nodes in the maximal clique found (output).
+OUTPUT	Number of nodes in the maximal clique found.
+NOTES   -.
+AUTHOR  E. Bertin (IAP)
+VERSION 05/08/2006
+ ***/
+int	max_clique(unsigned int *array, int nnode, int **max)
+  {
+   int	*all, *compsub,
+	c, ncompsub, nmax;
+
+  QMALLOC(all, int, nnode);
+  QMALLOC(compsub, int, nnode)
+  ncompsub = 0;
+  for (c=0; c<nnode; c++)
+    all[c] = c;
+  *max = NULL;
+  nmax = 0;
+
+/* Run the recursive part */
+  max_clique_recur(array, nnode, all, 0, nnode, &compsub, &ncompsub, max, &nmax);
+
+  free(compsub);
+  free(all);
+
+  return nmax;
+  }
+
+
+/******* max_clique_recur ****************************************************
+PROTO	void max_clique_recur(int *array, int nnode, int *old, int ne,int ce,
+		int **compsub, int *ncompsub, int **best, int *nbest)
+PURPOSE	Recursive part of the Bron & Kerbosch 1973 algorithm
+	(Comm. of the ACM 16, 575), with graph access modified to optimize
+	memory usage.
+INPUT	Input graph array,
+	Number of graph nodes,
+	Working list of nodes,
+	Start node,
+	End node,
+	Pointer to another working list of nodes,
+	Number of working nodes,
+	Pointer to the largest list of clique nodes,
+	Number of clique nodes.
+OUTPUT	-.
+NOTES   Recursive function.
+AUTHOR  E. Bertin (IAP)
+VERSION 05/08/2006
+ ***/
+static void	max_clique_recur(unsigned int *array, int nnode, int *old,
+		int ne, int ce, int **compsub, int *ncompsub, int **best,
+		int *nbest)
+  {
+   int	*new,
+	i,j,p,s, count, fixp, minnod, newce, newne, nod, pos, sel;
+
+  QMALLOC(new, int, nnode);
+  minnod = ce;
+  nod = 0;
+  pos = fixp = s = 0;	/* To avoid gcc -Wall warnings */
+/* Determine each counter value and look for minimum */
+  for (i=0; i<ce && minnod != 0; i++)
+    {
+    p = old[i];
+    count = 0;
+/*-- Count disconnections */
+    for (j=ne; j<ce && count < minnod; j++)
+      {
+      if (!ARRAY_BIT(p,old[j]))
+        {
+        count++;
+/*------ Save position of potential candidate */
+        pos = j;
+        }
+      }
+/*-- Test new minimum */
+    if (count < minnod)
+      {
+      fixp = p;
+      minnod = count;
+      if (i<ne)
+        s = pos;
+      else
+        {
+        s = i;
+/*------ Preincr */
+        nod = 1;
+        }
+      }
+    }
+/* If fixed point initially chosen from candidates then number of */
+/* disconnections will be preincreased by one */
+/*-- Backtrackcycle */
+  for (nod+=minnod; nod>=1; nod--)
+    {
+/*-- Interchange */
+    p = old[s];
+    old[s] = old[ne];
+    sel = old[ne] = p;
+
+/*-- Fill new set "not" */
+    newne = 0;
+    for (i=0; i<ne; i++)
+      if (ARRAY_BIT(sel,old[i]))
+        new[newne++] = old[i];
+
+/*-- Fill new set "cand" */
+    newce = newne;
+    for (i=ne+1; i<ce; i++)
+      if (ARRAY_BIT(sel,old[i]))
+        new[newce++] = old[i];
+
+/*-- Add to compsub */
+    (*compsub)[(*ncompsub)++] = sel;
+
+    if (newce == 0)
+      {
+      if (*nbest < *ncompsub)
+/*------ Found a max clique */
+        {
+        *nbest = *ncompsub;
+        if (*best)
+          free(*best);
+        QMEMCPY(*compsub, *best, int, *nbest);
+        }
+      }
+    else if (newne < newce)
+      max_clique_recur(array, nnode, new, newne, newce, compsub, ncompsub,
+		best, nbest);
+/*-- Remove from "compsub" */
+    (*ncompsub)--;
+/*-- Add to "not" */
+    ne++;
+    if (nod > 1)
+/*---- Select a candidate disconnected to the fixed point */
+      for (s=ne; ARRAY_BIT(fixp,old[s]); s++);
+    }
+  free(new);
+
+  return;
   }
 
 
