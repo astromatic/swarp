@@ -59,7 +59,6 @@ void	makeit(void)
    tabstruct		*tab;
    time_t		thetimef; 
    struct tm		*tm;
-   double		w,w1,w2, invscale;
    int		       	*list,*next;
    int			i,j,k,l, ninfield, ntinfield, lng,lat, nfield;
    int			mpiflag, mpitask;
@@ -313,7 +312,6 @@ void	makeit(void)
     goto the_end;
 
 /* Apply flux scaling to input images */
-  w1 = w2 = invscale = 0.0;
   for (k=0; k<ntinfield; k++)
     {
     infield[k]->cat->tab->bscale *= infield[k]->fscale;
@@ -322,30 +320,18 @@ void	makeit(void)
     infield[k]->backmean *= infield[k]->fscale;
     infield[k]->backsig *= infield[k]->fscale;
     infield[k]->gain /= infield[k]->fscale;
-/*--- Update gain information */
-    w = 1/(infield[k]->backsig*infield[k]->backsig);
-    w1 += w;
-    if (infield[k]->gain)
-      w2 += w/infield[k]->gain;
-    invscale += 1/infield[k]->fscale;
     }
-
-/* Approximation to the final equivalent gain */
-  if (w2)
-    outfield->gain = (w1/w2)*invscale;
-  else
-    outfield->gain = 0.0;
-
-/* Add relevant information to output FITS headers */
-  writefitsinfo_outfield(outfield, *infield);
-  writefitsinfo_outfield(outwfield, inwfield? *inwfield : *infield);
 
 /* Go! */
   coadd_fields(infield, inwfield, ntinfield, outfield, outwfield,
 		prefs.coadd_type, BIG);
 
-/* Close files and free memory */
 the_end:
+/* Update the output field meta-data */
+  if (prefs.xml_flag)
+    update_xml(outfield, outwfield);
+
+/* Close files and free memory */
   NFPRINTF(OUTPUT, "Closing files...")
   for (k=0; k<ntinfield; k++)
     {

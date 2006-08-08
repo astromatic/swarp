@@ -9,7 +9,7 @@
 *
 *       Contents:       Coaddition routines
 *
-*       Last modify:    05/08/2006
+*       Last modify:    08/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -35,6 +35,7 @@
 #include "coadd.h"
 #include "data.h"
 #include "field.h"
+#include "header.h"
 #include "interpolate.h"
 #include "prefs.h"
 #ifdef USE_THREADS
@@ -43,10 +44,10 @@
 #include "weight.h"
 #include "wcs/wcs.h"
 
-#define	ARRAY_BIT(x,y)		(array[(y/(8*sizeof(unsigned int)))*nnode+x]&2 \
-					<<(y%(8*sizeof(unsigned int))))
+#define	ARRAY_BIT(x,y)		(array[(y/(8*sizeof(unsigned int)))*nnode+x]&(1 \
+					<<(y%(8*sizeof(unsigned int)))))
 #define	SET_ARRAY_BIT(x,y)	(array[(y/(8*sizeof(unsigned int)))*ninput+x] \
-					|= 2<<(y%(8*sizeof(unsigned int))))
+					|= (1<<(y%(8*sizeof(unsigned int)))))
 
  coaddenum	coadd_type;
  PIXTYPE	*multibuf,*multiwbuf, *outbuf,*outwbuf,
@@ -100,7 +101,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 05/08/2006
+VERSION 08/08/2006
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -115,6 +116,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
    wcsstruct		*wcs;
    PIXTYPE		*emptybuf,*outline,
 			*pix,*wpix;
+   double		exptime, w,w1,w2, mw;
    unsigned int		*cflag,*array,
 			d, n, n1,n2, flag;
    int			bufmin[NAXIS], bufmax[NAXIS], bufpos[NAXIS],
@@ -124,8 +126,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			y, y2,dy, ybuf,ybufmax,
 			outwidth,multiwidth, width, height,min,max,
 			naxis, nlines, nlinesmax,
-			nbuflines,nbuflines2,nbuflinesmax, size, omax,
-			offbeg, offend;
+			nbuflines,nbuflines2,nbuflinesmax, size, omax,omax2,
+			offbeg, offend, fieldno;
 
   coadd_type = coaddtype;
   coadd_wthresh = wthresh;
@@ -184,7 +186,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
   coadd_width = outwidth = outfield->wcs->naxisn[0] - offend - offbeg;
 
 /* Build a graph of overlaps */
-  QCALLOC(array, unsigned int, ninput*(1+ninput/(8*sizeof(unsigned int)+1)));
+  QCALLOC(array, unsigned int, ninput*(1+(ninput-1)/(8*sizeof(unsigned int))));
   for (n1=0; n1<ninput; n1++)
     {
     SET_ARRAY_BIT(n1,n1);
@@ -215,11 +217,62 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 /* Find the densest overlap, that is the maximal clique (NP-complete pb!) */
   omax = max_clique(array, ninput, &maxclique);
   free(array);
+
+/* Compute maximum gain and maximum total exposure time */
+  exptime = w1 = w2 = mw = 0.0;
+  fieldno = -1;
+  omax2 = 0;
+  for (n=0; n<omax; n++)
+    {
+/*-- Keep only one extension per file */
+    n1 = maxclique[n];
+    if (infield[n1]->fieldno == fieldno)
+      continue;
+    omax2++;
+    fieldno = infield[n1]->fieldno;
+    exptime += infield[n1]->exptime;
+    w = (coaddtype == COADD_WEIGHTED && infield[n1]->backsig > 0.0)?
+	1.0/(infield[n1]->backsig*infield[n1]->backsig) : 1.0;
+    w1 += w;
+    if (infield[n1]->gain > 0.0)
+      {
+      w2 += w*w/infield[n1]->gain;
+      mw += infield[n1]->gain;
+      }
+    }
   free(maxclique);
+
+  outfield->exptime = exptime;
+
+/* Approximation to the final equivalent gain */
+  outfield->gain = 0.0;
+  if (coaddtype == COADD_WEIGHTED || coaddtype == COADD_AVERAGE)
+    {
+    if (w2 > 0.0)
+      outfield->gain = w1*w1/w2;
+    }
+  else if (coaddtype == COADD_MEDIAN)
+    {
+    if (w2 > 0.0)
+      outfield->gain = w1*w1/w2/PI;
+    }
+  else if (coaddtype == COADD_SUM)
+    {
+    if (w2 > 0.0)
+      outfield->gain = w1*w1/w2/omax2;
+    }
+  else
+    outfield->gain = mw/omax2;
+
+
+/* Add relevant information to output FITS headers */
+  writefitsinfo_outfield(outfield, *infield);
+  writefitsinfo_outfield(outwfield, inwfield? *inwfield : *infield);
 
   *gstr = '\0';
   NPRINTF(OUTPUT, "-------------- Co-adding frames            \n");
-  NPRINTF(OUTPUT, "Maximum overlap density: <= %d frames\n", omax);
+  NPRINTF(OUTPUT, "Maximum overlap density: %d frame%s\n",
+	omax2, omax2>1? "s" : "");
 
   coadd_nomax = omax;
   multiwidth = outwidth*omax;
@@ -618,7 +671,7 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 /*-- Add to compsub */
     (*compsub)[(*ncompsub)++] = sel;
 
-    if (newce == 0)
+    if (!newce)
       {
       if (*nbest < *ncompsub)
 /*------ Found a max clique */

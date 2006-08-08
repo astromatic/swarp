@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	26/07/2006
+*	Last modify:	08/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -85,7 +85,7 @@ INPUT	-.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	27/07/2006
+VERSION	08/08/2006
  ***/
 int	update_xml(fieldstruct *field, fieldstruct *wfield)
   {
@@ -93,9 +93,10 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
    double	pixpos[NAXIS], wcspos[NAXIS];
    int		d;
 
-  if (nxml > nxmlmax)
-    error(EXIT_FAILURE,"*Internal Error*: too many extensions in XML stack","");
-  x = &xmlstack[nxml++];
+  if (nxml < nxmlmax)
+    x = &xmlstack[nxml++];
+  else
+    x = &xmlstack[0];	/* Extra calls update the meta-data of output frame */
   x->fieldno = field->fieldno;
   x->extension = field->frameno;
   strcpy(x->ext_date, field->sdate_end);
@@ -230,7 +231,7 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	27/07/2006
+VERSION	08/08/2006
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
@@ -327,9 +328,13 @@ int	write_xml_meta(FILE *file, char *error)
     }
   else
     {
-    fprintf(file, "  <PARAM name=\"ExpTime\" datatype=\"float\""
-	" ucd=\"time.expo;obs.image\" value=\"%g\" unit=\"s\"/>\n",
+    fprintf(file, "  <PARAM name=\"ExpTime_Max\" datatype=\"float\""
+	" ucd=\"time.expo;stat.max;obs.image\" value=\"%g\" unit=\"s\"/>\n",
 	xmlstack[0].exptime);
+    fprintf(file, "  <PARAM name=\"Gain_Max\" datatype=\"float\""
+	" ucd=\"instr.calib;stat.max;obs.image\" value=\"%g\""
+	" unit=\"photon/ADU\"/>\n",
+	xmlstack[0].gain);
     }
 
 /* Meta-data for each extension */

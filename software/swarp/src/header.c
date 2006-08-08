@@ -9,7 +9,7 @@
 *
 *	Contents:	Provide additional FITS header management.
 *
-*	Last modify:	27/07/2006
+*	Last modify:	8/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -173,7 +173,7 @@ INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/07/2006
+VERSION	08/08/2006
  ***/
 void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
 
@@ -190,6 +190,11 @@ void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
    int			d, n, k, l;
 
   tab = field->tab;
+  addkeywordto_head(tab, "EXPTIME ", "Maximum equivalent exposure time (s)");
+  fitswrite(tab->headbuf, "EXPTIME ", &field->exptime, H_EXPO,T_DOUBLE);
+  addkeywordto_head(tab, "GAIN    ", "Maximum equivalent gain (e-/ADU)");
+  fitswrite(tab->headbuf, "GAIN    ", &field->gain, H_EXPO,T_DOUBLE);
+  fitswrite(tab->headbuf, "EXPTIME ", &field->exptime, H_EXPO,T_DOUBLE);
   addkeywordto_head(tab, "COMMENT ", "");
   addkeywordto_head(tab, "SOFTNAME", "The software that processed those data");
   fitswrite(tab->headbuf, "SOFTNAME", BANNER, H_STRING, T_STRING);
