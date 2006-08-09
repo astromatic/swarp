@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	08/08/2006
+*	Last modify:	09/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -339,7 +339,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 08/08/2006
+VERSION 09/08/2006
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -348,7 +348,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
    fieldstruct		*field;
    tabstruct		*tab;
    wcsstruct		*wcs;
-   double		pixscale, val;
+   double		pixscale, val, epoch;
    float		*scale;
    char			*pstr;
    int			i,j,n,npstr, naxis, lat,lng, countmin0,countmax0,
@@ -797,6 +797,11 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
       }
     }
 
+/* Compute mean epoch */
+  epoch = 0.0;
+  for (j=0; j<ninput; j++)
+    epoch += infield[j]->wcs->epoch;
+  field->wcs->epoch = epoch / ninput;
   update_head(tab);
   write_wcs(tab, wcs);
 /* Insert additional header informations from the "header" file */

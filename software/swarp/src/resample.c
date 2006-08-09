@@ -9,7 +9,7 @@
 *
 *       Contents:       Resampling procedures
 *
-*       Last modify:    01/08/2006
+*       Last modify:    09/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -93,7 +93,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	01/08/2006
+VERSION	09/08/2006
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -132,6 +132,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   field->backmean = infield->backmean;
   field->backsig = infield->backsig;
   field->gain = infield->gain;
+  field->exptime = infield->exptime;
   field->fieldno = infield->fieldno;
   field->fscale = infield->fscale;
   strcpy(field->ident, infield->ident);
@@ -175,7 +176,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
       error(EXIT_FAILURE, "*Error*: cannot open for writing ", filename);
   if (prefs.removetmp_flag && prefs.combine_flag)
     add_cleanupfilename(filename);
-  QFTELL( field->tab->headpos, field->cat->file, filename);
+  QFTELL(field->tab->headpos, field->cat->file, filename);
   QFWRITE(field->tab->headbuf, field->tab->headnblock*FBSIZE,
 	field->cat->file, filename);
   QFTELL(field->tab->bodypos, field->cat->file, filename);

@@ -78,8 +78,6 @@ typedef struct field
   struct wcs	*wcs;			/* astrometric data */
   int		flags;			/* flags defining the field type */
   int		cflags;			/* flags defining the conversion */
-  double	pixscale;		/* pixel size in arcsec.pix-1 */
-  double	epoch;			/* epoch of coordinates */
   double	*rawmin;		/* Starting pixel for coaddition */
   double	*rawmax;		/* Ending pixel for coaddition */
 /* ---- image interpolation */

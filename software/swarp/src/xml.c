@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	08/08/2006
+*	Last modify:	09/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -85,7 +85,7 @@ INPUT	-.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	08/08/2006
+VERSION	09/08/2006
  ***/
 int	update_xml(fieldstruct *field, fieldstruct *wfield)
   {
@@ -110,8 +110,9 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
   x->gain = field->gain;
   x->fscale = field->fscale;
   x->fascale = field->fascale;
-  x->pixscale = field->pixscale;
-  x->epoch = field->epoch;
+  x->pixscale = field->wcs->pixscale*DEG/ARCSEC;
+  x->equinox = field->wcs->equinox;
+  x->epoch = field->wcs->epoch;
   x->naxis = field->wcs->naxis;
   x->celsys = (int)(field->wcs->celsysconvflag? field->wcs->celsys : -1);
   for (d=0; d<field->wcs->naxis; d++)
@@ -217,7 +218,8 @@ int	write_xml_header(FILE *file)
     }
 
   fprintf(file, " <COOSYS ID=\"J2000\" equinox=\"J2000\""
-	" epoch=\"J2000\" system=\"%s\"/>\n", sysname);
+	" epoch=\"J%.10g\" system=\"%s\"/>\n",
+	nxml? (xmlstack[0].epoch? xmlstack[0].epoch: 2000.0) : 2000.0, sysname);
 
   return RETURN_OK;
   }
@@ -231,13 +233,14 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	08/08/2006
+VERSION	09/08/2006
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
    xmlstruct		*x;
    struct tm		*tm;
-   char			*pspath,*psuser, *pshost, *str;
+   char			sysname[16],
+			*pspath,*psuser, *pshost, *str;
    int			d,f,n, naxis;
 
 /* Processing date and time if msg error present */
@@ -328,6 +331,9 @@ int	write_xml_meta(FILE *file, char *error)
     }
   else
     {
+    fprintf(file, "  <PARAM name=\"NOverlap_Max\" datatype=\"int\""
+	" ucd=\"meta.number;stat.max;obs.image\" value=\"%d\"/>\n",
+	xmlstack[0].fieldno);
     fprintf(file, "  <PARAM name=\"ExpTime_Max\" datatype=\"float\""
 	" ucd=\"time.expo;stat.max;obs.image\" value=\"%g\" unit=\"s\"/>\n",
 	xmlstack[0].exptime);
@@ -387,6 +393,8 @@ int	write_xml_meta(FILE *file, char *error)
 	" ucd=\"instr.sensitivity;obs.param\" unit=\"adu\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Scaling\" datatype=\"float\""
 	" ucd=\"arith.factor;obs.image;stat.median\"/>\n");
+  fprintf(file, "   <FIELD name=\"Interpolate\" datatype=\"boolean\""
+	" ucd=\"meta.code;obs.param\"/>\n");
   fprintf(file, "   <FIELD name=\"Gain\" datatype=\"float\""
 	" ucd=\"instr.calib;obs.image\" unit=\"photon/adu\"/>\n");
   fprintf(file, "   <FIELD name=\"ExpTime\" datatype=\"float\""
@@ -400,8 +408,12 @@ int	write_xml_meta(FILE *file, char *error)
 	naxis, nxml? (xmlstack[0].celsys >=0? "deg":"pix") : "deg");
   fprintf(file, "   <FIELD name=\"Pixel_Scale\" datatype=\"float\""
 	" ucd=\"instr.scale;obs.image;stat.mean\" unit=\"arcsec\"/>\n");
+  fprintf(file, "   <FIELD name=\"Equinox\" datatype=\"double\""
+	" ucd=\"time.equinox;obs\" unit=\"yr\"/>\n");
   fprintf(file, "   <FIELD name=\"Epoch\" datatype=\"double\""
 	" ucd=\"time.epoch;obs\" unit=\"yr\"/>\n");
+  fprintf(file, "   <FIELD name=\"COOSYS\" datatype=\"char\""
+	" arraysize=\"*\" ucd=\"meta.code;pos\"/>\n");
   fprintf(file, "   <DATA><TABLEDATA>\n");
   for (n=1; n<nxml; n++)
     {
@@ -441,10 +453,31 @@ int	write_xml_meta(FILE *file, char *error)
 	x->fscale,
 	x->fascale,
 	x->centerpos[0]);
+    switch(x->celsys)
+      {
+      case CELSYS_PIXEL:
+        sprintf(sysname, "xy");
+        break;
+      case CELSYS_GALACTIC:
+        sprintf(sysname, "galactic");
+        break;
+      case CELSYS_ECLIPTIC:
+        sprintf(sysname, "ecl_FK5");
+        break;
+      case CELSYS_SUPERGALACTIC:
+        sprintf(sysname, "supergalactic");
+        break;
+      case CELSYS_EQUATORIAL:
+      case CELSYS_NATIVE:
+      default:
+        sprintf(sysname, "ICRS");
+        break;
+      }
     for (d=1; d<naxis; d++)
       fprintf(file, " %.10g", x->centerpos[d]);
-    fprintf(file, "</TD><TD>%g</TD><TD>%g</TD>\n    </TR>\n",
-	x->pixscale, x->epoch);
+    fprintf(file,
+	"</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%s</TD>\n    </TR>\n",
+	x->pixscale, x->equinox, x->epoch, sysname);
     }
   fprintf(file, "   </TABLEDATA></DATA>\n");
   fprintf(file, "  </TABLE>\n");

@@ -242,6 +242,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
     }
   free(maxclique);
 
+  outfield->fieldno = omax2;	/* This is not what is meant for but hey */
   outfield->exptime = exptime;
 
 /* Approximation to the final equivalent gain */

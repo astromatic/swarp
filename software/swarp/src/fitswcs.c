@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	18/07/2006
+*	Last modify:	09/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -53,7 +53,6 @@ wcsstruct	*copy_wcs(wcsstruct *wcsin)
 
 /* Copy the basic stuff */
   QMEMCPY(wcsin, wcs, wcsstruct, 1);
-
 /* The PROJP WCS parameters */
   QMEMCPY(wcsin->projp, wcs->projp, double, wcs->naxis*100);
 
@@ -95,7 +94,7 @@ OUTPUT	pointer to a WCS structure.
 NOTES	If a pointer is set to null, the corresponding variables are set to
 	default values.
 AUTHOR	E. Bertin (IAP)
-VERSION	19/08/2004
+VERSION	09/08/2006
  ***/
 wcsstruct	*create_wcs(char **ctype, double *crval, double *crpix,
 			double *cdelt, int *naxisn, int naxis)
@@ -126,6 +125,7 @@ wcsstruct	*create_wcs(char **ctype, double *crval, double *crpix,
     wcs->cd[l*(naxis+1)] = cdelt? cdelt[l] : 1.0;
     }
 
+  wcs->epoch = wcs->equinox = 2000.0;
   QCALLOC(wcs->wcsprm, struct wcsprm, 1);
 
 /* Test if the WCS is recognized and a celestial pair is found */
@@ -887,7 +887,7 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/09/2004
+VERSION	09/08/2006
  ***/
 void	range_wcs(wcsstruct *wcs)
 
@@ -937,16 +937,19 @@ void	range_wcs(wcsstruct *wcs)
   for (i=0; i<naxis; i++)
     {
     if ((i==lng || i==lat) && lng!=lat)
-      scale[i] = sqrt(wcs_scale(wcs, raw));
+      wcs->pixscale = scale[i] = sqrt(wcs_scale(wcs, raw));
     else
       {
       raw[i] += 1.0;
       raw_to_wcs(wcs, raw, world2);
       scale[i] = fabs(world2[i] - world[i]);
       raw[i] -= 1.0;
+      if (lng==lat)
+        wcs->pixscale = scale[i];
       }
     wcs->wcsscalepos[i] = world[i];
     }
+
 
 /* Find "World limits" */
   for (i=0; i<naxis; i++)
