@@ -9,10 +9,107 @@
 *
 *       Contents:       log of changes made to the SWarp source
 *
-*       Last modify:    17/07/2006
+*       Last modify:    09/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
+
+------------------------------------------------------------------------
+r323 | bertin | 2006-08-09 20:12:58 +0200 (Wed, 09 Aug 2006) | 5 lines
+
+Added Equinox and COOSYS FIELDs to VOTable output.
+Fixed various issues in the propagation of astrometric and photometric metadata.
+Updated the documentation.
+Changed the version number to 2.16: we are go for the release!
+
+------------------------------------------------------------------------
+r321 | bertin | 2006-08-08 20:17:11 +0200 (Tue, 08 Aug 2006) | 4 lines
+
+Fixed graph matrix overflow in image combine routine.
+Removed counting of more than one extension per file in the displayed number of overlaps.
+Added estimate of maximum exposure time and maximum effective gain in FITS and XML meta-data outputs.
+
+------------------------------------------------------------------------
+r320 | bertin | 2006-08-05 20:06:24 +0200 (Sat, 05 Aug 2006) | 2 lines
+
+Optimized the COMBINE buffer allocation by finding the real maximal clique by using the recursive algorithm of Bron & Kerbosch (1971): typical gain ~ 50%.
+
+------------------------------------------------------------------------
+r319 | bertin | 2006-08-02 22:04:55 +0200 (Wed, 02 Aug 2006) | 3 lines
+
+Fixed serious co-addition bug for framed output FOVs.
+Removed useless access to images outside the output frame during co-addition.
+
+------------------------------------------------------------------------
+r318 | bertin | 2006-08-01 23:00:44 +0200 (Tue, 01 Aug 2006) | 3 lines
+
+Fixed issues with image combining with RESAMPLE N.
+Fixed (invisible) floating exception occuring during image combining.
+
+------------------------------------------------------------------------
+r317 | bertin | 2006-07-27 21:29:03 +0200 (Thu, 27 Jul 2006) | 6 lines
+
+Added/Fixed several elements in XML output.
+Added BLANK_BADPIXELS option to blank output pixels with a weight of zero.
+Added "naive" total exposure time calculation.
+Increased background buffer size to 8MB.
+Doc: added BLANK_BADPIXELS keyword description and fixed typos in gain computation.
+
+------------------------------------------------------------------------
+r316 | bertin | 2006-07-26 20:29:05 +0200 (Wed, 26 Jul 2006) | 5 lines
+
+XML VOTable output implementation now complete (checked validity and compliance).
+Added stdout output of XML using XML_NAME STDOUT option.
+Pushed the limit for keyword length to 32 chars.
+Doc: Updated to 2.16, with info about XML output options.
+
+------------------------------------------------------------------------
+r315 | bertin | 2006-07-26 11:47:29 +0200 (Wed, 26 Jul 2006) | 2 lines
+
+Corrected a typo that would prevent the code to compile on Macs.
+
+------------------------------------------------------------------------
+r314 | bertin | 2006-07-25 22:52:52 +0200 (Tue, 25 Jul 2006) | 2 lines
+
+Further progress with the XML-Votable output (note: "ct" units replaced with "adu" units).
+
+------------------------------------------------------------------------
+r312 | bertin | 2006-07-25 16:00:31 +0200 (Tue, 25 Jul 2006) | 2 lines
+
+Added automatic detection of the number of CPUs on BSD, HP/UX and IRIX systems.
+
+------------------------------------------------------------------------
+r311 | bertin | 2006-07-24 20:47:56 +0200 (Mon, 24 Jul 2006) | 2 lines
+
+Further progress on the XML metadata config dump.
+
+------------------------------------------------------------------------
+r310 | bertin | 2006-07-21 21:09:26 +0200 (Fri, 21 Jul 2006) | 3 lines
+
+Further progress on the XML output.
+Added a follow-up of celestial types through field structures.
+
+------------------------------------------------------------------------
+r308 | bertin | 2006-07-20 22:01:53 +0200 (Thu, 20 Jul 2006) | 5 lines
+
+Cleaned up configure.ac (removed obsolete options).
+Added XML VOTable output support files.
+Added error catching routines.
+Added XML VOTable support (not finished, deactivated for now).
+
+------------------------------------------------------------------------
+r307 | bertin | 2006-07-19 19:41:42 +0200 (Wed, 19 Jul 2006) | 3 lines
+
+Added CELESTIAL_TYPE SUPERGALACTIC option.
+Cleaned up default configuration file dump.
+
+------------------------------------------------------------------------
+r306 | bertin | 2006-07-19 18:14:38 +0200 (Wed, 19 Jul 2006) | 5 lines
+
+Updated ChangeLog.
+Relaxed binary table identification checks.
+Fixed coordinate system transformation bug (detected on Gal<->Eq).
+Added support for supergalactic coordinate system.
 
 ------------------------------------------------------------------------
 r291 | bertin | 2006-07-17 20:02:20 +0200 (Mon, 17 Jul 2006) | 4 lines

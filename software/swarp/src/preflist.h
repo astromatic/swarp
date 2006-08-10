@@ -9,7 +9,7 @@
 *
 *	Contents:	Keywords for the configuration file.
 *
-*	Last modify:	27/07/2006
+*	Last modify:	09/08/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -24,6 +24,10 @@
 #endif
 #ifndef _PREFS_H_
 #include "prefs.h"
+#endif
+
+#ifndef _XML_H_
+#include "xml.h"
 #endif
 
 #ifdef	USE_THREADS
