@@ -240,6 +240,7 @@ void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
 			BANNER);
   fitswrite(tab->headbuf, "COMBINET", key[findkeys("COMBINE_TYPE", keylist,
 	FIND_STRICT)].keylist[prefs.coadd_type], H_STRING, T_STRING);
+
   if (infield && (intab=infield->tab) && prefs.ncopy_keywords)
     {
     addkeywordto_head(tab, "COMMENT ", "");
@@ -418,7 +419,6 @@ void	writefitsinfo_field(fieldstruct *field, fieldstruct *infield)
       {
       if ((l=fitsfind(intab->headbuf, prefs.copy_keywords[k])) != RETURN_ERROR)
         {
-printf("============================ %s ===========================\n", prefs.copy_keywords[k]);
         fitspick(intab->headbuf+l*80, prefs.copy_keywords[k], gstr,
 		&htype, &ttype, comment);
         addkeywordto_head(tab, prefs.copy_keywords[k], comment);
