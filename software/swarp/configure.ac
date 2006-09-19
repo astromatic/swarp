@@ -88,7 +88,7 @@ AC_ISC_POSIX
 
 # Special optimization options for the INTEL C compiler
 if test $use_icc = "yes" -a $CC = "icc"; then
-  CFLAGS="$CFLAGS -O3 -axW -ip"
+  CFLAGS="$CFLAGS -O3 -axP -ip"
 else
   ACX_PROG_CC_OPTIM
 fi
