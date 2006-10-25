@@ -9,7 +9,7 @@
 *
 *	Contents:	Parsing of the command line.
 *
-*	Last modify:	21/07/2005
+*	Last modify:	25/10/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -33,6 +33,8 @@
 
 #define		SYNTAX \
 BANNER " image1 [image2 ...][-c <configuration_file>][-<keyword> <value>]\n" \
+">\t or " \
+BANNER " @image_list [-c <configuration_file>][-<keyword> <value>]\n" \
 "> to dump a default configuration file: " BANNER " -d \n" \
 "> to dump a default extended configuration file: " BANNER " -dd \n"
 
@@ -42,7 +44,8 @@ extern const char	notokstr[];
 int	main(int argc, char *argv[])
 
   {
-   char		**argkey, **argval, *str;
+   FILE         *fp;
+   char		**argkey, **argval, *str, *list;
    int		a, narg, nim, opt, opt2;
 
 #ifdef HAVE_MPI
@@ -107,6 +110,31 @@ int	main(int argc, char *argv[])
       }
     else
       {
+/*---- The input image list filename */
+      if (*(argv[a]) == '@')
+        {
+        QMALLOC(list, char, MAXCHAR);
+        for(*argv[a]++; (a<argc) && (*argv[a]!='-'); a++)
+          strcpy(list, argv[a]);        
+        if (!(fopen(list,"r")==NULL))
+          {
+          QMALLOC(str, char, MAXCHAR);
+          fp = fopen(list,"r");
+          for (nim=0; fgets(str,MAXCHAR,fp); nim++)
+            if (nim<MAXINFIELD)
+              {
+              QMALLOC(prefs.infield_name[nim], char, strlen(str)-1);
+              strncpy(prefs.infield_name[nim],str,strlen(str)-1);        
+              }
+            else
+              error(EXIT_FAILURE, "*Error*: Too many input images: ", str);
+          fclose(fp);
+          free(str);
+          }
+        else
+          error(EXIT_FAILURE, "*Error*: Cannot open file ", list);
+        free(list);
+        }
 /*---- The input image filename(s) */
       for(; (a<argc) && (*argv[a]!='-'); a++)
         for (str=NULL;(str=strtok(str?NULL:argv[a], notokstr)); nim++)
