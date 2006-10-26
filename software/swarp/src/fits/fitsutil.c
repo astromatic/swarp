@@ -9,7 +9,7 @@
 *
 *	Contents:	functions for handling FITS keywords.
 *
-*	Last modify:	19/09/2006
+*	Last modify:	21/09/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -426,7 +426,7 @@ OUTPUT	RETURN_OK if the keyword was found, RETURN_ERROR otherwise.
 NOTES	The buffer MUST contain the ``END     '' keyword.
 	The keyword must already exist in the buffer (use fitsadd()).
 AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	27/08/2006
+VERSION	21/09/2006
  ***/
 int	fitswrite(char *fitsbuf, char *keyword, void *ptr, h_type htype,
 		t_type ttype)
@@ -539,7 +539,7 @@ int	fitswrite(char *fitsbuf, char *keyword, void *ptr, h_type htype,
   if (posoff==10 && i && (l=69-strlen(str))>0)
     {
     strncpy(str2, cstr, i);
-    str2[i+1] = 0;
+    str2[i] = 0;
     strcat(str, " ");
     strncat(str, str2, l);
     }
@@ -569,7 +569,7 @@ void	fixexponent(char *s)
    int	i;
 
   s += 9;
-  for (i=71; (int)*s != '/' && i--; s++)
+  for (i=71; ((int)*s) && (int)*s != '/' && i--; s++)
     if ((int)*s == 'D' || (int)*s == 'd')
       *s = (char)'E';
 

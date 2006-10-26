@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	09/08/2006
+*	Last modify:	02/10/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -233,7 +233,7 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	09/08/2006
+VERSION	02/10/2006
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
@@ -404,10 +404,10 @@ int	write_xml_meta(FILE *file, char *error)
   fprintf(file, "   <FIELD name=\"Astrometric_Flux_Scaling\" datatype=\"float\""
 	" ucd=\"phot.calib;obs.image\"/>\n");
   fprintf(file, "   <FIELD name=\"Field_Coordinates\" datatype=\"double\""
-	" arraysize=\"%d\" ucd=\"phot.eq;obs.image\" unit=\"%s\"/>\n",
+	" arraysize=\"%d\" ucd=\"pos.eq;obs.image\" unit=\"%s\"/>\n",
 	naxis, nxml? (xmlstack[0].celsys >=0? "deg":"pix") : "deg");
   fprintf(file, "   <FIELD name=\"Pixel_Scale\" datatype=\"float\""
-	" ucd=\"instr.scale;obs.image;stat.mean\" unit=\"arcsec\"/>\n");
+	" ucd=\"instr.pixel;obs.image;stat.mean\" unit=\"arcsec\"/>\n");
   fprintf(file, "   <FIELD name=\"Equinox\" datatype=\"double\""
 	" ucd=\"time.equinox;obs\" unit=\"yr\"/>\n");
   fprintf(file, "   <FIELD name=\"Epoch\" datatype=\"double\""

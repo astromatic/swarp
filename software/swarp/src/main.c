@@ -5,11 +5,11 @@
 *
 *	Part of:	SWarp
 *
-*	Author:		E.BERTIN (IAP)
+*	Author:		E.Bertin & C.Marmo (IAP)
 *
 *	Contents:	Parsing of the command line.
 *
-*	Last modify:	25/10/2006
+*	Last modify:	26/10/2006
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -32,9 +32,8 @@
 #include	"prefs.h"
 
 #define		SYNTAX \
-BANNER " image1 [image2 ...][-c <configuration_file>][-<keyword> <value>]\n" \
-">\t or " \
-BANNER " @image_list [-c <configuration_file>][-<keyword> <value>]\n" \
+BANNER " image1 [image2 ...][@image_list1 [@image_list2 ...]]\n" \
+"\t\t[-c <configuration_file>][-<keyword> <value>]\n" \
 "> to dump a default configuration file: " BANNER " -d \n" \
 "> to dump a default extended configuration file: " BANNER " -dd \n"
 
@@ -45,8 +44,10 @@ int	main(int argc, char *argv[])
 
   {
    FILE         *fp;
-   char		**argkey, **argval, *str, *list;
-   int		a, narg, nim, opt, opt2;
+   char		liststr[MAXCHAR],
+		**argkey, **argval,
+		*str, *listname, *listbuf;
+   int		a, l, narg, nim, opt, opt2, bufpos,bufsize;
 
 #ifdef HAVE_MPI
   MPI_Init (&argc,&argv);
@@ -69,6 +70,9 @@ int	main(int argc, char *argv[])
   prefs.infield_name[0] = "image";
   strcpy(prefs.prefs_name, "default.swarp");
   narg = nim = 0;
+  listbuf = (char *)NULL;
+  bufpos = 0;
+  bufsize = MAXCHAR*1000;
 
   for (a=1; a<argc; a++)
     {
@@ -108,45 +112,51 @@ int	main(int argc, char *argv[])
         argval[narg++] = argv[++a];
         }       
       }
-    else
+    else if (*(argv[a]) == '@')
       {
 /*---- The input image list filename */
-      if (*(argv[a]) == '@')
+      listname = argv[a]+1;
+      if ((fp=fopen(listname,"r")))
         {
-        QMALLOC(list, char, MAXCHAR);
-        for(*argv[a]++; (a<argc) && (*argv[a]!='-'); a++)
-          strcpy(list, argv[a]);        
-        if (!(fopen(list,"r")==NULL))
+        if (!listbuf)
           {
-          QMALLOC(str, char, MAXCHAR);
-          fp = fopen(list,"r");
-          for (nim=0; fgets(str,MAXCHAR,fp); nim++)
-            if (nim<MAXINFIELD)
-              {
-              QMALLOC(prefs.infield_name[nim], char, strlen(str)-1);
-              strncpy(prefs.infield_name[nim],str,strlen(str)-1);        
-              }
-            else
-              error(EXIT_FAILURE, "*Error*: Too many input images: ", str);
-          fclose(fp);
-          free(str);
+          QMALLOC(listbuf, char, bufsize);
           }
-        else
-          error(EXIT_FAILURE, "*Error*: Cannot open file ", list);
-        free(list);
-        }
-/*---- The input image filename(s) */
-      for(; (a<argc) && (*argv[a]!='-'); a++)
-        for (str=NULL;(str=strtok(str?NULL:argv[a], notokstr)); nim++)
+        while (fgets(liststr,MAXCHAR,fp))
           if (nim<MAXINFIELD)
-            prefs.infield_name[nim] = str;
+            {
+            str = strtok(liststr, "\n\r\t ");
+            if (!str)
+              continue;
+            l = strlen(str)+1;
+            if (bufpos+l > bufsize)
+              {
+              bufsize += MAXCHAR*1000;
+              QREALLOC(listbuf, char, bufsize);
+              }
+            prefs.infield_name[nim] = strcpy(listbuf + bufpos, str);
+            bufpos += l;
+            nim++;
+            }
           else
-            error(EXIT_FAILURE, "*Error*: Too many input images: ", str);
-      prefs.ninfield = nim;
-      a--;
+            error(EXIT_FAILURE, "*Error*: Too many input images in ",
+			liststr);
+        fclose(fp);
+        }
+      else
+        error(EXIT_FAILURE, "*Error*: Cannot open image list ", listname);
+      }
+    else
+/*---- The input image filename(s) */
+      {
+      str = strtok(argv[a], "\n\r\t ");
+      if (nim<MAXINFIELD)
+        prefs.infield_name[nim++] = str;
+      else
+        error(EXIT_FAILURE, "*Error*: Too many input images: ", str);
       }
     }
-
+  prefs.ninfield = nim;
   readprefs(prefs.prefs_name, argkey, argval, narg);
   useprefs();
 
@@ -159,6 +169,8 @@ int	main(int argc, char *argv[])
 #endif
 
   makeit();
+
+  free(listbuf);
 
   NFPRINTF(OUTPUT, "");
   NPRINTF(OUTPUT, "> All done (in %.0f s)\n", prefs.time_diff);
