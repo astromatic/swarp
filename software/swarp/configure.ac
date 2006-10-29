@@ -177,9 +177,6 @@ if test -n "$myldflags"; then
 LDFLAGS="$myldflags"
 fi
 
-# href to the XSL style-sheet in preflist.h
-CFLAGS="$CFLAGS -DXSL_URL=\\\"file://$datadir/${PACKAGE_NAME}/${PACKAGE_NAME}.xsl\\\""
-
 # Display compiler and linker flags
 AC_MSG_RESULT([I will compile using:  $CC $CFLAGS])
 AC_MSG_RESULT([I will link using:     $CC $LDFLAGS $LIBS])

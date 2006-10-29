@@ -1,8 +1,7 @@
 Add variable flux correction for non equal-area projections.
-Optimize better COMBINE buffer usage (with a maximum clique algorithm).
 Correct the small (10^-4) jittering due to kernel aliasing in Lanczos mode.
 Add support for compressed input images.
 Improve the quality of background subtraction, and make it multithreaded.
-Add support for ICRS and PV/DV parameters according to the final WCS documents
+Add support for PV/DV parameters according to the final WCS documents
 (when they are released!).
 Add "Drizzle-like" RESAMPLING_TYPE (square top-hat with width < 1 pixel).

@@ -9,5 +9,6 @@ swarp_SOURCES		= back.c coadd.c data.c field.c fitswcs.c header.c \
 			  globals.h header.h interpolate.h key.h preflist.h \
 			  prefs.h projapprox.h resample.h threads.h types.h \
 			  wcscelsys.h weight.h xml.h
+AM_CPPFLAGS		= -DXSL_URL=\"file://$(pkgdatadir)/${PACKAGE_NAME}.xsl\"
 swarp_LDADD		= $(top_builddir)/src/fits/libfits.a $(top_builddir)/src/wcs/libwcs_c.a
 DATE=`date +"%Y-%m-%d"`
