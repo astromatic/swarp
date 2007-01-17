@@ -1,6 +1,7 @@
 %define name @PACKAGE_NAME@
 %define version @PACKAGE_VERSION@
 %define release 1
+%define target
 
 Summary: resample and combine astronomical FITS images
 Name: %{name}
@@ -20,17 +21,9 @@ SWarp is a program that resamples and coadd FITS images to any arbitrary astrome
 %setup -q
 
 %build
-if test "$ICCFLAGS"; then
-./configure --enable-icc --enable-static --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/
-make -j CFLAGS="$ICCFLAGS -prof_genx -prof_dir "`pwd`
-src/@PACKAGE_NAME@ test/test.fits -PROJECTION_ERR 0.0
-src/@PACKAGE_NAME@ test/test.fits -PROJECTION_ERR 0.0
-src/@PACKAGE_NAME@ test/test.fits -OVERSAMPLING 4
-make clean
-make -j CFLAGS="$ICCFLAGS -ipo -ipo_obj -prof_use -prof_dir "`pwd`
-elif test "$GCCFLAGS"; then
+if test "$TPXFLAGS"; then
 ./configure --enable-static --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/
-make -j CFLAGS="$GCCFLAGS"
+make -j CC="$TPXCC" CFLAGS="$TPXFLAGS"
 else
 ./configure --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/
 make -j
