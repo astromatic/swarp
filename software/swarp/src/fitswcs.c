@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	09/08/2006
+*	Last modify:	08/02/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -149,7 +149,7 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	07/03/2005
+VERSION	26/09/2006
  ***/
 void	init_wcs(wcsstruct *wcs)
 
@@ -239,6 +239,9 @@ void	init_wcs(wcsstruct *wcs)
       }
     wcs->nprojp = n;
     }
+
+/* Check-out chirality */
+  wcs->chirality = wcs_chirality(wcs);
 
 /* Initialize Equatorial <=> Celestial coordinate system transforms */
   init_wcscelsys(wcs);
@@ -1156,6 +1159,76 @@ int	reaxe_wcs(wcsstruct *wcs, int lng, int lat)
   }
 
 
+/******* celsys_to_eq *********************************************************
+PROTO	int celsys_to_eq(wcsstruct *wcs, double *wcspos)
+PURPOSE	Convert arbitrary celestial coordinates to equatorial.
+INPUT	WCS structure,
+	Coordinate vector.
+OUTPUT	RETURN_OK if mapping successful, RETURN_ERROR otherwise.
+NOTES	-.
+AUTHOR	E. Bertin (IAP)
+VERSION	08/02/2007
+ ***/
+int	celsys_to_eq(wcsstruct *wcs, double *wcspos)
+
+  {
+   double	*mat,
+		a2,d2,sd2,cd2cp,sd,x,y;
+   int		lng, lat;
+
+  mat = wcs->celsysmat;
+  a2 = wcspos[lng = wcs->wcsprm->lng]*DEG - mat[1];
+  d2 = wcspos[lat = wcs->wcsprm->lat]*DEG;
+/* A bit of spherical trigonometry... */
+/* Compute the latitude... */
+  sd2 = sin(d2);
+  cd2cp = cos(d2)*mat[2];
+  sd = sd2*mat[3]-cd2cp*cos(a2);
+/* ...and the longitude */
+  y = cd2cp*sin(a2);
+  x = sd2 - sd*mat[3];
+  wcspos[lng] = fmod((atan2(y,x) + mat[0])/DEG+360.0, 360.0);
+  wcspos[lat] = asin(sd)/DEG;
+
+  return RETURN_OK;
+  }
+
+
+/******* eq_to_celsys *********************************************************
+PROTO	int eq_to_celsys(wcsstruct *wcs, double *wcspos)
+PURPOSE	Convert equatorial to arbitrary celestial coordinates.
+INPUT	WCS structure,
+	Coordinate vector.
+OUTPUT	RETURN_OK if mapping successful, RETURN_ERROR otherwise.
+NOTES	-.
+AUTHOR	E. Bertin (IAP)
+VERSION	08/02/2007
+ ***/
+int	eq_to_celsys(wcsstruct *wcs, double *wcspos)
+
+  {
+   double	*mat,
+		a,d,sd2,cdcp,sd,x,y;
+   int		lng, lat;
+
+  mat = wcs->celsysmat;
+  a = wcspos[lng = wcs->wcsprm->lng]*DEG - mat[0];
+  d = wcspos[lat = wcs->wcsprm->lat]*DEG;
+/* A bit of spherical trigonometry... */
+/* Compute the latitude... */
+  sd = sin(d);
+  cdcp = cos(d)*mat[2];
+  sd2 = sd*mat[3]+cdcp*cos(a);
+/* ...and the longitude */
+  y = cdcp*sin(a);
+  x = sd2*mat[3]-sd;
+  wcspos[lng] = fmod((atan2(y,x) + mat[1])/DEG+360.0, 360.0);
+  wcspos[lat] = asin(sd2)/DEG;
+
+  return RETURN_OK;
+  }
+
+
 /******* raw_to_wcs ***********************************************************
 PROTO	int raw_to_wcs(wcsstruct *, double *, double *)
 PURPOSE	Convert raw (pixel) coordinates to WCS (World Coordinate System).
@@ -1165,15 +1238,14 @@ INPUT	WCS structure,
 OUTPUT	RETURN_OK if mapping successful, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	31/08/2002
+VERSION	08/02/2007
  ***/
 int	raw_to_wcs(wcsstruct *wcs, double *pixpos, double *wcspos)
 
   {
-   double	*mat,
-		imgcrd[NAXIS],
-		phi,theta, a2,d2,sd2,cd2cp,sd,x,y;
-   int		i,lng,lat;
+   double	imgcrd[NAXIS],
+		phi,theta;
+   int		i;
 
   if (wcsrev((const char(*)[9])wcs->ctype, wcs->wcsprm, pixpos,
 	wcs->lin,imgcrd, wcs->prj, &phi, &theta, wcs->crval, wcs->cel, wcspos))
@@ -1185,21 +1257,7 @@ int	raw_to_wcs(wcsstruct *wcs, double *pixpos, double *wcspos)
 
 /* If needed, convert from a different coordinate system to equatorial */
   if (wcs->celsysconvflag)
-    {
-    mat = wcs->celsysmat;
-    a2 = wcspos[lng = wcs->wcsprm->lng]*DEG - mat[1];
-    d2 = wcspos[lat = wcs->wcsprm->lat]*DEG;
-/*-- A bit of spherical trigonometry... */
-/*-- Compute the latitude... */
-    sd2 = sin(d2);
-    cd2cp = cos(d2)*mat[2];
-    sd = sd2*mat[3]-cd2cp*cos(a2);
-/*-- ...and the longitude */
-    y = cd2cp*sin(a2);
-    x = sd2 - sd*mat[3];
-    wcspos[lng] = fmod((atan2(y,x) + mat[0])/DEG+360.0, 360.0);
-    wcspos[lat] = asin(sd)/DEG;
-    }
+    celsys_to_eq(wcs, wcspos);
 
   return RETURN_OK;
   }
@@ -1214,33 +1272,18 @@ INPUT	WCS structure,
 OUTPUT	RETURN_OK if mapping successful, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	31/08/2002
+VERSION	08/02/2007
  ***/
 int	wcs_to_raw(wcsstruct *wcs, double *wcspos, double *pixpos)
 
   {
-   double	*mat,
-		imgcrd[NAXIS],
-		phi,theta, a,d,sd,cdcp,sd2,x,y;
-   int		i,lng,lat;
+   double	imgcrd[NAXIS],
+		phi,theta;
+   int		i;
 
 /* If needed, convert to a coordinate system different from equatorial */
   if (wcs->celsysconvflag)
-    {
-    mat = wcs->celsysmat;
-    a = wcspos[lng = wcs->wcsprm->lng]*DEG - mat[0];
-    d = wcspos[lat = wcs->wcsprm->lat]*DEG;
-/*-- A bit of spherical trigonometry... */
-/*-- Compute the latitude... */
-    sd = sin(d);
-    cdcp = cos(d)*mat[2];
-    sd2 = sd*mat[3]+cdcp*cos(a);
-/*-- ...and the longitude */
-    y = cdcp*sin(a);
-    x = sd2*mat[3]-sd;
-    wcspos[lng] = fmod((atan2(y,x) + mat[1])/DEG+360.0, 360.0);
-    wcspos[lat] = asin(sd2)/DEG;
-    }
+    eq_to_celsys(wcs, wcspos);
 
   if (wcsfwd((const char(*)[9])wcs->ctype,wcs->wcsprm,wcspos,
 	wcs->crval, wcs->cel,&phi,&theta,wcs->prj, imgcrd,wcs->lin,pixpos))
@@ -1474,6 +1517,36 @@ double	wcs_scale(wcsstruct *wcs, double *pixpos)
   return fabs((dpos1*(wcspos2[lat]-wcspos[lat])
 		-(wcspos1[lat]-wcspos[lat])*dpos2)
 		*cos(wcspos[lat]*DEG));
+  }
+
+
+/******* wcs_chirality *******************************************************
+PROTO	int wcs_chirality(wcsstruct *wcs)
+PURPOSE	Compute the chirality of a WCS projection.
+INPUT	WCS structure.
+OUTPUT	+1 if determinant of matrix is positive, -1 if negative, 0 if null.
+NOTES	-.
+AUTHOR	E. Bertin (IAP)
+VERSION	26/09/2006
+ ***/
+int	wcs_chirality(wcsstruct *wcs)
+
+  {
+   double	a;
+   int		lng,lat, naxis;
+
+  lng = wcs->lng;
+  lat = wcs->lat;
+  naxis = wcs->naxis;
+  if (lng==lat && naxis>=2)
+    {
+    lng = 0;
+    lat = 1;
+    }
+
+  a = wcs->cd[lng*naxis+lng]*wcs->cd[lat*naxis+lat]
+	- wcs->cd[lng*naxis+lat]*wcs->cd[lat*naxis+lng];
+  return a>TINY? 1 : (a<-TINY? -1 : 0);
   }
 
 

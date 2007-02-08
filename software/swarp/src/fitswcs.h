@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for fitswcs.c
 *
-*	Last modify:	21/07/2006
+*	Last modify:	08/02/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -70,6 +70,7 @@ typedef struct wcs
   int		lat,lng;		/* longitude and latitude axes # */
   double	r0;			/* projection "radius" */
   double	lindet;			/* Determinant of the local matrix */
+  int		chirality;		/* Chirality of the CD matrix */
   double	pixscale;		/* (Local) pixel scale */
   double	ap2000,dp2000;		/* J2000 coordinates of pole */
   double	ap1950,dp1950;		/* B1950 coordinates of pole */
@@ -104,13 +105,16 @@ extern double		sextodegal(char *hms),
 				double *wcspos1, double *wcspos2),
 			wcs_scale(wcsstruct *wcs, double *pixpos);
 
-extern int		raw_to_red(wcsstruct *wcs,
+extern int		celsys_to_eq(wcsstruct *wcs, double *wcspos),
+			eq_to_celsys(wcsstruct *wcs, double *wcspos),
+			raw_to_red(wcsstruct *wcs,
 				double *pixpos, double *redpos),
 			raw_to_wcs(wcsstruct *wcs,
 				double *pixpos, double *wcspos),
 			reaxe_wcs(wcsstruct *wcs, int lng, int lat),
 			red_to_raw(wcsstruct *wcs,
 				double *redpos, double *pixpos),
+			wcs_chirality(wcsstruct *wcs),
 			wcs_supproj(char *name),
 			wcs_to_raw(wcsstruct *wcs,
 				double *wcspos, double *pixpos);

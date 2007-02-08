@@ -168,11 +168,11 @@ void	makeit(void)
 /* Check consistency of lng and lat axes */
   lng = outfield->wcs->lng;
   lat = outfield->wcs->lat;
+  NFPRINTF(OUTPUT, "Creating NEW weight-map...")
+  outwfield = init_weight(prefs.outwfield_name, outfield);
   NFPRINTF(OUTPUT, "")
   QPRINTF(OUTPUT, "------- Output File %s:\n", outfield->rfilename);
   printinfo_field(outfield, outwfield);
-  NFPRINTF(OUTPUT, "Creating NEW weight-map...")
-  outwfield = init_weight(prefs.outwfield_name, outfield);
 
 /* The first field in the XML stack is the output field */
   if (prefs.xml_flag)

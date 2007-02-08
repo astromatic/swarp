@@ -279,6 +279,7 @@ void	printinfo_field(fieldstruct *field, fieldstruct *wfield)
   wcs = field->wcs;
 
 /* Find field center */
+printf("%g %g\n", wcs->crval[0], wcs->crval[1]);
   for (i=0; i<wcs->naxis; i++)
     pixpos[i] = (wcs->naxisn[i]+1.0)/2.0;
   raw_to_wcs(wcs, pixpos, wcspos);
@@ -339,7 +340,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 09/08/2006
+VERSION 08/02/2007
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -348,9 +349,11 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
    fieldstruct		*field;
    tabstruct		*tab;
    wcsstruct		*wcs;
-   double		pixscale, val, epoch;
+   double		pixscale[NAXIS],
+			val, epoch;
    float		*scale;
-   char			*pstr;
+   char			*ctype[NAXIS],
+			*pstr;
    int			i,j,n,npstr, naxis, lat,lng, countmin0,countmax0,
 			countmin,countmax;
 
@@ -380,7 +383,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 /* Check that angular axes are the same and adopt them for output */
 
   lat = lng = -1;
-  naxis = 0;	/* to avoid gcc -Wall warnings */
+  naxis = 0;				/* to avoid gcc -Wall warnings */
   for (i=0; i<ninput; i++)
     {
     if (lng == -1)
@@ -401,42 +404,47 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 
   if (prefs.resample_flag)
     {
-     double	wcsmin,wcsmax,wcsmin1,wcsmax1,wcsmin2,wcsmax2;
+     double	wcsmin[NAXIS],wcsmax[NAXIS],
+		wcsmin1,wcsmax1,wcsmin2,wcsmax2;
 
-/*-- Fill a new WCS structure */
-    QCALLOC(wcs, wcsstruct, 1);
-    field->wcs = wcs;
-    wcs->naxis = tab->naxis = naxis;
+    tab->naxis = naxis;
 
-    QCALLOC(wcs->projp, double, naxis*100);
-
-    wcs->lng = lng;
-    wcs->lat = lat;
-/*-- Copy the types and units */
+/*-- Create a new WCS structure */
+/*-- Copy the types */
     for (i=0; i<naxis; i++)
       {
-      strncpy(wcs->cunit[i], infield[0]->wcs->cunit[i], 8);
-      strncpy(wcs->ctype[i], infield[0]->wcs->ctype[i], 8);
+      QMALLOC(ctype[i], char, 16);
+      strncpy(ctype[i], infield[0]->wcs->ctype[i], 8);
       }
+
 /*---- Change the Celestial system if needed */
     if (lng!=lat)
       {
       if (prefs.celsys_type == CELSYS_PIXEL)
         {
-        strcpy(wcs->ctype[lng], "PIXEL");
-        strcpy(wcs->ctype[lat], "PIXEL");
+        strcpy(ctype[lng], "PIXEL");
+        strcpy(ctype[lat], "PIXEL");
         }
       else if (prefs.celsys_type != CELSYS_NATIVE)
         {
         n = prefs.celsys_type - 2;	/* Drop "NATIVE" and "PIXEL" options */
-        strncpy(wcs->ctype[lng], celsysname[n][0], 4);
-        strncpy(wcs->ctype[lat], celsysname[n][1], 4);
+        strncpy(ctype[lng], celsysname[n][0], 4);
+        strncpy(ctype[lat], celsysname[n][1], 4);
         }
+      }
+
+    field->wcs = wcs = create_wcs(ctype, NULL, NULL, NULL, NULL, naxis);
+
+/*-- Copy the units */
+    for (i=0; i<naxis; i++)
+      {
+      strncpy(wcs->cunit[i], infield[0]->wcs->cunit[i], 8);
+      free(ctype[i]);
       }
 
     for (n=0; n<naxis; n++)
       {
-      wcsmin =  wcsmax = 0.0;	/* to avoid gcc -Wall warnings */
+      wcsmin[n] =  wcsmax[n] = 0.0;	/* to avoid gcc -Wall warnings */
       switch (prefs.center_type[n])
         {
         case CENTER_MOST:
@@ -466,48 +474,48 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 /*---------- Update the "most intersecting" limits */
             if (countmin>countmin0)
               {
-              wcsmin = wcsmin1;
+              wcsmin[n] = wcsmin1;
               countmin0 = countmin;
               }
             if (countmax>countmax0)
               {
-              wcsmax = wcsmax1;
+              wcsmax[n] = wcsmax1;
               countmax0 = countmax;
               }
             }
-          wcs->crval[n] = (wcsmin+wcsmax)/2.0;
+          wcs->crval[n] = (wcsmin[n]+wcsmax[n])/2.0;
           break;
 
         case CENTER_ALL:
-          wcsmin = BIG;
-          wcsmax = -BIG;
+          wcsmin[n] = BIG;
+          wcsmax[n] = -BIG;
           for (i=0; i<ninput; i++)
             {
             wcsmin2 = infield[i]->wcs->wcsmin[n];
             wcsmax2 = infield[i]->wcs->wcsmax[n];
 /*---------- Test for the lower limit */
-            if (wcsmin2<wcsmin)
-              wcsmin = wcsmin2;
+            if (wcsmin2<wcsmin[n])
+              wcsmin[n] = wcsmin2;
 /*---------- Test for the upper limit */
-            if (wcsmax2>wcsmax)
-              wcsmax = wcsmax2;
+            if (wcsmax2>wcsmax[n])
+              wcsmax[n] = wcsmax2;
             }
-          wcs->crval[n] = (wcsmin+wcsmax)/2.0;
+          wcs->crval[n] = (wcsmin[n]+wcsmax[n])/2.0;
           break;
 
         case CENTER_MANUAL:
-          wcsmin = BIG;
-          wcsmax = -BIG;
+          wcsmin[n] = BIG;
+          wcsmax[n] = -BIG;
           for (i=0; i<ninput; i++)
             {
             wcsmin2 = infield[i]->wcs->wcsmin[n];
             wcsmax2 = infield[i]->wcs->wcsmax[n];
 /*---------- Test for the lower limit */
-            if (wcsmin2<wcsmin)
-              wcsmin = wcsmin2;
+            if (wcsmin2<wcsmin[n])
+              wcsmin[n] = wcsmin2;
 /*---------- Test for the upper limit */
-            if (wcsmax2>wcsmax)
-              wcsmax = wcsmax2;
+            if (wcsmax2>wcsmax[n])
+              wcsmax[n] = wcsmax2;
             }
 /*-------- Handled swapped ra, dec axes (e.g. SDSS) */
           npstr = n;
@@ -530,25 +538,25 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
           break;
         }
 
-      pixscale = 0.0;
+      pixscale[n] = 0.0;
       switch (prefs.pixscale_type[n])
         {
         case PIXSCALE_MIN:
-          pixscale = BIG;
+          pixscale[n] = BIG;
           for (i=0; i<ninput; i++)
-            if (infield[i]->wcs->wcsscale[n] < pixscale)
-              pixscale = infield[i]->wcs->wcsscale[n];
+            if (infield[i]->wcs->wcsscale[n] < pixscale[n])
+              pixscale[n] = infield[i]->wcs->wcsscale[n];
           break;
         case PIXSCALE_MAX:
-          pixscale = -BIG;
+          pixscale[n] = -BIG;
           for (i=0; i<ninput; i++)
-            if (infield[i]->wcs->wcsscale[n] > pixscale)
-              pixscale = infield[i]->wcs->wcsscale[n];
+            if (infield[i]->wcs->wcsscale[n] > pixscale[n])
+              pixscale[n] = infield[i]->wcs->wcsscale[n];
           break;
         case PIXSCALE_MEDIAN:
           for (i=0; i<ninput; i++)
             scale[i] = (float)infield[i]->wcs->wcsscale[n];
-          pixscale = (double)hmedian(scale, ninput);
+          pixscale[n] = (double)hmedian(scale, ninput);
           break;
         case PIXSCALE_FIT:
           if (prefs.center_type[n] == CENTER_MANUAL)
@@ -560,13 +568,13 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 	      "*Error*: cannot choose an output pixel scale if ",
 		"IMAGE_SIZE is not provided");
 
-          pixscale = (wcsmax - wcsmin) / (double)prefs.image_size[n];
+          pixscale[n] = (wcsmax[n] - wcsmin[n]) / (double)prefs.image_size[n];
           break;
 
         case PIXSCALE_MANUAL:
-          pixscale = prefs.pixscale[n];
+          pixscale[n] = prefs.pixscale[n];
           if ((n==lng || n==lat) && lat!=lng)
-            pixscale *= (ARCSEC/DEG);
+            pixscale[n] *= (ARCSEC/DEG);
           break;
 
         default:
@@ -575,13 +583,34 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
           break;
         }
 
-      if (!pixscale)
+      if (!pixscale[n])
         error(EXIT_FAILURE, "*Error*: null output pixel size ", "");
 
 /*---- Following the tradition in astronomy, CDELTx decreases with longitude */
-      wcs->cd[n*(naxis+1)] = wcs->cdelt[n] = (n==lng && lng != lat)? -pixscale
-								  :pixscale;
+      wcs->cd[n*(naxis+1)] = wcs->cdelt[n] = (n==lng && lng != lat)?
+		-pixscale[n]
+		:pixscale[n];
+      }
 
+/*-- Poorman's boundary computation */
+    if (wcs->celsysconvflag)
+      {
+      if ((prefs.center_type[lng] != CENTER_MANUAL
+	|| prefs.center_type[lat] != CENTER_MANUAL))
+        eq_to_celsys(wcs,  wcs->crval);
+      eq_to_celsys(wcs, wcsmin);
+      eq_to_celsys(wcs, wcsmax);
+      for (n=0; n<naxis; n++)
+        if (wcsmax[n]<wcsmin[n])
+          {
+          val = wcsmin[n];
+          wcsmin[n] = wcsmax[n];
+          wcsmax[n] = val;
+          }
+      }
+
+    for (n=0; n<naxis; n++)
+      {
 /*---- Compute image size. It is necessarily > 0 */
       if (prefs.image_size[n])
         {
@@ -593,22 +622,23 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
         if (prefs.center_type[n] == CENTER_MANUAL)
           {
 /*-------- This is a special case where CRPIX is not NAXISN/2 */
-          val = wcs->cdelt[n] >=0 ? wcs->crval[n] - wcsmin
-				 :wcsmax - wcs->crval[n];
+          
+          val = wcs->cdelt[n] >=0 ? wcs->crval[n] - wcsmin[n] : wcsmax[n] - wcs->crval[n];
           if ((n==lng || n==lat) && lat!=lng)
             {
             if (val<-180.0)
               val += 360.0;
-            wcs->crpix[n] = (int)(fmod(val, 180.0)/pixscale) + 1.0;
+            wcs->crpix[n] = (int)(fmod(val, 180.0)/pixscale[n]) + 1.0;
 /*-------- Add a 5% margin in field size */
             tab->naxisn[n] = wcs->naxisn[n]
-		= (int)(fmod(wcsmax-wcsmin+360.0, 360.0)*1.05/pixscale) + 1;
+		= (int)(fmod(wcsmax[n]-wcsmin[n]+360.0, 360.0)*1.05/pixscale[n])
+		  + 1;
             }
           else
             {
-            wcs->crpix[n] = (int)(val/pixscale) + 1.0;
+            wcs->crpix[n] = (int)(val/pixscale[n]) + 1.0;
             tab->naxisn[n] = wcs->naxisn[n]
-		= (int)(fabs(wcsmax-wcsmin)*1.05/pixscale) + 1;
+		= (int)(fabs(wcsmax[n]-wcsmin[n])*1.05/pixscale[n]) + 1;
 	    }
           }
         else
@@ -616,10 +646,11 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 /*-------- Add a 5% margin in field size */
           if ((n==lng || n==lat) && lat!=lng)
             tab->naxisn[n] = wcs->naxisn[n]
-		= (int)(fmod(wcsmax-wcsmin+360.0, 360.0)*1.05/pixscale) + 1;
+		= (int)(fmod(wcsmax[n]-wcsmin[n]+360.0, 360.0)*1.05/pixscale[n])
+		  + 1;
           else
             tab->naxisn[n] = wcs->naxisn[n]
-		= (int)(fabs(wcsmax-wcsmin)*1.05/pixscale) + 1;
+		= (int)(fabs(wcsmax[n]-wcsmin[n])*1.05/pixscale[n]) + 1;
           wcs->crpix[n] = (wcs->naxisn[n]+1.0)/2.0;
           }
         }
@@ -674,7 +705,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 
 /*-- Default equinox, RA-DEC-sys, longpole and latpole */
     wcs->equinox = 2000.0;
-    wcs->radecsys = RDSYS_FK5;
+    wcs->radecsys = RDSYS_ICRS;
     wcs->longpole = 999.0;
     wcs->latpole = 999.0;
     }
