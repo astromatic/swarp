@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	09/08/2006
+*	Last modify:	08/03/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -249,7 +249,7 @@ INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	16/08/2003
+VERSION	08/03/2007
  ***/
 void	printinfo_field(fieldstruct *field, fieldstruct *wfield)
 
@@ -279,7 +279,6 @@ void	printinfo_field(fieldstruct *field, fieldstruct *wfield)
   wcs = field->wcs;
 
 /* Find field center */
-printf("%g %g\n", wcs->crval[0], wcs->crval[1]);
   for (i=0; i<wcs->naxis; i++)
     pixpos[i] = (wcs->naxisn[i]+1.0)/2.0;
   raw_to_wcs(wcs, pixpos, wcspos);
