@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	09/08/2006
+*	Last modify:	26/03/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -42,6 +42,7 @@
 typedef struct
   {
   int		fieldno;
+  int		headflag;				/* external header? */
   int		extension;
   char 		ext_date[16],ext_time[16];		/* date and time */
   float		ext_elapsed;				/* processing time */

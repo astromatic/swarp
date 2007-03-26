@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	02/10/2006
+*	Last modify:	26/03/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -115,6 +115,7 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
   x->epoch = field->wcs->epoch;
   x->naxis = field->wcs->naxis;
   x->celsys = (int)(field->wcs->celsysconvflag? field->wcs->celsys : -1);
+  x->headflag = field->headflag;
   for (d=0; d<field->wcs->naxis; d++)
     pixpos[d] = (field->wcs->naxisn[d]+1.0)/2.0;
   raw_to_wcs(field->wcs, pixpos, wcspos);
@@ -363,6 +364,8 @@ int	write_xml_meta(FILE *file, char *error)
 	" ucd=\"obs.image;meta.fits\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Name\" datatype=\"char\" arraysize=\"*\""
 	" ucd=\"obs.image;meta.fits\"/>\n");
+  fprintf(file, "   <FIELD name=\"External_Header\" datatype=\"boolean\""
+	" ucd=\"meta.code;obs.param\"/>\n");
   fprintf(file, "   <FIELD name=\"Image_Ident\" datatype=\"char\""
 	" arraysize=\"*\" ucd=\"meta.id;obs\"/>\n");
   fprintf(file, "   <FIELD name=\"Extension\" datatype=\"int\""
@@ -420,7 +423,7 @@ int	write_xml_meta(FILE *file, char *error)
     x = &xmlstack[n];
     f = x->fieldno;
     fprintf(file, "    <TR>\n"
-	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%s</TD>\n"
+	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%c</TD><TD>%s</TD>\n"
 	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>\n"
 	"     <TD>%g</TD><TD>%g</TD><TD>%c</TD><TD>%s</TD>"
 	"<TD>%d</TD><TD>%d</TD><TD>%g</TD>\n"
@@ -430,6 +433,7 @@ int	write_xml_meta(FILE *file, char *error)
 	prefs.infield_name[f],
 	(prefs.inwfield_name[f] && *prefs.inwfield_name[f])?
 		prefs.inwfield_name[f] : "(null)",
+        x->headflag? 'T' : 'F',
 	(x->ident && *(x->ident)) ? x->ident : "(null)",
 	x->extension,
 	x->ext_date,

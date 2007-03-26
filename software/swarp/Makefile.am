@@ -2,7 +2,8 @@
 # Copyright (C) 2003-2007 Emmanuel Bertin.
 AUTOMAKE_OPTIONS	= foreign no-dependencies
 SUBDIRS			= man src
-EXTRA_DIST		= doc AUTHORS BUGS ChangeLog HISTORY INSTALL README \
+dist_pkgdata_DATA	= doc xsl/swarp.xsl
+EXTRA_DIST		= AUTHORS BUGS ChangeLog HISTORY INSTALL README \
 			  THANKS TODO acx_pthread.m4 acx_prog_cc_optim.m4 \
 			  acx_mpi.m4 test/test.fits
 RPM_ROOTDIR		= /usr/src/RPM

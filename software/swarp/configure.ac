@@ -6,7 +6,7 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.16.1b, [bertin@iap.fr])
+AC_INIT(swarp, 2.16.1, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AM_CONFIG_HEADER(config.h)
@@ -119,6 +119,27 @@ AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([atexit getenv gethostname memcpy memmove memset mmap strstr])
 AC_CHECK_FUNCS([cosd sind tand acosd asind atand atan2d])
 
+# Set the data directory to a true absolute path
+if test "x${datadir}" = 'x${prefix}/share'; then
+  if test "x${prefix}" = "xNONE"; then
+    datadir2="${ac_default_prefix}/share"
+  else
+    datadir2="${prefix}/share"
+  fi
+else
+  datadir2="${datadir}"
+fi
+
+# Provide a special option for the default XSLT URL
+AC_ARG_WITH(xsl_url,
+        [AC_HELP_STRING([--with-xsl_url=<default URL for XSLT filter>],
+        [Provide an alternative default URL of the XSLT filter])],
+    [xsl_url=$withval],
+    [xsl_url="file://$datadir2/$PACKAGE_NAME/$PACKAGE_NAME.xsl"]
+    )
+
+AC_DEFINE_UNQUOTED([XSL_URL], "$xsl_url",[Default URL of the XSLT filter])
+
 # Set flags for multithreading
 AC_ARG_ENABLE(threads,
 	[AC_HELP_STRING([--enable-threads@<:@=<max_number_of_threads>@:>@],
@@ -178,8 +199,20 @@ LDFLAGS="$myldflags"
 fi
 
 # Display compiler and linker flags
-AC_MSG_RESULT([I will compile using:  $CC $CFLAGS])
-AC_MSG_RESULT([I will link using:     $CC $LDFLAGS $LIBS])
+# Display compiler and linker flags
+AC_MSG_RESULT([***************************************************************])
+AC_MSG_RESULT([Compile cmdline:  $CC $CFLAGS])
+AC_MSG_RESULT([Link    cmdline:  $CC $LDFLAGS $LIBS])
+AC_MSG_RESULT([Default XSLT URL: $xsl_url])
+AC_MSG_RESULT([***************************************************************])
 
-AC_CONFIG_FILES([Makefile man/Makefile src/Makefile src/fits/Makefile src/wcs/Makefile swarp.spec swarp-mp.spec man/swarp.1])
+AC_CONFIG_FILES([
+Makefile
+man/Makefile
+src/Makefile
+src/fits/Makefile
+src/wcs/Makefile
+swarp.spec
+swarp-mp.spec
+man/swarp.1])
 AC_OUTPUT

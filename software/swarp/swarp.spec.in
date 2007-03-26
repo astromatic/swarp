@@ -22,10 +22,10 @@ SWarp is a program that resamples and coadd FITS images to any arbitrary astrome
 
 %build
 if test "$TPXFLAGS"; then
-./configure --enable-static --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/
+./configure --enable-static --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/ --with-xsl_url=file:///usr/local/share/@PACKAGE_NAME@/@PACKAGE_NAME@.xsl
 make -j CC="$TPXCC" CFLAGS="$TPXFLAGS"
 else
-./configure --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/
+./configure --prefix=$RPM_BUILD_ROOT/usr/local/ --mandir=$RPM_BUILD_ROOT/usr/local/man/ --with-xsl_url=file:///usr/local/share/@PACKAGE_NAME@/@PACKAGE_NAME@.xsl
 make -j
 fi
 
@@ -40,6 +40,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/local/bin/@PACKAGE_NAME@
 /usr/local/man/man1/@PACKAGE_NAME@.1
 /usr/local/man/manx/@PACKAGE_NAME@.x
+/usr/local/share/@PACKAGE_NAME@
 %doc AUTHORS ChangeLog COPYING HISTORY INSTALL README THANKS doc/swarp.pdf
 
 %changelog
