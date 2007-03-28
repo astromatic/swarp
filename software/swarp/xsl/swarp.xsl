@@ -98,35 +98,31 @@
    </BODY>
   </html>
  </xsl:template>
-
 <!-- **************** Generic XSL template for VOTables ****************** -->
  <xsl:template name="VOTable">
   <xsl:for-each select="/VOTABLE">
    <xsl:call-template name="Resource"/>
   </xsl:for-each>
  </xsl:template>
-
 <!-- *************** Generic XSL template for Resources ****************** -->
  <xsl:template name="Resource">
   <xsl:for-each select="RESOURCE">
    <xsl:choose>
-    <xsl:when test="@ID='SCAMP'">
-     <xsl:call-template name="SCAMP"/>
+    <xsl:when test="@ID='SWarp'">
+     <xsl:call-template name="swarp"/>
     </xsl:when>
    </xsl:choose>
   </xsl:for-each>
  </xsl:template>
-
-<!-- ********************** XSL template for SCAMP *********************** -->
- <xsl:template name="SCAMP">
+<!-- ********************** XSL template for SWarp *********************** -->
+ <xsl:template name="swarp">
   <xsl:for-each select="RESOURCE[@ID='MetaData']">
    <xsl:call-template name="RunInfo"/>
-   <xsl:for-each select="TABLE[@ID='Fields']">
-    <xsl:call-template name="Fields"/>
+   <xsl:for-each select="TABLE[@ID='Input_Image_Data']">
+    <xsl:call-template name="Input_Image_Data"/>
    </xsl:for-each>
   </xsl:for-each>
  </xsl:template>
-
 <!-- ************* Generic XSL RunInfo template for MetaData ************* -->
  <xsl:template name="RunInfo">
   <p>
@@ -178,58 +174,88 @@
    in <b><mono><xsl:value-of select="PARAM[@name='Path']/@value"/></mono></b>
   </p>
  </xsl:template>
-
-<!-- ********************** XSL template for Fields ********************** -->
-  <xsl:template name="Fields">
-   <xsl:variable name="name" select="count(FIELD[@name='Catalog_Name']/preceding-sibling::FIELD)+1"/>
+<!-- ********************** XSL template for Input_Image_Data ************** -->
+  <xsl:template name="Input_Image_Data">
+   <xsl:variable name="index" select="count(FIELD[@name='Frame_Index']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="name" select="count(FIELD[@name='Image_Name']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="weight" select="count(FIELD[@name='Weight_Name']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="headflag" select="count(FIELD[@name='External_Header']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="ident" select="count(FIELD[@name='Image_Ident']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="next" select="count(FIELD[@name='NExtensions']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="ndet" select="count(FIELD[@name='NDetect']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="headflag" select="count(FIELD[@name='Ext_Header']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="photflag" select="count(FIELD[@name='Photom_Flag']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="group" select="count(FIELD[@name='Group']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="astrinstru" select="count(FIELD[@name='Astr_Instrum']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="photinstru" select="count(FIELD[@name='Phot_Instrum']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="coord" select="count(FIELD[@name='Field_Coordinates']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="radius" select="count(FIELD[@name='Max_Radius']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="next" select="count(FIELD[@name='Extension']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="date" select="count(FIELD[@name='Date']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="time" select="count(FIELD[@name='Time']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="duration" select="count(FIELD[@name='Duration']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="backmean" select="count(FIELD[@name='Background_Mean']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="backdev" select="count(FIELD[@name='Background_StDev']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="subback" select="count(FIELD[@name='Subtract_Back']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="backtype" select="count(FIELD[@name='Back_Type']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="backsize" select="count(FIELD[@name='Back_Size']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="backfsize" select="count(FIELD[@name='Back_FilterSize']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="backdef" select="count(FIELD[@name='Back_Default']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="weighttype" select="count(FIELD[@name='Weight_Type']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="weighttres" select="count(FIELD[@name='Weight_Thresh']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="weightscale" select="count(FIELD[@name='Weight_Scaling']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="interp" select="count(FIELD[@name='Interpolate']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="gain" select="count(FIELD[@name='Gain']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="exptime" select="count(FIELD[@name='ExpTime']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="photfscale" select="count(FIELD[@name='Photometric_Flux_Scaling']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="astrfscale" select="count(FIELD[@name='Astrometric_Flux_Scaling']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="fieldcoord" select="count(FIELD[@name='Field_Coordinates']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="pixscale" select="count(FIELD[@name='Pixel_Scale']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="ascont" select="count(FIELD[@name='AS_Contrast']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="xycont" select="count(FIELD[@name='XY_Contrast']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="zpcorr" select="count(FIELD[@name='ZeroPoint_Corr']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="equinox" select="count(FIELD[@name='Equinox']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="epoch" select="count(FIELD[@name='Epoch']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="coosys" select="count(FIELD[@name='COOSYS']/preceding-sibling::FIELD)+1"/>
    <p>
-    <TABLE class="sortable" id="scamp" BORDER="2">
-<!--
- <TR>
-  <TH COLSPAN="3" BGCOLOR="#DDCC99" ALIGN="LEFT">
-  <FONT SIZE="-1">
-   <xsl:value-of select="ASTROM/nfield"/>
-    input<xsl:if test="ASTROM/nfield &gt; 1">s</xsl:if>
-  </FONT>
-  </TH>
- </TR>
--->
+    <TABLE class="sortable" id="SWarp" BORDER="2">
      <TR>
-      <TH BGCOLOR="#FFEECC">Filename</TH>
+      <TH BGCOLOR="#FFEECC">Index</TH>
+      <TH BGCOLOR="#FFEECC">Image Name</TH>
+      <TH BGCOLOR="#FFEECC">Weight Name</TH>
+      <TH BGCOLOR="#FFEECC">External Header</TH>
       <TH BGCOLOR="#FFEECC">Identifier</TH>
       <TH BGCOLOR="#FFEECC">Next</TH>
-      <TH BGCOLOR="#FFEECC">Ndet</TH>
-      <TH BGCOLOR="#FFEECC">Flags</TH>
-      <TH BGCOLOR="#FFEECC">G</TH>
-      <TH BGCOLOR="#FFEECC">A</TH>
-      <TH BGCOLOR="#FFEECC">P</TH>
-      <TH BGCOLOR="#FFEECC">alpha</TH>
-      <TH BGCOLOR="#FFEECC">delta</TH>
-      <TH BGCOLOR="#FFEECC">Radius</TH>
-      <TH BGCOLOR="#FFEECC">Pixel scale</TH>
-      <TH BGCOLOR="#FFEECC">A/S contrast</TH>
-      <TH BGCOLOR="#FFEECC">X/Y contrast</TH>
-      <TH BGCOLOR="#FFEECC">MagZP.corr</TH>
+      <TH BGCOLOR="#FFEECC">Date</TH>
+      <TH BGCOLOR="#FFEECC">Time</TH>
+      <TH BGCOLOR="#FFEECC">Duration</TH>
+      <TH BGCOLOR="#FFEECC">Background Mean</TH>
+      <TH BGCOLOR="#FFEECC">Background Deviation</TH>
+      <TH BGCOLOR="#FFEECC">Subtract Backgrond</TH>
+      <TH BGCOLOR="#FFEECC">Background Type</TH>
+      <TH BGCOLOR="#FFEECC">BACK_SIZE</TH>
+      <TH BGCOLOR="#FFEECC">BACK_FILTERSIZE</TH>
+      <TH BGCOLOR="#FFEECC">Background Default</TH>
+      <TH BGCOLOR="#FFEECC">Weight Type</TH>
+      <TH BGCOLOR="#FFEECC">Weight Threshold</TH>
+      <TH BGCOLOR="#FFEECC">Weight Scaling</TH>
+      <TH BGCOLOR="#FFEECC">Interpolate</TH>
+      <TH BGCOLOR="#FFEECC">Gain</TH>
+      <TH BGCOLOR="#FFEECC">Exposure Time</TH>
+      <TH BGCOLOR="#FFEECC">Photo Flux Scale</TH>
+      <TH BGCOLOR="#FFEECC">Astro Flux Scale</TH>
+      <TH BGCOLOR="#FFEECC">Field Coordinates</TH>
+      <TH BGCOLOR="#FFEECC">Pixel Scale</TH>
+      <TH BGCOLOR="#FFEECC">Equinox</TH>
+      <TH BGCOLOR="#FFEECC">Epoch</TH>
+      <TH BGCOLOR="#FFEECC">Coordinate System</TH>
      </TR>
      <xsl:for-each select="DATA/TABLEDATA">
       <xsl:for-each select="TR">
        <tr>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$index]"/></el>
+        </td>
         <td  BGCOLOR="#EEEEEE">
          <el><xsl:value-of select="TD[$name]"/></el>
+        </td>
+        <td  BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$weight]"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <xsl:choose>
+          <xsl:when test="TD[$headflag] = 'T'">
+           <elen>H</elen>
+          </xsl:when>
+         </xsl:choose>
         </td>
         <td align="center" BGCOLOR="#EEEEEE">
          <el><xsl:value-of select="TD[$ident]"/></el>
@@ -238,100 +264,106 @@
          <el><xsl:value-of select="TD[$next]"/></el>
         </td>
         <td align="center" BGCOLOR="#EEEEEE">
-         <el><xsl:value-of select="TD[$ndet]"/></el>
+         <el><xsl:value-of select="TD[$date]"/></el>
         </td>
         <td align="center" BGCOLOR="#EEEEEE">
-         <xsl:choose>
-          <xsl:when test="TD[$headflag] = 'T'">
-           <elen>H</elen>
+         <el><xsl:value-of select="TD[$time]"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <xsl:choose> 
+          <xsl:when test="$duration &gt; 3600.0">
+           <el><xsl:value-of
+	    select='concat(format-number(floor(TD[$duration] div 3600),"##00"),
+	    " h ", format-number(floor((TD[$duration] div 60) mod 60.0),"##00"),
+	    " min")'/></el>
           </xsl:when>
           <xsl:otherwise>
-            <el>-</el>
-          </xsl:otherwise>
-         </xsl:choose>
-         <xsl:choose>
-          <xsl:when test="TD[$photflag] = 'T'">
-            <elen>P</elen>
-          </xsl:when>
-          <xsl:otherwise>
-            <el>-</el>
-          </xsl:otherwise>
-         </xsl:choose>
-        </td>
-        <td align="center" BGCOLOR="#EEEEEE">
-         <el><xsl:value-of select="TD[$group]"/></el>
-        </td>
-        <td align="left" BGCOLOR="#EEEEEE">
-         <el><xsl:value-of select="TD[$astrinstru]"/></el>
-        </td>
-        <td align="left" BGCOLOR="#EEEEEE">
-         <el><xsl:value-of select="TD[$photinstru]"/></el>
-        </td>
-<!-- Alpha -->
-        <td align="center" BGCOLOR="#EEEEEE">
-         <el>
-          <xsl:variable name="alpha" select="substring-before(string(TD[$coord]), ' ')"/>
-          <xsl:value-of
-		select='concat(format-number(floor($alpha div 15.0), "00"),":",
-		format-number(floor(($alpha * 4) mod 60.0), "00"),":",
-		format-number(floor(($alpha * 240.0) mod 60.0), "00.00"))'/>
-         </el>
-        </td>
-<!-- Delta -->
-        <td align="center" BGCOLOR="#EEEEEE">
-         <xsl:variable name="delta" select="substring-after(string(TD[$coord]), ' ')"/>
-         <el>
-          <xsl:choose>
-           <xsl:when test="$delta &lt; 0.0">
-            <xsl:value-of
-		select='concat("-", format-number(floor(-$delta), "00"),":",
-		format-number(floor((-$delta * 60) mod 60.0), "00"),":",
-		format-number(floor((-$delta * 3600.0) mod 60.0), "00.0"))'/>
-           </xsl:when>
-           <xsl:otherwise>
-            <xsl:value-of
-		select='concat("+", format-number(floor($delta), "00"),":",
-		format-number(floor(($delta * 60) mod 60.0), "00"),":",
-		format-number(floor(($delta * 3600.0) mod 60.0), "00.0"))'/>
-           </xsl:otherwise>
-          </xsl:choose>
-         </el>
-        </td>
-<!-- Radius -->
-        <td align="right" BGCOLOR="#EEEEEE">
-         <el><xsl:value-of select="format-number(TD[$radius],'##0.000')"/>&amin;</el>
-        </td>
-<!-- Pixel scale --> 
-        <td align="right" BGCOLOR="#EEEEEE">
-         <xsl:variable name="pix1" select="number(substring-before(string(TD[$pixscale]), ' '))"/>
-         <xsl:variable name="pix2" select="number(substring-after(string(TD[$pixscale]), ' '))"/>
-         <el><xsl:value-of select="format-number(($pix1+$pix2) div 2.0, '##0.0000')"/>&asec;</el>
-        </td>
-<!-- A/S contrast --> 
-        <td align="right" BGCOLOR="#EEEEEE">
-         <el><xsl:value-of select="format-number(TD[$ascont], '##0.0')"/></el>
-        </td>
-<!-- X/Y contrast --> 
-        <td align="right" BGCOLOR="#EEEEEE">
-         <xsl:choose>
-          <xsl:when test="TD[$xycont] &lt; 2.0">
-           <elep><xsl:value-of select="format-number(TD[$xycont], '##0.0')"/></elep>
-          </xsl:when>
-          <xsl:otherwise>
-            <elen><xsl:value-of select="format-number(TD[$xycont], '##0.0')"/></elen>
+           <xsl:choose>
+            <xsl:when test="$duration &gt; 60.0">
+             <el><xsl:value-of
+	      select='concat(format-number(floor(TD[$duration] div 60),"##00"),
+	      " min ", format-number(floor(TD[$duration] mod 60.0),"##00")," s")'/></el>
+            </xsl:when>
+            <xsl:otherwise>
+             <el><xsl:value-of select='concat(format-number(TD[$duration],"##00"), " s")'/></el>
+            </xsl:otherwise>
+           </xsl:choose>
           </xsl:otherwise>
          </xsl:choose>
         </td>
-<!-- Zero-Point correction --> 
         <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="format-number(TD[$backmean],'##0000.00')"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+          <el><xsl:value-of select="format-number(TD[$backdev],'##00.00')"/></el>
+       </td>
+        <td align="center" BGCOLOR="#EEEEEE">
          <xsl:choose>
-          <xsl:when test="contains(TD[$zpcorr],'e')">
-           <el><xsl:value-of select="format-number('0', '#0.000')"/></el>
+          <xsl:when test="TD[$subback] = 'T'">
+           <elen>Y</elen>
           </xsl:when>
           <xsl:otherwise>
-           <el><xsl:value-of select="format-number(TD[$zpcorr], '#0.000')"/></el>
+           <elen>N</elen>
           </xsl:otherwise>
          </xsl:choose>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$backtype]"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$backsize]"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$backfsize]"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$backdef]"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$weighttype]"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$weighttres]"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$weightscale]"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <xsl:choose>
+          <xsl:when test="TD[$interp] = 'T'">
+           <elen>Y</elen>
+          </xsl:when>
+          <xsl:otherwise>
+           <elen>N</elen>
+          </xsl:otherwise>
+         </xsl:choose>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="format-number(TD[$gain],'##0.000')"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select='concat(TD[$exptime]," s")'/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$photfscale]"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$astrfscale]"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$fieldcoord]"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="format-number(TD[$pixscale],'##0.000')"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$equinox]"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$epoch]"/></el>
+        </td>
+        <td align="center" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="TD[$coosys]"/></el>
         </td>
        </tr>
       </xsl:for-each>
@@ -339,8 +371,7 @@
     </TABLE>
    </p>
  </xsl:template>
-
-
  <xsl:template name="Rest">
 </xsl:template>
+
 </xsl:stylesheet>
