@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	08/03/2007
+*	Last modify:	02/04/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -339,7 +339,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 08/02/2007
+VERSION 02/04/2007
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -353,7 +353,8 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
    float		*scale;
    char			*ctype[NAXIS],
 			*pstr;
-   int			i,j,n,npstr, naxis, lat,lng, countmin0,countmax0,
+   int			*axis,
+			i,j,n,npstr, lng,lat, naxis, countmin0,countmax0,
 			countmin,countmax;
 
 /* First allocate memory for the new field */
@@ -381,7 +382,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 /*-------------------------- Set the astrometry -----------------------------*/
 /* Check that angular axes are the same and adopt them for output */
 
-  lat = lng = -1;
+  lng = lat = -1;
   naxis = 0;				/* to avoid gcc -Wall warnings */
   for (i=0; i<ninput; i++)
     {
@@ -395,6 +396,27 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
       error(EXIT_FAILURE, "*Error*: Mismatched number of axes in ",
 				infield[i]->filename);
     }
+
+/* Make sure that longitudes are before latitudes */
+  if (lng>lat)
+    {
+    i = lng;
+    lng = lat;
+    lat = i;
+    }
+
+  QMALLOC(axis, int, ninput*naxis);
+
+  for (i=0; i<ninput; i++)
+    {
+    for (n=0; n<naxis; n++)
+      axis[i*naxis+n] = n;
+    if (lng != -1 && infield[i]->wcs->lng != -1)
+      axis[i*naxis+lng] = infield[i]->wcs->lng;
+    if (lat != -1 && infield[i]->wcs->lat != -1)
+      axis[i*naxis+lat] = infield[i]->wcs->lat;
+    }
+
 
   QMALLOC(scale, float, ninput);
   QMALLOC(tab->naxisn, int, naxis);
@@ -410,10 +432,10 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 
 /*-- Create a new WCS structure */
 /*-- Copy the types */
-    for (i=0; i<naxis; i++)
+    for (n=0; n<naxis; n++)
       {
-      QMALLOC(ctype[i], char, 16);
-      strncpy(ctype[i], infield[0]->wcs->ctype[i], 8);
+      QMALLOC(ctype[n], char, 16);
+      strncpy(ctype[n], infield[0]->wcs->ctype[n], 8);
       }
 
 /*---- Change the Celestial system if needed */
@@ -435,10 +457,13 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
     field->wcs = wcs = create_wcs(ctype, NULL, NULL, NULL, NULL, naxis);
 
 /*-- Copy the units */
-    for (i=0; i<naxis; i++)
+    for (n=0; n<naxis; n++)
       {
-      strncpy(wcs->cunit[i], infield[0]->wcs->cunit[i], 8);
-      free(ctype[i]);
+      if (n==lng)
+        strncpy(wcs->cunit[lng], infield[0]->wcs->cunit[axis[0+lng]], 8);
+      else if (n==lat)
+        strncpy(wcs->cunit[lat], infield[0]->wcs->cunit[axis[0+lat]], 8);
+      free(ctype[n]);
       }
 
     for (n=0; n<naxis; n++)
@@ -451,13 +476,13 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
           countmin0 = countmax0 = 0;
           for (j=0; j<ninput; j++)
             {
-            wcsmin1 = infield[j]->wcs->wcsmin[n];
-            wcsmax1 = infield[j]->wcs->wcsmax[n];
+            wcsmin1 = infield[j]->wcs->wcsmin[axis[j*naxis+n]];
+            wcsmax1 = infield[j]->wcs->wcsmax[axis[j*naxis+n]];
             countmin = countmax = 0;
             for (i=0; i<ninput; i++)
               {
-              wcsmin2 = infield[i]->wcs->wcsmin[n];
-              wcsmax2 = infield[i]->wcs->wcsmax[n];
+              wcsmin2 = infield[i]->wcs->wcsmin[axis[i*naxis+n]];
+              wcsmax2 = infield[i]->wcs->wcsmax[axis[i*naxis+n]];
 /*------------ Test for the lower limit */
               if (wcsmin2<=wcsmin1)
                 countmin++;
@@ -490,8 +515,8 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
           wcsmax[n] = -BIG;
           for (i=0; i<ninput; i++)
             {
-            wcsmin2 = infield[i]->wcs->wcsmin[n];
-            wcsmax2 = infield[i]->wcs->wcsmax[n];
+            wcsmin2 = infield[i]->wcs->wcsmin[axis[i*naxis+n]];
+            wcsmax2 = infield[i]->wcs->wcsmax[axis[i*naxis+n]];
 /*---------- Test for the lower limit */
             if (wcsmin2<wcsmin[n])
               wcsmin[n] = wcsmin2;
@@ -507,8 +532,8 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
           wcsmax[n] = -BIG;
           for (i=0; i<ninput; i++)
             {
-            wcsmin2 = infield[i]->wcs->wcsmin[n];
-            wcsmax2 = infield[i]->wcs->wcsmax[n];
+            wcsmin2 = infield[i]->wcs->wcsmin[axis[i*naxis+n]];
+            wcsmax2 = infield[i]->wcs->wcsmax[axis[i*naxis+n]];
 /*---------- Test for the lower limit */
             if (wcsmin2<wcsmin[n])
               wcsmin[n] = wcsmin2;
@@ -543,18 +568,18 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
         case PIXSCALE_MIN:
           pixscale[n] = BIG;
           for (i=0; i<ninput; i++)
-            if (infield[i]->wcs->wcsscale[n] < pixscale[n])
-              pixscale[n] = infield[i]->wcs->wcsscale[n];
+            if (infield[i]->wcs->wcsscale[axis[i*naxis+n]] < pixscale[n])
+              pixscale[n] = infield[i]->wcs->wcsscale[axis[i*naxis+n]];
           break;
         case PIXSCALE_MAX:
           pixscale[n] = -BIG;
           for (i=0; i<ninput; i++)
-            if (infield[i]->wcs->wcsscale[n] > pixscale[n])
-              pixscale[n] = infield[i]->wcs->wcsscale[n];
+            if (infield[i]->wcs->wcsscale[axis[i*naxis+n]] > pixscale[n])
+              pixscale[n] = infield[i]->wcs->wcsscale[axis[i*naxis+n]];
           break;
         case PIXSCALE_MEDIAN:
           for (i=0; i<ninput; i++)
-            scale[i] = (float)infield[i]->wcs->wcsscale[n];
+            scale[i] = (float)infield[i]->wcs->wcsscale[axis[i*naxis+n]];
           pixscale[n] = (double)hmedian(scale, ninput);
           break;
         case PIXSCALE_FIT:
@@ -643,7 +668,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
         else
           {
 /*-------- Add a 5% margin in field size */
-          if ((n==lng || n==lat) && lat!=lng)
+          if (lat!=lng && (n==lng || n==lat))
             tab->naxisn[n] = wcs->naxisn[n]
 		= (int)(fmod(wcsmax[n]-wcsmin[n]+360.0, 360.0)*1.05/pixscale[n])
 		  + 1;
@@ -688,7 +713,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
           }
         }
       else if (prefs.pixscale_type[lng] == PIXSCALE_FIT)
-        wcs->cd[lng*(naxis+1)] = wcs->cdelt[lng] *= cos(wcs->crval[lat]*DEG);
+        wcs->cd[lng*(naxis+1)] = (wcs->cdelt[lng]*=cos(wcs->crval[lat]*DEG));
 /*---- Make pixel scales equal in alpha and delta */
       if (prefs.pixscale[lng] == prefs.pixscale[lat])
         {
@@ -826,6 +851,8 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
         wcs->crpix[n] += (int)(wcs->naxisn[n]/2 - rawcenter[n] +0.49);
       }
     }
+
+  free(axis);
 
 /* Compute mean epoch */
   epoch = 0.0;
