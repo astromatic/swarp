@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	02/04/2007
+*	Last modify:	03/04/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -339,7 +339,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 02/04/2007
+VERSION 03/04/2007
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -398,13 +398,14 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
     }
 
 /* Make sure that longitudes are before latitudes */
+/*
   if (lng>lat)
     {
     i = lng;
     lng = lat;
     lat = i;
     }
-
+*/
   QMALLOC(axis, int, ninput*naxis);
 
   for (i=0; i<ninput; i++)
@@ -435,7 +436,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
     for (n=0; n<naxis; n++)
       {
       QMALLOC(ctype[n], char, 16);
-      strncpy(ctype[n], infield[0]->wcs->ctype[n], 8);
+      strncpy(ctype[n], infield[0]->wcs->ctype[axis[0+n]], 8);
       }
 
 /*---- Change the Celestial system if needed */
