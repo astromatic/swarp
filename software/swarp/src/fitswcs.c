@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	08/02/2007
+*	Last modify:	17/05/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -149,7 +149,7 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/09/2006
+VERSION	17/05/2007
  ***/
 void	init_wcs(wcsstruct *wcs)
 
@@ -232,8 +232,8 @@ void	init_wcs(wcsstruct *wcs)
     n = 0;
     for (l=100; l--;)
       {
-      wcs->prj->p[l] = wcs->projp[l+lng*100];
-      wcs->prj->p[l+100] = wcs->projp[l+lat*100];
+      wcs->prj->p[l] = wcs->projp[l+lat*100];	/* lat comes first for ... */
+      wcs->prj->p[l+100] = wcs->projp[l+lng*100];/* ... compatibility reasons */
       if (!n && (wcs->prj->p[l] || wcs->prj->p[l+100]))
         n = l+1;
       }

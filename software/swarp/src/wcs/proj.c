@@ -192,7 +192,7 @@
 *   Author: Mark Calabretta, Australia Telescope National Facility
 *   IRAF's TNX added by E.Bertin 2000/08/23
 *   Behaviour of Cartesian-like projections modified by E.Bertin 2005/08/29
-*   $Id: proj.c,v 1.1.1.1 2004/01/04 21:33:26 bertin Exp $
+*   $Id: proj.c,v 1.1.1.1 2007/05/17 18:00:00 bertin Exp $
 *===========================================================================*/
 
 #ifdef HAVE_CONFIG_H
@@ -3693,8 +3693,8 @@ int raw_to_pv(struct prjprm *prj, double x, double y, double *xo, double *yo)
    }
 
    k=prj->n;
-   a = prj->p;			/* Longitude */
-   b = prj->p+100;		/* Latitude */
+   a = prj->p+100;		/* Latitude comes first for compatibility */
+   b = prj->p;			/* Longitude */
    xp = *(a++);
    xp += *(a++)*x;
    yp = *(b++);

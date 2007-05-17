@@ -1,5 +1,5 @@
 # configure.ac for SWarp
-# (C) E.Bertin 2002-2006
+# (C) E.Bertin 2002-2007
 # Process this file with autoconf to produce a configure script.
 # First, disable the annoying config.cache
 define([AC_CACHE_LOAD],)
