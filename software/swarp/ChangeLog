@@ -15,6 +15,18 @@
 */
 
 ------------------------------------------------------------------------
+r488 | marmo | 2007-06-08 15:34:19 +0200 (Fri, 08 Jun 2007) | 1 line
+
+Error notification added
+
+------------------------------------------------------------------------
+r487 | bertin | 2007-06-08 15:05:30 +0200 (Fri, 08 Jun 2007) | 4 lines
+
+Updated fits library modules to the latest version.
+Updated release info files.
+Pushed version number to 2.16.3 (release version).
+
+------------------------------------------------------------------------
 r486 | bertin | 2007-06-08 14:54:44 +0200 (Fri, 08 Jun 2007) | 3 lines
 
 Added support for pseudo-3D image cubes (e.g. ISSA maps).

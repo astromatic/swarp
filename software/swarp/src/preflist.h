@@ -220,7 +220,7 @@ char *default_prefs[] =
 "                                       # from the input to the output headers",
 "WRITE_FILEINFO         N               # Write information about each input",
 "                                       # file in the output image header?",
-"WRITE_XML              N               # Write XML file (Y/N)?",
+"WRITE_XML              Y               # Write XML file (Y/N)?",
 "XML_NAME               swarp.xml       # Filename for XML output",
 "*XSL_URL                " XSL_URL,
 "*                                       # Filename for XSL style-sheet",

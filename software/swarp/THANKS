@@ -12,9 +12,9 @@ Ville Laurikari	<vl@iki.fi>
 Steven G. Johnson <stevenj@alum.mit.edu>	
 	For his acx_pthread.m4
 
-Chiara Marmo <marmo@iap.fr>
-	For fixing the duplication bug with a single weight image
-	and making the XSLT sheet.
+Akim Demaille <akim@lrde.epita.fr>
+	for solving the $datarootdir issue and providing the URBI_RESOLVE_DIR()
+	function.
 
 Eduardo Amores <amores@newb6.u-strasbg.fr>
 Pierre Astier <pierre.astier@in2p3.fr>
