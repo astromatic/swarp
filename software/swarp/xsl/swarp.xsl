@@ -180,6 +180,11 @@
    in <b><mono><xsl:value-of select="PARAM[@name='Path']/@value"/></mono></b>
   </p>
   <p>
+   <b style="color: red"><xsl:if test="PARAM[@name='Error_Msg']/@value &gt; 0">
+    An Error occured!!! </xsl:if>
+   <xsl:value-of select="PARAM[@name='Error_Msg']/@value"/></b>
+  </p>
+  <p>
   <sans-serif><i>click to expand or hide tables</i></sans-serif>
   </p>
  </xsl:template>
