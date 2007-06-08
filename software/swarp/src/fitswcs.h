@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for fitswcs.c
 *
-*	Last modify:	08/02/2007
+*	Last modify:	05/06/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -122,7 +122,9 @@ extern int		celsys_to_eq(wcsstruct *wcs, double *wcspos),
 extern char		*degtosexal(double alpha, char *str),
 			*degtosexde(double delta, char *str);
 
-extern void		end_wcs(wcsstruct *wcs),
+extern void		b2j(double yearobs, double alphain, double deltain,
+				double *alphaout, double *deltaout),
+			end_wcs(wcsstruct *wcs),
 			init_wcs(wcsstruct *wcs),
 			init_wcscelsys(wcsstruct *wcs),
 			invert_wcs(wcsstruct *wcs),

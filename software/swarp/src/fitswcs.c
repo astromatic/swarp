@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	17/05/2007
+*	Last modify:	05/06/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -315,7 +315,7 @@ INPUT	tab structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	17/07/2006
+VERSION	05/06/2007
  ***/
 wcsstruct	*read_wcs(tabstruct *tab)
 
@@ -349,6 +349,13 @@ wcsstruct	*read_wcs(tabstruct *tab)
   FITSREADS(buf, "OBJECT  ", str, "Unnamed");
 
   QCALLOC(wcs, wcsstruct, 1);
+  if (tab->naxis > NAXIS)
+    {
+    warning("Maximum number of dimensions supported by this version of ",
+		"SWarp exceeded\n");
+    tab->naxis = 2;
+    }
+
   wcs->naxis = naxis = tab->naxis;
   QCALLOC(wcs->projp, double, naxis*100);
 
@@ -571,6 +578,7 @@ wcsstruct	*read_wcs(tabstruct *tab)
 
 /* Initialize other WCS structures */
   init_wcs(wcs);
+
 /* Find the range of coordinates */
   range_wcs(wcs);
 /* Invert projection corrections */
@@ -1595,7 +1603,7 @@ void	precess_wcs(wcsstruct *wcs, double yearin, double yearout)
 /* The B matrix is made of 2 numbers */
 
   cas = cos(angle*DEG);
-  sas = sin(angle*DEG);
+  sas = sin(-angle*DEG);
   for (i=0; i<naxis; i++)
     b[i+i*naxis] = 1.0;
   b[lng+lng*naxis] = cas;
@@ -1673,6 +1681,80 @@ void	precess(double yearin, double alphain, double deltain,
   *deltaout /= DEG;
 
   return;
+  }
+
+
+/********************************* b2j ***********************************/
+/*
+conver equatorial coordinates from equinox and epoch B1950 to equinox and
+epoch J2000 for extragalactic sources (from Aoki et al. 1983).
+*/
+void	b2j(double yearobs, double alphain, double deltain,
+		double *alphaout, double *deltaout)
+  {
+   int		i,j;
+   double	a[3] = {-1.62557e-6, -0.31919e-6, -0.13843e-6},
+		ap[3] = {1.245e-3, -1.580e-3, -0.659e-3},
+		m[6][6] = {
+  { 0.9999256782,     -0.0111820611,     -0.0048579477,
+    0.00000242395018, -0.00000002710663, -0.00000001177656},
+  { 0.0111820610,      0.9999374784,     -0.0000271765,
+    0.00000002710663,  0.00000242397878, -0.00000000006587},
+  { 0.0048579479,     -0.0000271474,      0.9999881997,
+    0.00000001177656, -0.00000000006582,  0.00000242410173},
+  {-0.000551,        -0.238565,           0.435739,
+    0.99994704,	     -0.01118251,        -0.00485767},
+  { 0.238514,        -0.002662,          -0.008541,
+    0.01118251,	      0.99995883,        -0.00002718},
+  {-0.435623,         0.012254,           0.002117,
+    0.00485767,      -0.00002714,         1.00000956}},
+ 		a1[3], r[3], ro[3], r1[3], r2[3], v1[3], v[3];
+   double		cai, sai, cdi, sdi, dotp, rmod, alpha, delta,
+			t1 = (yearobs - 1950.0)/100.0;
+
+  alphain *= PI/180.0;
+  deltain *= PI/180.0;
+  cai = cos(alphain);
+  sai = sin(alphain);
+  cdi = cos(deltain);
+  sdi = sin(deltain);
+  ro[0] = cdi*cai;
+  ro[1] = cdi*sai;
+  ro[2] = sdi;
+  dotp = 0.0;
+  for (i=0; i<3; i++)
+    {
+    a1[i] = a[i]+ap[i]*ARCSEC*t1;
+    dotp += a1[i]*ro[i];
+    }
+  for (i=0; i<3; i++)
+    {
+    r1[i] = ro[i] - a1[i] + dotp*ro[i];
+    r[i] = v[i] = v1[i] = 0.0;
+    }
+  for (j=0; j<6; j++)
+    for (i=0; i<6; i++)
+      {
+      if (j<3)
+        r[j] += m[j][i]*(i<3?r1[i]:v1[i-3]);
+      else
+         v[j-3] += m[j][i]*(i<3?r1[i]:v1[i-3]);
+      }
+  rmod = 0.0;
+  for (i=0; i<3; i++)
+    {
+    r2[i] = r[i]+v[i]*ARCSEC*(t1-0.5);
+    rmod += r2[i]*r2[i];
+    }
+  rmod = sqrt(rmod);
+  delta = asin(r2[2]/rmod);
+  alpha = acos(r2[0]/cos(delta)/rmod);
+  if (r2[1]<0)
+    alpha = 2*PI - alpha;
+  *alphaout = alpha*180.0/PI;
+  *deltaout = delta*180.0/PI;
+
+  return;			
   }
 
 
