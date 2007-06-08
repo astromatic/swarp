@@ -465,8 +465,8 @@ PURPOSE	Update a FITS header to make it "primary" (not extension)
 INPUT	Table structure.
 OUTPUT	RETURN_OK if tab header was already primary, or RETURN_ERROR otherwise.
 NOTES	-.
-AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	08/05/2002
+AUTHOR	E. Bertin (IAP & Leiden observatory) C. Marmo (IAP)
+VERSION	24/05/2007
  ***/
 int	prim_head(tabstruct *tab)
 
@@ -477,8 +477,15 @@ int	prim_head(tabstruct *tab)
       {
       strncpy(tab->headbuf, "SIMPLE  =                    T  "
 	"/ This is a FITS file                            ", 80);
+/* fitsverify 4.13 (CFITSIO V3.002) return an error
+   if PCOUNT and GCOUNT are in a primary header (23/05/2007)*/
+      if (fitsfind(tab->headbuf, "PCOUNT"))
+        fitsremove(tab->headbuf, "PCOUNT");      
+      if (fitsfind(tab->headbuf, "GCOUNT"))
+        fitsremove(tab->headbuf, "GCOUNT");      
       return RETURN_ERROR;
       }
+
   return RETURN_OK;
   }
 

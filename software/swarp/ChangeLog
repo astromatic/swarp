@@ -9,10 +9,110 @@
 *
 *       Contents:       log of changes made to the SWarp source
 *
-*       Last modify:    09/08/2006
+*       Last modify:    08/06/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
+
+------------------------------------------------------------------------
+r486 | bertin | 2007-06-08 14:54:44 +0200 (Fri, 08 Jun 2007) | 3 lines
+
+Added support for pseudo-3D image cubes (e.g. ISSA maps).
+Added internal functions for future astrometric improvements.
+
+------------------------------------------------------------------------
+r473 | marmo | 2007-05-30 14:44:35 +0200 (Wed, 30 May 2007) | 1 line
+
+all tables in xml file are now displayed.
+------------------------------------------------------------------------
+r467 | bertin | 2007-05-17 18:00:30 +0200 (Thu, 17 May 2007) | 2 lines
+
+Fixed issue with ZPN and other projections by using the right latitude axis.
+
+------------------------------------------------------------------------
+r425 | bertin | 2007-04-03 17:59:05 +0200 (Tue, 03 Apr 2007) | 2 lines
+
+Fixed swapping of CTYPEs for mixed longitude and latitude indices.
+
+------------------------------------------------------------------------
+r424 | bertin | 2007-04-03 14:31:36 +0200 (Tue, 03 Apr 2007) | 2 lines
+
+Dirty-fixed ${datarootdir} issue in configure.
+
+------------------------------------------------------------------------
+r423 | bertin | 2007-04-02 19:00:00 +0200 (Mon, 02 Apr 2007) | 2 lines
+
+Fixed issue occurring when longitude and latitude axes are mixed.
+
+------------------------------------------------------------------------
+r421 | marmo | 2007-03-28 15:09:03 +0200 (Wed, 28 Mar 2007) | 1 line
+
+basic xslt stylesheet imported
+
+------------------------------------------------------------------------
+r419 | bertin | 2007-03-26 14:41:33 +0200 (Mon, 26 Mar 2007) | 6 lines
+
+Added XSLT filter file (currently copied from the SCAMP XSLT filter).
+Fixed XSLT filter path problem with RPM versions.
+Added External_Header flag FIELD to XML-VOTable output.
+Improved configure summary display.
+Pushed version number to 2.16.1.
+
+------------------------------------------------------------------------
+r405 | bertin | 2007-03-08 09:58:16 +0100 (Thu, 08 Mar 2007) | 2 lines
+
+Removed forgotten debug display,
+
+------------------------------------------------------------------------
+r389 | bertin | 2007-02-18 09:24:48 +0100 (Sun, 18 Feb 2007) | 2 lines
+
+Fixed bug occuring while picking up integers in headers.
+
+------------------------------------------------------------------------
+r385 | bertin | 2007-02-08 21:04:16 +0100 (Thu, 08 Feb 2007) | 3 lines
+
+Added new celsys_to_eq() and eq_to_celsys() functions to fitswcs library.
+Fixed issue with automatic centering with galactic (or anything else) inputs and
+ equatorial outputs. 
+
+------------------------------------------------------------------------
+r381 | bertin | 2007-01-17 18:03:46 +0100 (Wed, 17 Jan 2007) | 2 lines
+
+Added options for compiling with icc (Intel compiler).
+
+------------------------------------------------------------------------
+r359 | bertin | 2006-10-29 21:07:01 +0100 (Sun, 29 Oct 2006) | 3 lines
+
+Applied patch by Sergio Pascual for configuring the path to the XSL file.
+Updated the TODO section.
+
+------------------------------------------------------------------------
+r353 | bertin | 2006-10-26 18:08:24 +0200 (Thu, 26 Oct 2006) | 4 lines
+
+Updated FITS library to the latest version.
+Fixed UCDs in XML output.
+Finalized support for file lists.
+
+------------------------------------------------------------------------
+r351 | marmo | 2006-10-25 18:59:54 +0200 (Wed, 25 Oct 2006) | 1 line
+
+input as image list enabled
+
+------------------------------------------------------------------------
+r338 | bertin | 2006-09-19 15:29:39 +0200 (Tue, 19 Sep 2006) | 2 lines
+
+Removed residual debugging info.
+
+------------------------------------------------------------------------
+r337 | bertin | 2006-09-19 15:27:21 +0200 (Tue, 19 Sep 2006) | 2 lines
+
+Fixed bug with COPY_KEYWORDS option on some specific headers.
+
+------------------------------------------------------------------------
+r324 | bertin | 2006-08-10 18:40:17 +0200 (Thu, 10 Aug 2006) | 3 lines
+
+Typo in preference list fixed.
+This is the 2.16 release.
 
 ------------------------------------------------------------------------
 r323 | bertin | 2006-08-09 20:12:58 +0200 (Wed, 09 Aug 2006) | 5 lines
