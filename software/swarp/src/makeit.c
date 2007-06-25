@@ -320,6 +320,7 @@ void	makeit(void)
     infield[k]->backmean *= infield[k]->fscale;
     infield[k]->backsig *= infield[k]->fscale;
     infield[k]->gain /= infield[k]->fscale;
+    infield[k]->saturation *= infield[k]->fscale;
     }
 
 /* Go! */

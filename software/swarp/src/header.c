@@ -155,6 +155,7 @@ void	readfitsinfo_field(fieldstruct *field, tabstruct *tab)
   FITSREADF(buf,prefs.fscale_keyword, field->fscale, field->fscale);
 /* Set the conversion factor */
   FITSREADF(buf, prefs.gain_keyword, field->gain, field->gain);
+  FITSREADF(buf, prefs.sat_keyword, field->saturation, field->saturation);
   FITSREADF(buf, "EXPTIME ", field->exptime, 0.0);
   FITSREADS(buf, "OBJECT  ", field->ident, "");
 
@@ -194,6 +195,8 @@ void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
   fitswrite(tab->headbuf, "EXPTIME ", &field->exptime, H_EXPO,T_DOUBLE);
   addkeywordto_head(tab, "GAIN    ", "Maximum equivalent gain (e-/ADU)");
   fitswrite(tab->headbuf, "GAIN    ", &field->gain, H_EXPO,T_DOUBLE);
+  addkeywordto_head(tab, "SATURATE", "Saturation Level (ADU)");
+  fitswrite(tab->headbuf, "SATURATE", &field->saturation, H_EXPO,T_DOUBLE);
   fitswrite(tab->headbuf, "EXPTIME ", &field->exptime, H_EXPO,T_DOUBLE);
   addkeywordto_head(tab, "COMMENT ", "");
   addkeywordto_head(tab, "SOFTNAME", "The software that processed those data");
@@ -476,6 +479,11 @@ void	writefitsinfo_field(fieldstruct *field, fieldstruct *infield)
   addkeywordto_head(tab, prefs.gain_keyword,
 	"Effective conversion factor in e-/ADU");
   fitswrite(tab->headbuf,prefs.gain_keyword, &field->gain, H_EXPO,T_DOUBLE);
+
+/* Saturation level */
+  addkeywordto_head(tab, prefs.sat_keyword,
+	"Saturation level");
+  fitswrite(tab->headbuf,prefs.sat_keyword, &field->saturation, H_EXPO,T_DOUBLE);
 
 /* Background */
   addkeywordto_head(tab, "BACKMEAN", "Measured background level");

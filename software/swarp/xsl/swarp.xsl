@@ -211,6 +211,7 @@
    <xsl:variable name="weightscale" select="count(FIELD[@name='Weight_Scaling']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="interp" select="count(FIELD[@name='Interpolate']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="gain" select="count(FIELD[@name='Gain']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="saturation" select="count(FIELD[@name='Saturation']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="exptime" select="count(FIELD[@name='ExpTime']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="photfscale" select="count(FIELD[@name='Photometric_Flux_Scaling']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="astrfscale" select="count(FIELD[@name='Astrometric_Flux_Scaling']/preceding-sibling::FIELD)+1"/>
@@ -246,6 +247,7 @@
       <TH BGCOLOR="#FFEECC">Weight Scaling</TH>
       <TH BGCOLOR="#FFEECC">Interpolate</TH>
       <TH BGCOLOR="#FFEECC">Gain</TH>
+      <TH BGCOLOR="#FFEECC">Saturation</TH>
       <TH BGCOLOR="#FFEECC">Exposure Time</TH>
       <TH BGCOLOR="#FFEECC">Photo Flux Scale</TH>
       <TH BGCOLOR="#FFEECC">Astro Flux Scale</TH>
@@ -357,6 +359,9 @@
         </td>
         <td align="right" BGCOLOR="#EEEEEE">
          <el><xsl:value-of select="format-number(TD[$gain],'##0.000')"/></el>
+        </td>
+        <td align="right" BGCOLOR="#EEEEEE">
+         <el><xsl:value-of select="format-number(TD[$saturation],'#########')"/></el>
         </td>
         <td align="right" BGCOLOR="#EEEEEE">
          <el><xsl:value-of select='concat(TD[$exptime]," s")'/></el>
@@ -503,6 +508,14 @@
      <tr BGCOLOR="#EEEEEE">
       <td><el>GAIN_DEFAULT</el></td>
       <td><el><xsl:value-of select="PARAM[@name='Gain_Default']/@value"/></el></td>
+     </tr>
+     <tr BGCOLOR="#EEEEEE">
+      <td><el>SATLEV_KEYWORD</el></td>
+      <td><el><xsl:value-of select="PARAM[@name='SatLev_Keyword']/@value"/></el></td>
+     </tr>
+     <tr BGCOLOR="#EEEEEE">
+      <td><el>SATLEV_DEFAULT</el></td>
+      <td><el><xsl:value-of select="PARAM[@name='SatLev_Default']/@value"/></el></td>
      </tr>
      <tr BGCOLOR="#EEEEEE">
       <td><el>SUBTRACT_BACK</el></td>

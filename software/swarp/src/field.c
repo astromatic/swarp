@@ -111,6 +111,7 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
   field->fascale = 1.0;
   field->fscale = prefs.fscale_default[fieldno];
   field->gain = prefs.gain_default[fieldno];
+  field->saturation = prefs.sat_default[fieldno];
 
 /* Force input celestial system to "PIXEL" if requested by user */
   if (prefs.celsys_type == CELSYS_PIXEL)
@@ -891,9 +892,10 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
     field->height *= tab->naxisn[i];
   field->npix = field->width*field->height;
 
-/* Default flux scale and gain*/
+/* Default flux scale and gain and saturation */
   field->fscale = field->fascale = 1.0;
   field->gain = 0.0;
+  field->saturation = 0.0;
 
   free(scale);
 
@@ -948,6 +950,7 @@ void	scale_field(fieldstruct *field, fieldstruct *reffield)
     field->tab->bscale *= (field->fascale = (outscale/inscale));
     field->tab->bzero *= field->fascale;
     field->gain /= field->fascale;
+    field->saturation *= field->fascale;
     }
 
   return;

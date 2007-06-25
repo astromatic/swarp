@@ -530,6 +530,10 @@ void	useprefs(void)
   for (i=prefs.ngain_default; i<prefs.ninfield; i++)
     prefs.gain_default[i] = prefs.gain_default[prefs.ngain_default-1];
   prefs.ngain_default = prefs.ninfield;
+/* Saturation default value */
+  for (i=prefs.nsat_default; i<prefs.ninfield; i++)
+    prefs.sat_default[i] = prefs.sat_default[prefs.nsat_default-1];
+  prefs.nsat_default = prefs.ninfield;
 /* Flux scale default value */
   for (i=prefs.nfscale_default; i<prefs.ninfield; i++)
     prefs.fscale_default[i] = prefs.fscale_default[prefs.nfscale_default-1];

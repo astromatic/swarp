@@ -52,6 +52,7 @@ typedef struct
   float		backsig;				/* mean back stddev */
   float		sigfac;					/* mean weight scaling*/
   float		gain;					/* gain (e-/ADU) */
+  float		saturation;				/* saturation (ADU) */
   float		fscale;					/* photometric scaling*/
   float		fascale;				/* astrometric scaling*/
   int		naxis;					/* number of axes */

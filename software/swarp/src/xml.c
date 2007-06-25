@@ -108,6 +108,7 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
   x->backsig = field->backsig;
   x->sigfac = field->sigfac;
   x->gain = field->gain;
+  x->saturation = field->saturation;
   x->fscale = field->fscale;
   x->fascale = field->fascale;
   x->pixscale = field->wcs->pixscale*DEG/ARCSEC;
@@ -400,6 +401,8 @@ int	write_xml_meta(FILE *file, char *error)
 	" ucd=\"meta.code;obs.param\"/>\n");
   fprintf(file, "   <FIELD name=\"Gain\" datatype=\"float\""
 	" ucd=\"instr.calib;obs.image\" unit=\"photon/adu\"/>\n");
+  fprintf(file, "   <FIELD name=\"Saturation\" datatype=\"float\""
+	" ucd=\"instr.calib;obs.image\" unit=\"adu\"/>\n");
   fprintf(file, "   <FIELD name=\"ExpTime\" datatype=\"float\""
 	" ucd=\"time.expo;obs.image\" unit=\"s\"/>\n");
   fprintf(file, "   <FIELD name=\"Photometric_Flux_Scaling\" datatype=\"float\""
@@ -428,7 +431,8 @@ int	write_xml_meta(FILE *file, char *error)
 	"     <TD>%g</TD><TD>%g</TD><TD>%c</TD><TD>%s</TD>"
 	"<TD>%d</TD><TD>%d</TD><TD>%g</TD>\n"
 	"     <TD>%s</TD><TD>%g</TD><TD>%g</TD><TD>%c</TD>\n"
-	"     <TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD>\n      <TD>%.10g",
+	"     <TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD>\n"
+	"     <TD>%g</TD><TD>%.10g",
 	n,
 	prefs.infield_name[f],
 	(prefs.inwfield_name[f] && *prefs.inwfield_name[f])?
@@ -453,6 +457,7 @@ int	write_xml_meta(FILE *file, char *error)
 	x->sigfac,
         prefs.interp_flag[f]? 'T' : 'F',
 	x->gain,
+	x->saturation,
 	x->exptime,
 	x->fscale,
 	x->fascale,
@@ -675,6 +680,15 @@ int	write_xml_meta(FILE *file, char *error)
     fprintf(file, "   <PARAM name=\"Gain_Default\" datatype=\"float\""
 	" ucd=\"phot.calib;obs.param\" value=\"%g\"/>\n",
 	prefs.gain_default[0]);
+
+    fprintf(file,
+	"   <PARAM name=\"SatLev_Keyword\" datatype=\"char\" arraysize=\"*\""
+	" ucd=\"meta.code;phot.calib;obs.param\" value=\"%s\"/>\n",
+	prefs.sat_keyword);
+
+    fprintf(file, "   <PARAM name=\"SatLev_Default\" datatype=\"float\""
+	" ucd=\"phot.calib;obs.param\" value=\"%g\"/>\n",
+	prefs.sat_default[0]);
 
     fprintf(file,
 	"   <PARAM name=\"Subtract_Back\" datatype=\"boolean\""

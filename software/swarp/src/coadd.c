@@ -116,7 +116,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
    wcsstruct		*wcs;
    PIXTYPE		*emptybuf,*outline,
 			*pix,*wpix;
-   double		exptime, w,w1,w2, mw;
+   double		exptime, w,w1,w2, mw, satlev;
    unsigned int		*cflag,*array,
 			d, n, n1,n2, flag;
    int			bufmin[NAXIS], bufmax[NAXIS], bufpos[NAXIS],
@@ -265,6 +265,16 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
   else
     outfield->gain = mw/omax2;
 
+/* Compute output saturation level (the minimum on all saturation) */
+  satlev = BIG;
+  for (n=0; n<ninput; n++)
+    {
+    infield[n]->saturation = (prefs.subback_flag[n])? (infield[n]->saturation
+                     - infield[n]->backmean) : infield[n]->saturation;
+    satlev = (infield[n]->saturation < satlev)?
+                     infield[n]->saturation : satlev;
+    }
+  outfield->saturation = satlev;
 
 /* Add relevant information to output FITS headers */
   writefitsinfo_outfield(outfield, *infield);

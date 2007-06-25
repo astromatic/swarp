@@ -80,6 +80,9 @@ typedef struct
   char		gain_keyword[MAXCHAR];	/* FITS keyword for gain */
   double	gain_default[MAXINFIELD];/* Default gain (e-/ADU) */
   int		ngain_default;		/* nb of params */
+  char		sat_keyword[MAXCHAR];	/* FITS keyword for saturation */
+  double	sat_default[MAXINFIELD];/* Default saturation (ADU) */
+  int		nsat_default;		/* nb of params */
   char		fscale_keyword[MAXCHAR];/* FITS keyword for flux scale */
   double	fscale_default[MAXINFIELD];/* Default flux scale */
   int		nfscale_default;		/* nb of params */

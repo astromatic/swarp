@@ -9,7 +9,7 @@
 *
 *	Contents:	Keywords for the configuration file.
 *
-*	Last modify:	09/08/2006
+*	Last modify:	25/06/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -74,6 +74,9 @@ pkeystruct key[] =
   {"GAIN_DEFAULT", P_FLOATLIST, prefs.gain_default, 0,0, 0.0, BIG,
    {""}, 1, MAXINFIELD, &prefs.ngain_default},
   {"GAIN_KEYWORD", P_STRING, prefs.gain_keyword},
+  {"SATLEV_DEFAULT", P_FLOATLIST, prefs.sat_default, 0,0, 0.0, BIG,
+   {""}, 1, MAXINFIELD, &prefs.nsat_default},
+  {"SATLEV_KEYWORD", P_STRING, prefs.sat_keyword},
   {"HEADER_ONLY", P_BOOL, &prefs.headeronly_flag},
   {"HEADER_SUFFIX", P_STRING, prefs.head_suffix},
   {"IMAGEOUT_NAME", P_STRING, prefs.outfield_name},
@@ -188,6 +191,8 @@ char *default_prefs[] =
 "GAIN_KEYWORD           GAIN            # FITS keyword for effect. gain (e-/ADU)",
 "GAIN_DEFAULT           0.0             # Default gain if no FITS keyword found",
 "                                       # 0 = infinity (all or for each image)",
+"SATLEV_KEYWORD         SATURATE        # FITS keyword for saturation level (ADU)",
+"SATLEV_DEFAULT         0.0             # Default saturation if no FITS keyword",
 " ",
 "#--------------------------- Background subtraction ---------------------------",
 " ",

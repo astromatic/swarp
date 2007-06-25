@@ -132,6 +132,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   field->backmean = infield->backmean;
   field->backsig = infield->backsig;
   field->gain = infield->gain;
+  field->saturation = infield->saturation;
   field->exptime = infield->exptime;
   field->fieldno = infield->fieldno;
   field->fscale = infield->fscale;

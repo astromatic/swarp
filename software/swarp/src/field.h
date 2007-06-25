@@ -53,6 +53,7 @@ typedef struct field
   int		width, height;		/* x,y size of the field */
   size_t	npix;			/* total number of pixels */
   double	gain;			/* conversion factor e-/ADU */
+  double	saturation;		/* saturation limit in ADU */
   double	exptime;		/* exposure time (s) */
   double	fscale;			/* relative photometric scale */
   double	fascale;		/* relative phot. scale from astrom. */
