@@ -63,9 +63,6 @@
 /* Define to 1 if you have the `mmap' function. */
 #undef HAVE_MMAP
 
-/* Define if you have the MPI library. */
-#undef HAVE_MPI
-
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 

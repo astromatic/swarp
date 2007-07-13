@@ -9,7 +9,7 @@
 *
 *	Contents:	Provide additional FITS header management.
 *
-*	Last modify:	8/08/2006
+*	Last modify:	25/06/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -117,7 +117,7 @@ INPUT	Pointer to the field structure,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	27/07/2006
+VERSION	25/06/2007
  ***/
 void	readfitsinfo_field(fieldstruct *field, tabstruct *tab)
   {
@@ -174,7 +174,7 @@ INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	08/08/2006
+VERSION	25/06/2007
  ***/
 void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
 
@@ -357,7 +357,7 @@ INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/07/2006
+VERSION	25/06/2007
  ***/
 void	writefitsinfo_field(fieldstruct *field, fieldstruct *infield)
 
@@ -481,9 +481,8 @@ void	writefitsinfo_field(fieldstruct *field, fieldstruct *infield)
   fitswrite(tab->headbuf,prefs.gain_keyword, &field->gain, H_EXPO,T_DOUBLE);
 
 /* Saturation level */
-  addkeywordto_head(tab, prefs.sat_keyword,
-	"Saturation level");
-  fitswrite(tab->headbuf,prefs.sat_keyword, &field->saturation, H_EXPO,T_DOUBLE);
+  addkeywordto_head(tab, prefs.sat_keyword, "Saturation level");
+  fitswrite(tab->headbuf,prefs.sat_keyword, &field->saturation,H_EXPO,T_DOUBLE);
 
 /* Background */
   addkeywordto_head(tab, "BACKMEAN", "Measured background level");

@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	03/04/2007
+*	Last modify:	25/06/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -50,7 +50,7 @@ INPUT	Cat structure,
 OUTPUT	The new field pointer if OK, NULL otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	21/11/2002
+VERSION	25/06/2007
  ***/
 fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
 
@@ -340,7 +340,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 03/04/2007
+VERSION 25/06/2007
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -911,7 +911,7 @@ INPUT	Field ptr,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 28/04/2004
+VERSION 25/06/2007
  ***/
 void	scale_field(fieldstruct *field, fieldstruct *reffield)
   {

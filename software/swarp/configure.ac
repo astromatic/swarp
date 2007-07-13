@@ -20,7 +20,6 @@ AC_SUBST(DATE2, "$date2")
 AC_SUBST(DATE3, "$date3")
 
 # Include macros
-sinclude(acx_mpi.m4)
 sinclude(acx_pthread.m4)
 sinclude(acx_prog_cc_optim.m4)
 sinclude(acx_urbi_resolve_dir.m4)
@@ -74,13 +73,6 @@ AC_ARG_ENABLE(static,
 # Checks for programs.
 # GCC is chosen last because it is likely to yield less optimized code
 AC_PROG_CC([$cclist])
-
-# Compile with MPI option
-if test "$use_mpi" = "yes"; then
-ACX_MPI([AC_DEFINE(HAVE_MPI,1,[Define if you have the MPI library.])]
-	CC="$MPICC",
-      	use_mpi="no")
-fi
 
 # C Compiler: Check that it is ANSI C
 AM_PROG_CC_STDC

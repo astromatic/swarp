@@ -9,7 +9,7 @@
 *
 *       Contents:       Coaddition routines
 *
-*       Last modify:    08/08/2006
+*       Last modify:    13/07/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -101,7 +101,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 08/08/2006
+VERSION 13/07/2007
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -271,8 +271,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
     {
     infield[n]->saturation = (prefs.subback_flag[n])? (infield[n]->saturation
                      - infield[n]->backmean) : infield[n]->saturation;
-    satlev = (infield[n]->saturation < satlev)?
-                     infield[n]->saturation : satlev;
+    if (infield[n]->saturation < satlev)
+      satlev = infield[n]->saturation;
     }
   outfield->saturation = satlev;
 

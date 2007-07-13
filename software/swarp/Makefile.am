@@ -5,7 +5,7 @@ SUBDIRS			= man src
 dist_pkgdata_DATA	= doc xsl/swarp.xsl
 EXTRA_DIST		= AUTHORS BUGS ChangeLog HISTORY INSTALL README \
 			  THANKS TODO acx_pthread.m4 acx_prog_cc_optim.m4 \
-			  acx_mpi.m4 test/test.fits acx_urbi_resolve_dir.m4
+			  acx_urbi_resolve_dir.m4 test/test.fits
 RPM_ROOTDIR		= `rpmbuild --nobuild -E %_topdir`
 RPM_SRCDIR		= $(RPM_ROOTDIR)/SOURCES
 rpm:	dist

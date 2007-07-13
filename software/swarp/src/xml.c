@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	26/03/2007
+*	Last modify:	13/07/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -235,7 +235,7 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	02/10/2006
+VERSION	13/07/2007
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
@@ -683,11 +683,11 @@ int	write_xml_meta(FILE *file, char *error)
 
     fprintf(file,
 	"   <PARAM name=\"SatLev_Keyword\" datatype=\"char\" arraysize=\"*\""
-	" ucd=\"meta.code;phot.calib;obs.param\" value=\"%s\"/>\n",
+	" ucd=\"meta.code;instr.saturation;obs.param\" value=\"%s\"/>\n",
 	prefs.sat_keyword);
 
     fprintf(file, "   <PARAM name=\"SatLev_Default\" datatype=\"float\""
-	" ucd=\"phot.calib;obs.param\" value=\"%g\"/>\n",
+	" ucd=\"instr.saturation;obs.param\" value=\"%g\"/>\n",
 	prefs.sat_default[0]);
 
     fprintf(file,

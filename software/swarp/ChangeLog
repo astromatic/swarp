@@ -15,6 +15,12 @@
 */
 
 ------------------------------------------------------------------------
+r490 | bertin | 2007-06-08 16:12:01 +0200 (Fri, 08 Jun 2007) | 2 lines
+
+Updated the documentation (about XML now written by default and image list
+support).
+
+------------------------------------------------------------------------
 r489 | bertin | 2007-06-08 15:53:25 +0200 (Fri, 08 Jun 2007) | 2 lines
 
 Added Akim Demaille's fix for absolute paths.
