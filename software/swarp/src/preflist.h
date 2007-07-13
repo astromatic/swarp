@@ -9,7 +9,7 @@
 *
 *	Contents:	Keywords for the configuration file.
 *
-*	Last modify:	25/06/2007
+*	Last modify:	13/07/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -190,9 +190,9 @@ char *default_prefs[] =
 " ",
 "GAIN_KEYWORD           GAIN            # FITS keyword for effect. gain (e-/ADU)",
 "GAIN_DEFAULT           0.0             # Default gain if no FITS keyword found",
-"                                       # 0 = infinity (all or for each image)",
-"SATLEV_KEYWORD         SATURATE        # FITS keyword for saturation level (ADU)",
-"SATLEV_DEFAULT         50000.0         # Default saturation if no FITS keyword",
+"*                                       # 0 = infinity (all or for each image)",
+"*SATLEV_KEYWORD         SATURATE        # FITS keyword for saturation level (ADU)",
+"*SATLEV_DEFAULT         50000.0         # Default saturation if no FITS keyword",
 " ",
 "#--------------------------- Background subtraction ---------------------------",
 " ",
