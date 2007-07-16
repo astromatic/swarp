@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	25/06/2007
+*	Last modify:	16/07/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -101,5 +101,6 @@ extern fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
 extern void		end_field(fieldstruct *field),
 			printinfo_field(fieldstruct *field,
 					fieldstruct *wfield),
-			scale_field(fieldstruct *field, fieldstruct *reffield);
+			scale_field(fieldstruct *field, fieldstruct *reffield,
+					int scaleflag);
 #endif

@@ -9,7 +9,7 @@
 *
 *       Contents:       Signal-catching routines to clean-up temporary files
 *
-*       Last modify:    13/07/2007
+*       Last modify:    16/07/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -96,7 +96,7 @@ INPUT	pointer to filename char string.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	13/07/2007
+VERSION	16/07/2007
  ***/
 void	remove_cleanupfilename(char *filename)
   {
@@ -113,10 +113,10 @@ void	remove_cleanupfilename(char *filename)
       {
 /* Match found: update the list and free memory is necessary*/
       filename3 = filename2 - 1;
+      free(*filename3);
       for (j=i; j--;)
         *(filename3++) = *(filename2++);
-      free(cleanup_filename[--cleanup_nfiles]);
-      if (!(cleanup_nfiles%CLEANUP_NFILES))
+      if (!((--cleanup_nfiles)%CLEANUP_NFILES))
         {
         if (cleanup_nfiles)
           {

@@ -9,7 +9,7 @@
 *
 *       Contents:       Main loop
 *
-*       Last modify:    25/06/2007
+*       Last modify:    16/07/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -203,8 +203,8 @@ void	makeit(void)
     for (i=0; i<ntinfield; i++)
       {
       frame_wcs(infield[i]->wcs, outfield->wcs);
-      if (prefs.fscalastro_type==FSCALASTRO_FIXED)
-        scale_field(infield[i], outfield);
+      scale_field(infield[i], outfield,
+		prefs.fscalastro_type==FSCALASTRO_FIXED);
       }
     }
 

@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	25/06/2007
+*	Last modify:	16/07/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -904,16 +904,20 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 
 
 /******* scale_field *********************************************************
-PROTO	void scale_field(fieldstruct *field, fieldstruct *reffield)
+PROTO	void scale_field(fieldstruct *field, fieldstruct *reffield,
+			int scaleflag)
 PURPOSE	Compute the flux-scaling factor for each input field.
 INPUT	Field ptr,
-	Reference field ptr.
+	Reference field ptr,
+	Scaling flag.
 OUTPUT	-.
-NOTES   -.
+NOTES   If scaleflag is set, pixel values are scaled in such a way that fluxes
+	are conserved (but not surface brightness), otherwise, the scaling
+	only applies to the output gain.
 AUTHOR  E. Bertin (IAP)
-VERSION 25/06/2007
+VERSION 16/07/2007
  ***/
-void	scale_field(fieldstruct *field, fieldstruct *reffield)
+void	scale_field(fieldstruct *field, fieldstruct *reffield, int scaleflag)
   {
    wcsstruct		*wcs;
    static double	raw[NAXIS], wcspos2[NAXIS];
@@ -947,10 +951,14 @@ void	scale_field(fieldstruct *field, fieldstruct *reffield)
 
   if (inscale!=0.0 && outscale!=0.0)
     {
-    field->tab->bscale *= (field->fascale = (outscale/inscale));
-    field->tab->bzero *= field->fascale;
-    field->gain /= field->fascale;
-    field->saturation *= field->fascale;
+    if (scaleflag)
+      {
+      field->tab->bscale *= (field->fascale = (outscale/inscale));
+      field->tab->bzero *= field->fascale;
+      field->saturation *= field->fascale;
+      }
+    else
+      field->gain *= (inscale/outscale);
     }
 
   return;

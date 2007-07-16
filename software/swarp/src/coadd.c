@@ -9,7 +9,7 @@
 *
 *       Contents:       Coaddition routines
 *
-*       Last modify:    13/07/2007
+*       Last modify:    16/07/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -101,7 +101,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 13/07/2007
+VERSION 16/07/2007
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -255,7 +255,9 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
   else if (coaddtype == COADD_MEDIAN)
     {
     if (w2 > 0.0)
-      outfield->gain = w1*w1/w2/PI;
+      outfield->gain = w1*w1/w2;
+    if (omax2 > 2)
+      outfield->gain /= PI;
     }
   else if (coaddtype == COADD_SUM)
     {
