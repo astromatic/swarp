@@ -93,7 +93,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/06/2007
+VERSION	09/08/2007
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -136,6 +136,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   field->exptime = infield->exptime;
   field->fieldno = infield->fieldno;
   field->fscale = infield->fscale;
+  field->headflag = infield->headflag;
   strcpy(field->ident, infield->ident);
 
 /* Now modify some characteristics of the output file */
