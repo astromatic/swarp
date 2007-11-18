@@ -8,6 +8,8 @@ EXTRA_DIST		= AUTHORS BUGS ChangeLog HISTORY INSTALL README \
 			  acx_urbi_resolve_dir.m4 test/test.fits
 RPM_ROOTDIR		= `rpmbuild --nobuild -E %_topdir`
 RPM_SRCDIR		= $(RPM_ROOTDIR)/SOURCES
+dist-hook:
+	rm -rf `find $(distdir) -name .svn`
 rpm:	dist
 	cp -f $(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz $(RPM_SRCDIR)
 	rpmbuild -ba --clean $(PACKAGE_NAME).spec $(PACKAGE_NAME)-mp.spec

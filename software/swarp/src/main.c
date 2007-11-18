@@ -9,7 +9,7 @@
 *
 *	Contents:	Parsing of the command line.
 *
-*	Last modify:	26/10/2006
+*	Last modify:	17/11/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -43,11 +43,9 @@ extern const char	notokstr[];
 int	main(int argc, char *argv[])
 
   {
-   FILE         *fp;
-   char		liststr[MAXCHAR],
-		**argkey, **argval,
-		*str, *listname, *listbuf;
-   int		a, l, narg, nim, opt, opt2, bufpos,bufsize;
+   char		**argkey, **argval,
+		*str, *listbuf;
+   int		a, narg, nim, opt, opt2, bufpos,bufsize;
 
 #ifdef HAVE_MPI
   MPI_Init (&argc,&argv);
@@ -112,48 +110,20 @@ int	main(int argc, char *argv[])
         argval[narg++] = argv[++a];
         }       
       }
-    else if (*(argv[a]) == '@')
-      {
-/*---- The input image list filename */
-      listname = argv[a]+1;
-      if ((fp=fopen(listname,"r")))
-        {
-        if (!listbuf)
-          {
-          QMALLOC(listbuf, char, bufsize);
-          }
-        while (fgets(liststr,MAXCHAR,fp))
-          if (nim<MAXINFIELD)
-            {
-            str = strtok(liststr, "\n\r\t ");
-            if (!str)
-              continue;
-            l = strlen(str)+1;
-            if (bufpos+l > bufsize)
-              {
-              bufsize += MAXCHAR*1000;
-              QREALLOC(listbuf, char, bufsize);
-              }
-            prefs.infield_name[nim] = strcpy(listbuf + bufpos, str);
-            bufpos += l;
-            nim++;
-            }
-          else
-            error(EXIT_FAILURE, "*Error*: Too many input images in ",
-			liststr);
-        fclose(fp);
-        }
-      else
-        error(EXIT_FAILURE, "*Error*: Cannot open image list ", listname);
-      }
     else
-/*---- The input image filename(s) */
       {
-      str = strtok(argv[a], "\n\r\t ");
-      if (nim<MAXINFIELD)
-        prefs.infield_name[nim++] = str;
-      else
-        error(EXIT_FAILURE, "*Error*: Too many input images: ", str);
+/*---- The input image filename(s) */
+      for(; (a<argc) && (*argv[a]!='-'); a++)
+        {
+        str = (*argv[a] == '@'? listbuf=list_to_str(argv[a]+1) : argv[a]);
+        for (nim = 0; (str=strtok(nim?NULL:str, notokstr)); nim++)
+          if (nim<MAXINFIELD)
+            prefs.infield_name[nim] = str;
+          else
+            error(EXIT_FAILURE, "*Error*: Too many input images: ", str);
+        }
+      prefs.ninfield = nim;
+      a--;
       }
     }
   prefs.ninfield = nim;

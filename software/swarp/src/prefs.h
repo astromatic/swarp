@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	25/06/2007
+*	Last modify:	17/11/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -41,6 +41,7 @@
 
 #define         MAXCHARL	16384	/* max. nb of chars in a string list */
 #define		MAXLIST		256	/* max. nb of list members */
+#define		MAXLISTSIZE	2000000 /* max size of list */
 
 /*--------------------------------- typedefs --------------------------------*/
 /*------------------------------- preferences -------------------------------*/
@@ -144,6 +145,8 @@ typedef struct
 prefstruct	prefs;
 
 /*-------------------------------- protos -----------------------------------*/
+extern char	*list_to_str(char *listname);
+
 extern int	cistrcmp(char *cs, char *ct, int mode);
 
 extern void	dumpprefs(int state),

@@ -9,7 +9,7 @@
 *
 *       Contents:       Main loop
 *
-*       Last modify:    16/07/2007
+*       Last modify:    09/10/2007
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -25,6 +25,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #ifdef HAVE_MPI
@@ -49,7 +50,8 @@ void	control_mpi(int nnodes, int ntasks);
 
 #define	NFIELD	128	/* Increment in the number of fields */
 
-time_t	thetime, thetime2;
+static int	selectext(char *filename);
+time_t		thetime, thetime2;
 
 /********************************** makeit ***********************************/
 void	makeit(void)
@@ -59,8 +61,9 @@ void	makeit(void)
    tabstruct		*tab;
    time_t		thetimef; 
    struct tm		*tm;
-   int		       	*list,*next;
-   int			i,j,k,l, ninfield, ntinfield, lng,lat, nfield;
+   int		       	*next;
+   int			i,j,k,l, ninfield, ntinfield, lng,lat, nfield,
+			jima,jweight;
    int			mpiflag, mpitask;
 
 /* Install error logging */
@@ -96,58 +99,64 @@ void	makeit(void)
   ntinfield = k = 0;
   nfield = NFIELD;
   QCALLOC(next, int, ninfield);
-  QMALLOC(list, int, nfield);
   QMALLOC(infield, fieldstruct *, nfield);
   QMALLOC(inwfield, fieldstruct *, nfield);
   NFPRINTF(OUTPUT, "Examining input data...")
   for (i=0; i<ninfield; i++)
     {
+/*-- Test if the filename contains a bracket indicating a particular extension*/
+    jima = selectext(prefs.infield_name[i]);
     if (!(cat=read_cat(prefs.infield_name[i])))
       {
       sprintf(gstr, "*Error*: %s not found", prefs.infield_name[i]);
       error(EXIT_FAILURE, gstr,"");
       }
+    if (jima >= cat->ntab)
+        error(EXIT_FAILURE, "Not enough valid FITS image extensions in ",
+		prefs.infield_name[i]);
 /*-- Examine all extensions */
     wcat = NULL;
+    jweight= RETURN_ERROR;		/* to avoid gcc -Wall warnings */
     if (prefs.weight_type[i] && prefs.weight_type[i] != WEIGHT_FROMBACK)
+      {
+      jweight = selectext(prefs.inwfield_name[i]);
       if (!(wcat=read_cat(prefs.inwfield_name[i])))
         {
         sprintf(gstr, "*Error*: %s not found", prefs.inwfield_name[i]);
         error(EXIT_FAILURE, gstr,"");
         }
+      if (jweight >= wcat->ntab)
+        error(EXIT_FAILURE, "Not enough valid FITS image extensions in ",
+		prefs.inwfield_name[i]);
+      }
     tab=cat->tab;
-    for (j=0; j<cat->ntab; j++)
+    for (j=0; j<cat->ntab; j++,tab=tab->nexttab)
       {
-      if (tab->naxis
-	&& (!(tab->tfields && tab->bitpix==8)))
+      if ((jima>=0 && j!=jima)
+	|| (jima<0 && (!tab->naxis || (tab->tfields && tab->bitpix==8))))
+        continue;
+      if (k >= nfield)
         {
-        if (k >= nfield)
-	  {
-          nfield += NFIELD;
-          QREALLOC(infield, fieldstruct *, nfield);
-          QREALLOC(inwfield,fieldstruct *, nfield);
-          QREALLOC(list, int, nfield);
-          }
-        list[k] = j;
-        infield[k] = load_field(cat, list[k], i);
-        for (l=0; l<ntinfield; l++)
-          if ((infield[l]->wcs->lng != -1 &&  infield[l]->wcs->lat != -1)
-		&&  infield[l]->wcs->lat < infield[l]->wcs->lng)
-          {
-          lng = infield[l]->wcs->lat;
-          lat = infield[l]->wcs->lng;
-/*-------- Force axis labeling to verify lat>lng */
-/*
-          reaxe_wcs(infield[l]->wcs, lng, lat);
-*/
-          }
-        inwfield[k] = wcat?
-		load_weight(wcat, infield[k], list[k], i, prefs.weight_type[i])
-		: NULL;
-        next[i]++;
-        k++;
+        nfield += NFIELD;
+        QREALLOC(infield, fieldstruct *, nfield);
+        QREALLOC(inwfield,fieldstruct *, nfield);
         }
-      tab = tab->nexttab;
+      infield[k] = load_field(cat, j, i);
+      for (l=0; l<ntinfield; l++)
+        if ((infield[l]->wcs->lng != -1 &&  infield[l]->wcs->lat != -1)
+		&&  infield[l]->wcs->lat < infield[l]->wcs->lng)
+        {
+        lng = infield[l]->wcs->lat;
+        lat = infield[l]->wcs->lng;
+/*------ Force axis labeling to verify lat>lng */
+/*
+        reaxe_wcs(infield[l]->wcs, lng, lat);
+*/
+        }
+      inwfield[k] = wcat? load_weight(wcat, infield[k], jweight<0? j:jweight, i,
+				prefs.weight_type[i]) : NULL;
+      next[i]++;
+      k++;
       }
     ntinfield += next[i];
     if (!next[i])
@@ -340,7 +349,6 @@ the_end:
     if (inwfield[k])
       end_field(inwfield[k]);
     }
-  free(list);
   free(next);
   free(infield);
   free(inwfield);
@@ -366,6 +374,34 @@ the_end:
     }
 
   return;
+  }
+
+
+/****** selectext ************************************************************
+PROTO 	int selectext(char *filename)
+PURPOSE	Return the user-selected extension number [%d] from the file name.
+INPUT	Filename character string.
+OUTPUT	Extension number, or RETURN_ERROR if nos extension specified.
+NOTES	The bracket and its extension number are removed from the filename if
+	found.
+AUTHOR	E. Bertin (IAP)
+VERSION	09/10/2007
+ ***/
+static int	selectext(char *filename)
+  {
+   char	*bracl,*bracr;
+   int	next;
+
+  if (filename && (bracl=strrchr(filename, '[')))
+    {
+    *bracl = '\0';
+    if ((bracr=strrchr(bracl+1, ']')))
+      *bracr = '\0';
+    next = strtol(bracl+1, NULL, 0);
+    return next;
+    }
+
+  return RETURN_ERROR;
   }
 
 
