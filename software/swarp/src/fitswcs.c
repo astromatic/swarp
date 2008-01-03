@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	05/06/2007
+*	Last modify:	03/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -315,7 +315,7 @@ INPUT	tab structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	05/06/2007
+VERSION	02/01/2008
  ***/
 wcsstruct	*read_wcs(tabstruct *tab)
 
@@ -351,8 +351,8 @@ wcsstruct	*read_wcs(tabstruct *tab)
   QCALLOC(wcs, wcsstruct, 1);
   if (tab->naxis > NAXIS)
     {
-    warning("Maximum number of dimensions supported by this version of ",
-		"SWarp exceeded\n");
+    warning("Maximum number of dimensions supported by this version of the ",
+	"software exceeded\n");
     tab->naxis = 2;
     }
 
@@ -1489,7 +1489,7 @@ INPUT	WCS structure,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	20/02/2005
+VERSION	03/01/2008
  ***/
 double	wcs_scale(wcsstruct *wcs, double *pixpos)
 
@@ -1498,10 +1498,16 @@ double	wcs_scale(wcsstruct *wcs, double *pixpos)
    double	dpos1,dpos2;
    int		lng, lat;
 
-  lng = wcs->lng;
-  lat = wcs->lat;
   if (raw_to_wcs(wcs, pixpos, wcspos))
     return 0.0;
+
+  lng = wcs->lng;
+  lat = wcs->lat;
+  if (lng == lat)
+    {
+    lng = 0;
+    lat = 1;
+    }
 
 /* Compute pixel scale */
   pixpos2[lng] = pixpos[lng] + 1.0;
@@ -1513,18 +1519,81 @@ double	wcs_scale(wcsstruct *wcs, double *pixpos)
   if (raw_to_wcs(wcs, pixpos2, wcspos2))
     return 0.0;
   dpos1 = wcspos1[lng]-wcspos[lng];
-  if (dpos1>180.0)
-    dpos1 -= 360.0;
-  else if (dpos1<-180.0)
-    dpos1 += 360.0;
   dpos2 = wcspos2[lng]-wcspos[lng];
-  if (dpos2>180.0)
-    dpos2 -= 360.0;
-  else if (dpos2<-180.0)
-    dpos2 += 360.0;
-  return fabs((dpos1*(wcspos2[lat]-wcspos[lat])
-		-(wcspos1[lat]-wcspos[lat])*dpos2)
-		*cos(wcspos[lat]*DEG));
+  if (wcs->lng!=wcs->lat)
+    {
+    if (dpos1>180.0)
+      dpos1 -= 360.0;
+    else if (dpos1<-180.0)
+      dpos1 += 360.0;
+    if (dpos2>180.0)
+      dpos2 -= 360.0;
+    else if (dpos2<-180.0)
+      dpos2 += 360.0;
+    return fabs((dpos1*(wcspos2[lat]-wcspos[lat])
+		-(wcspos1[lat]-wcspos[lat])*dpos2)*cos(wcspos[lat]*DEG));
+    }
+  else
+    return fabs((dpos1*(wcspos2[lat]-wcspos[lat])
+		-(wcspos1[lat]-wcspos[lat])*dpos2));
+  }
+
+
+/****** wcs jacobian *********************************************************
+PROTO	double wcs_jacobian(wcsstruct *wcs, double *pixpos, double *jacob)
+PURPOSE	Compute the local Jacobian matrice of the astrometric deprojection.
+INPUT	WCS structure,
+	Pointer to the array of local raw coordinates,
+	Pointer to the jacobian array (output).
+OUTPUT	Determinant over spatial coordinates (=pixel area), or -1.0 if mapping
+	was unsuccesful.
+NOTES   Memory must have been allocated (naxis*naxis*sizeof(double)) for the
+        Jacobian array.
+AUTHOR	E. Bertin (IAP)
+VERSION	11/10/2007
+ ***/
+double	wcs_jacobian(wcsstruct *wcs, double *pixpos, double *jacob)
+  {
+   double	pixpos0[NAXIS], wcspos0[NAXIS], wcspos[NAXIS],
+		dpos;
+   int		i,j, lng,lat,naxis;
+
+  lng = wcs->lng;
+  lat = wcs->lat;
+  naxis = wcs->naxis;
+  for (i=0; i<naxis; i++)
+    pixpos0[i] = pixpos[i];
+  if (raw_to_wcs(wcs, pixpos0, wcspos0) == RETURN_ERROR)
+    return -1.0;
+  for (i=0; i<naxis; i++)
+    {
+    pixpos0[i] += 1.0;
+    if (raw_to_wcs(wcs, pixpos0, wcspos) == RETURN_ERROR)
+      return -1.0;
+    pixpos0[i] -= 1.0;
+    for (j=0; j<naxis; j++)
+      {
+      dpos = wcspos[j]-wcspos0[j];
+      if (lng!=lat && j==lng)
+        {
+        if (dpos>180.0)
+          dpos -= 360.0;
+        else if (dpos<-180.0)
+          dpos += 360.0;
+        dpos *= cos(wcspos0[lat]*DEG);
+        }
+      jacob[j*naxis+i] = dpos;
+      }
+    }
+
+  if (lng==lat)
+    {
+    lng = 0;
+    lat = 1;
+    }
+
+  return fabs(jacob[lng+naxis*lng]*jacob[lat+naxis*lat]
+		- jacob[lat+naxis*lng]*jacob[lng+naxis*lat]);
   }
 
 

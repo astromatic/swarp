@@ -9,7 +9,7 @@
 *
 *	Contents:	Keywords for the configuration file.
 *
-*	Last modify:	13/07/2007
+*	Last modify:	03/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -67,7 +67,7 @@ pkeystruct key[] =
    {""}, 0, 1024, &prefs.ncopy_keywords},
   {"DELETE_TMPFILES", P_BOOL, &prefs.removetmp_flag},
   {"FSCALASTRO_TYPE", P_KEY, &prefs.fscalastro_type, 0,0, 0.0,0.0,
-   {"NONE", "FIXED", ""}},
+   {"NONE", "FIXED", "VARIABLE", ""}},
   {"FSCALE_DEFAULT", P_FLOATLIST, prefs.fscale_default, 0,0, -BIG, BIG,
    {""}, 1, MAXINFIELD, &prefs.nfscale_default},
   {"FSCALE_KEYWORD", P_STRING, prefs.fscale_keyword},
@@ -183,7 +183,7 @@ char *default_prefs[] =
 "INTERPOLATE            N               # Interpolate bad input pixels (Y/N)?",
 "                                       # (all or for each image)",
 " ",
-"FSCALASTRO_TYPE        FIXED           # NONE or FIXED",
+"FSCALASTRO_TYPE        FIXED           # NONE,FIXED, or VARIABLE",
 "FSCALE_KEYWORD         FLXSCALE        # FITS keyword for the multiplicative",
 "                                       # factor applied to each input image",
 "FSCALE_DEFAULT         1.0             # Default FSCALE value if not in header",

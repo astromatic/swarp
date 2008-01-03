@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	17/11/2007
+*	Last modify:	03/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -87,7 +87,7 @@ typedef struct
   char		fscale_keyword[MAXCHAR];/* FITS keyword for flux scale */
   double	fscale_default[MAXINFIELD];/* Default flux scale */
   int		nfscale_default;		/* nb of params */
-  enum {FSCALASTRO_NONE, FSCALASTRO_FIXED}
+  enum {FSCALASTRO_NONE, FSCALASTRO_FIXED, FSCALASTRO_VARIABLE}
 		fscalastro_type;	/* Astrometric flux-scaling type */
   interpenum	resamp_type[INTERP_MAXDIM];/* Image resampling method */
   int		nresamp_type;		/* nb of params */

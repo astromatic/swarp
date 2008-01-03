@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for projapprox.c
 *
-*	Last modify:	14/11/2003
+*	Last modify:	03/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -38,20 +38,23 @@ typedef struct projapp
   int		npoints[NAXIS];	/* Number of nodes per dimension */
   int		npointstot;	/* Total number of nodes */
   double	step[NAXIS];	/* Step (in pixels) between each node */
-  double	*projpos[NAXIS];	/* coordinate value at each node */
+  double	*projpos[NAXIS];/* coordinate value at each node */
   double	*dprojpos2x[NAXIS];/* second derivative along x at each node */
   double	*dprojpos2y[NAXIS];/* second derivative along y at each node */
+  double	*projarea;	/* coordinate value at each node */
+  double	*dprojarea2x;	/* second derivative along x at each node */
+  double	*dprojarea2y;	/* second derivative along y at each node */
   }		projappstruct;
 
 
 /*----------------------- miscellaneous variables ---------------------------*/
 projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
-				double projmaxerr);
+			double projmaxerr, int areaflag, double meanscale);
 
 void		projapp_dmap(projappstruct *projapp),
 		projapp_end(projappstruct *projapp),
 		projapp_line(projappstruct *projapp, double *startposin,
-			double step, int npos, double *posout);
+			double step, int npos, double *posout, double *areaout);
 
 /*-------------------------------- protos -----------------------------------*/
 

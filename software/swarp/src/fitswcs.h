@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for fitswcs.c
 *
-*	Last modify:	05/06/2007
+*	Last modify:	02/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -103,6 +103,8 @@ extern double		sextodegal(char *hms),
 			sextodegde(char *dms),
 			wcs_dist(wcsstruct *wcs,
 				double *wcspos1, double *wcspos2),
+			wcs_jacobian(wcsstruct *wcs, double *pixpos,
+				double *jacob),
 			wcs_scale(wcsstruct *wcs, double *pixpos);
 
 extern int		celsys_to_eq(wcsstruct *wcs, double *wcspos),

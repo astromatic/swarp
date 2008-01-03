@@ -9,7 +9,7 @@
 *
 *       Contents:       Resampling procedures
 *
-*       Last modify:    25/06/2007
+*       Last modify:    03/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -63,6 +63,7 @@
  double			rawmin[NAXIS], rawmax[NAXIS],rawpos0[NAXIS],
 			stepover[NAXIS],
 			**rawposp, **rawbuf, **oversampbuf,**oversampwbuf,
+			**rawbufarea,
 			ascale;
  PIXTYPE		**outbuf,**outwbuf;
  int			**oversampnbuf, *oversamp,
@@ -93,7 +94,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	09/08/2007
+VERSION	03/01/2008
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -237,7 +238,8 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 
 /* Turn approximation on or off */
   approxflag = ((projerr = prefs.proj_err[infield->fieldno] > 0.0)
-    && (projapp = projapp_init(infield->wcs, field->wcs, projerr)));
+    && (projapp = projapp_init(infield->wcs, field->wcs, projerr,
+	prefs.fscalastro_type==FSCALASTRO_VARIABLE, infield->fascale)));
 
 #ifdef USE_THREADS
 /* Set up multi-threading stuff */
@@ -269,6 +271,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   QMALLOC(outbuf, PIXTYPE *, nlines);
   QMALLOC(outwbuf, PIXTYPE *, nlines);
   QMALLOC(rawbuf, double *, nlines);
+  QCALLOC(rawbufarea, double *, nlines);
   QMALLOC(ikernel, ikernelstruct *, nlines);
   QMALLOC(wcsinp, wcsstruct *, nlines);
   QMALLOC(wcsoutp, wcsstruct *, nlines);
@@ -294,6 +297,8 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
       }
 /*-- Provide memory space for the current astrometric line */
     QMALLOC(rawbuf[l], double, naxis*width);
+    if (prefs.fscalastro_type==FSCALASTRO_VARIABLE)
+      QMALLOC(rawbufarea[l], double, width);
     QMALLOC(rawposp[l], double, naxis);
 /*-- Initialize interpolation kernel */
     ikernel[l] = init_ikernel(interptype, naxis);
@@ -387,6 +392,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
       free(oversampnbuf[l]);
       }
     free(rawbuf[l]);
+    free(rawbufarea[l]);
 /*-- Free interpolation kernel */
     free_ikernel(ikernel[l]);
     end_wcs(wcsinp[l]);
@@ -402,6 +408,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
     free(oversampnbuf);
     }
   free(rawbuf);
+  free(rawbufarea);
   free(ikernel);
   free(wcsinp);
   free(wcsoutp);
@@ -528,20 +535,21 @@ void    cancel_resample_threads(void)
 
 #endif
 
-/****** warp_line *******************************************************
+/****** warp_line *************************************************************
 PROTO	void warp_line(int p)
 PURPOSE	Resample an image line.
 INPUT	Thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	20/12/2003
+VERSION	03/01/2008
  ***/
 void	warp_line(int p)
   {
    wcsstruct		*wcsin,*wcsout;
    double		rawposover[NAXIS], wcspos[NAXIS],
-			*rawpos, *rawbufc, *oversampt,*oversampwt;
+			*rawpos, *rawbufc, *oversampt,*oversampwt, *rawbufareac,
+			invscale, area;
    PIXTYPE		*out, *outw,
 			pix,pixw;
    int			nstepover[NAXIS],stepcount[NAXIS],
@@ -553,6 +561,9 @@ void	warp_line(int p)
   rawpos = rawposp[p];
   wcsin = wcsinp[p];
   wcsout = wcsoutp[p];
+  invscale = 1.0/infield->fascale;
+  area = 1.0;
+
 /* Compute all alpha's and delta's for the current line */
   rawpos[0] = rawmin[0];
   if (oversampflag)
@@ -569,9 +580,10 @@ void	warp_line(int p)
     for (o=noversamp; o--; )
       {
       rawbufc = rawbuf[p];
+      rawbufareac = rawbufarea[p];
       if (approxflag)
 /*------ With approximation */
-        projapp_line(projapp, rawposover, 1.0, width, rawbufc);
+        projapp_line(projapp, rawposover, 1.0, width, rawbufc, rawbufareac);
       else
         {
 /*------ Without approximation */
@@ -581,7 +593,14 @@ void	warp_line(int p)
           if (*wcspos == WCS_NOCOORD)
             *rawbufc = WCS_NOCOORD;
           else
+            {
             wcs_to_raw(wcsin, wcspos, rawbufc);
+            if (rawbufareac)
+              *rawbufareac = invscale * wcs_scale(wcsout, rawposover)
+			/ wcs_scale(wcsin, rawbufc);
+            }
+          if (rawbufareac)
+            rawbufareac++;
           }
 	}
 /*---- Resample the current line */
@@ -589,18 +608,21 @@ void	warp_line(int p)
       oversampwt = oversampwbuf[p];
       oversampnt = oversampnbuf[p];
       rawbufc = rawbuf[p];
+      rawbufareac = rawbufarea[p];
       for (x=width; x--; rawbufc+=naxis)
         {
+        if (rawbufareac)
+          area = *(rawbufareac++);
         if (*rawbufc != WCS_NOCOORD
 		&& (interpolate_pix(infield, inwfield, ikernel[p],rawbufc,
 			&pix,&pixw),pixw<BIG))
           {
-          *(oversampt++) += (double)pix;
-          *(oversampwt++) += (double)pixw;
+          *(oversampt++) += area * (double)pix;
+          *(oversampwt++) += (double)pixw / area;
           (*(oversampnt++))++;
-	  }
+          }
         else
-	  {
+          {
           oversampt++;
           oversampwt++;
           oversampnt++;
@@ -639,9 +661,10 @@ void	warp_line(int p)
     {
 /*-- No oversampling */
     rawbufc = rawbuf[p];
+    rawbufareac = rawbufarea[p];
     if (approxflag)
 /*---- With approximation */
-      projapp_line(projapp, rawpos, 1.0, width, rawbufc);
+      projapp_line(projapp, rawpos, 1.0, width, rawbufc, rawbufareac);
     else
 /*---- Without approximation */
       for (x=width; x--; (*rawpos)+=1.0,  rawbufc+=naxis)
@@ -650,20 +673,33 @@ void	warp_line(int p)
         if (*wcspos == WCS_NOCOORD)
           *rawbufc = WCS_NOCOORD;
         else
+          {
           wcs_to_raw(wcsin, wcspos, rawbufc);
+          if (rawbufareac)
+            *rawbufareac = invscale * wcs_scale(wcsout, rawpos)
+			/ wcs_scale(wcsin, rawbufc);
+          }
+        if (rawbufareac)
+          rawbufareac++;
         }
 /*-- Resample the line */
     rawbufc = rawbuf[p];
+    rawbufareac = rawbufarea[p];
     for (x=width; x--; rawbufc+=naxis)
+      {
+      if (rawbufareac)
+        area = *(rawbufareac++);
       if (*rawbufc != WCS_NOCOORD)
         {
-        interpolate_pix(infield, inwfield, ikernel[p], rawbufc,out++,outw);
+        interpolate_pix(infield, inwfield, ikernel[p], rawbufc,out,outw);
+        *(out++) *= area;
 /*----- Convert variance to weight */
-        *outw = (*outw < BIG) ? 1.0/(*outw) : 0.0;
+        *outw = (*outw < BIG) ? 1.0/(*outw*area) : 0.0;
         outw++;
         }
       else
         *(out++) = *(outw++) = 0.0;
+      }
     }
 
   return;

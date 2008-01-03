@@ -9,7 +9,7 @@
 *
 *       Contents:       Approximation to astrometric (re-)projection
 *
-*       Last modify:    12/01/2004
+*       Last modify:    03/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -35,20 +35,22 @@
 #include "projapprox.h"
 
 /****** projapp_init *********************************************************
-PROTO	projappstruct *projapp_init(wcsstruct *wcsin, wcsstruct *wcsout, double
-				projmaxerr)
+PROTO	projappstruct *projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
+			double projmaxerr, int areaflag, double meanscale)
 PURPOSE	Prepare all the necessary data for approximating a reprojection.
 INPUT	Input pointer to wcs structure pointer,
 	Output wcs structure pointer,
-	Maximum reprojection error (pixels) allowed.
+	Maximum reprojection error (pixels) allowed,
+	Pixel area flag (triggers mapping of relative pixel areas if !=0),
+	Mean image relative scale.
 OUTPUT	Pointer to an allocated projappstruct structure, or NULL if
 	approximation failed 
 NOTES	Currently limited to 2D (returns NULL otherwise).
 AUTHOR	E. Bertin (IAP)
-VERSION	21/11/2003
+VERSION	03/01/2008
  ***/
-projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout, double
-				projmaxerr)
+projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
+			double projmaxerr, int areaflag, double meanscale)
   {
    projappstruct	*projapp;
    double		*projpos[NAXIS],
@@ -56,7 +58,8 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout, double
 			wcspos[NAXIS],
 			stepc[NAXIS],
 			*step, *projline,*projlinet,*projappline,*projapplinet,
-			maxerror, cerror, defstep, stepcx;
+			*projarea,
+			maxerror, cerror, defstep, stepcx, invscale;
    int			linecount[NAXIS], stepcount[NAXIS], npointsc[NAXIS],
 			*npoints,
 			d,i,j, naxis,naxisnmax, ngridpoints,npointstot,
@@ -64,7 +67,15 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout, double
 
 /* The present version only works in 2D */
   if (wcsin->naxis != 2 || wcsout->naxis != 2)
-    return NULL;
+    return (projappstruct *)NULL;
+
+  if (areaflag && meanscale < 1/BIG)
+    {
+    warning("Wrong re-scaling with ", "this re-projection");
+    return (projappstruct *)NULL;
+    }
+
+  invscale = 1.0/meanscale;
 
   QCALLOC(projapp, projappstruct, 1);
 
@@ -125,6 +136,15 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout, double
       rawposout[d] = rawposmin[d] = 0.5;
       linecount[d] = stepcount[d] = 0;
       }
+
+    if (areaflag)
+      {
+      QMALLOC(projapp->projarea, double, npointstot);
+      projarea = projapp->projarea;
+      }
+    else
+      projarea = NULL;		/* to avoid gcc -Wall warnings */
+
 /*-- Fill the arrays */
     for (i=npointstot; i--;)
       {
@@ -137,9 +157,11 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout, double
         projapp_end(projapp);
         return (projappstruct *)NULL;
         }
-      wcs_to_raw(wcsin, wcspos, rawpos);
       for (d=0; d<naxis; d++)
         *(projpos[d]++) = rawpos[d];
+      if (areaflag)
+        *(projarea++) = invscale * wcs_scale(wcsout,rawposout)
+			/ wcs_scale(wcsin,rawpos);
       for (d=0; d<naxis; d++)
         {
         rawposout[d] = rawposmin[d] + (++stepcount[d])*step[d];
@@ -176,7 +198,7 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout, double
       {
       rawposout[0] = rawposmin[0];
 /*---- The approximation */
-      projapp_line(projapp, rawposout, stepcx, npointscx, projappline);
+      projapp_line(projapp, rawposout, stepcx, npointscx, projappline, NULL);
 /*---- The exact computation */
       projlinet = projline;
       stepcountx = 0;
@@ -220,7 +242,7 @@ INPUT	Input pointer to projapp structure pointer,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	12/01/2004
+VERSION	03/01/2008
  ***/
 void	projapp_end(projappstruct *projapp)
   {
@@ -245,6 +267,10 @@ void	projapp_end(projappstruct *projapp)
       }
     }
 
+  free(projapp->projarea);
+  free(projapp->dprojarea2x);
+  free(projapp->dprojarea2y);
+
   free(projapp);
 
   return;
@@ -258,7 +284,7 @@ INPUT	Input projappstruct pointer.
 OUTPUT	-.
 NOTES	Currently limited to 2D vectors.
 AUTHOR	E. Bertin (IAP)
-VERSION	10/11/2003
+VERSION	03/01/2008
  ***/
 void	projapp_dmap(projappstruct *projapp)
   {
@@ -273,6 +299,7 @@ void	projapp_dmap(projappstruct *projapp)
   nbym1 = nby - 1;
 /*-- Computation of 2nd derivatives along x */
   QMALLOC(u, double, nbxm1);	/* temporary array */
+
   for (d=0; d<naxis; d++)
     {
     QMALLOC(projapp->dprojpos2x[d], double, projapp->npointstot);
@@ -305,15 +332,85 @@ void	projapp_dmap(projappstruct *projapp)
         *dmapt = 0.0;
       }
     }
+
+  if (projapp->projarea)
+    {
+/*-- The same for relative pixel areas */
+    QMALLOC(projapp->dprojarea2x, double, projapp->npointstot);
+    map = projapp->projarea;
+    dmap = projapp->dprojarea2x;
+    for (y=nby; y--;)
+      {
+      mapt = map+1;
+      dmapt = dmap;
+      map += nbx;
+      dmap += nbx;
+      if (nbx>1)
+        {
+        *dmapt = *u = 0.0;	/* "natural" lower boundary condition */
+        for (x=nbxm1; --x; mapt++)
+          {
+          temp = -1.0/(*dmapt+4.0);
+          *(++dmapt) = temp;
+          temp *= *(u++) - 6.0*(*(mapt+1)+*(mapt-1)-2.0**mapt);
+          *u = temp;
+          }
+        *(++dmapt) = 0.0;	/* "natural" upper boundary condition */
+        for (x=nbx-2; x--;)
+          {
+          temp = *(dmapt--);
+          *dmapt = (*dmapt*temp+*(u--))/6.0;
+          }
+        }
+      else
+        *dmapt = 0.0;
+      }
+    }
+
   free(u);
 
 /* Derivatives along "y" */
   QMALLOC(u, double, nbym1);	/* temporary array */
+
   for (d=0; d<naxis; d++)
     {
     QMALLOC(projapp->dprojpos2y[d], double, projapp->npointstot);
     map = projapp->projpos[d];
     dmap = projapp->dprojpos2y[d];
+    for (x=0; x<nbx; x++)
+      {
+      mapt = map++;
+      dmapt = dmap++;
+      if (nby>1)
+        {
+        *dmapt = *u = 0.0;	/* "natural" lower boundary condition */
+        mapt += nbx;
+        for (y=nbym1; --y; mapt+=nbx)
+          {
+          temp = -1.0/(*dmapt+4.0);
+          *(dmapt += nbx) = temp;
+          temp *= *(u++) - 6.0*(*(mapt+nbx)+*(mapt-nbx)-2.0**mapt);
+          *u = temp;
+          }
+        *(dmapt+=nbx) = 0.0;	/* "natural" upper boundary condition */
+        for (y=nby-2; y--;)
+          {
+          temp = *dmapt;
+          dmapt -= nbx;
+          *dmapt = (*dmapt*temp+*(u--))/6.0;
+          }
+        }
+      else
+        *dmapt = 0.0;
+      }
+    }
+
+  if (projapp->projarea)
+    {
+/*-- The same for relative pixel areas */
+    QMALLOC(projapp->dprojarea2y, double, projapp->npointstot);
+    map = projapp->projarea;
+    dmap = projapp->dprojarea2y;
     for (x=0; x<nbx; x++)
       {
       mapt = map++;
@@ -350,22 +447,24 @@ void	projapp_dmap(projappstruct *projapp)
 
 /****** projapp_line *********************************************************
 PROTO	void projapp_line(projappstruct *projapp, double *startposin,
-		double step, int npos, double *posout)
+		double step, int npos, double *posout, double *areaout)
 PURPOSE	Approximate several reprojections on the same line
 INPUT	Input projappstruct pointer,
 	ptr to input coordinate vector array (of size naxis*nvectors),
 	step along "x" (NAXIS1) dimension,
 	number of input vectors.
 	ptr to output coordinate vector array (where the results are written).
+	ptr to output pixel area vector array (where the results are written).
 OUTPUT	-.
-NOTES	Currently limited to 2D vectors.
+NOTES	Pixel area are computed only if areaout != NULL.
+	Currently limited to 2D vectors.
 AUTHOR	E. Bertin (IAP)
-VERSION	14/11/2003
+VERSION	03/01/2008
  ***/
 void	projapp_line(projappstruct *projapp, double *startposin, double step,
-		int npos, double *posout)
+		int npos, double *posout, double *areaout)
   {
-   double	*node,*nodep, *blo,*bhi,*dblo,*dbhi, *posoutt,
+   double	*node,*nodep, *anode, *blo,*bhi,*dblo,*dbhi, *posoutt,*areaoutt,
 		xstep, dx,ddx,cdx, dy,dy3,cdy,cdy3;
    int		d,i,j, xl,yl, x, ax,ax0,dax, nbx,nbxm1,nby, ylstep, nxnodes,
 		naxis;
@@ -374,8 +473,9 @@ void	projapp_line(projappstruct *projapp, double *startposin, double step,
   nbx = projapp->npoints[0];
   nbxm1 = nbx - 1;
   nby = projapp->npoints[1];
+  node = anode = NULL;		/* To avoid gcc -Wall warnings */
 
-/*-- Perpare interpolation along x */
+/*-- Prepare interpolation along x */
   if (nbx>1)
     {
     xstep = 1.0/projapp->step[0];
@@ -425,10 +525,11 @@ void	projapp_line(projappstruct *projapp, double *startposin, double step,
     if (nxnodes > (nbx-xl))
       nxnodes = nbx - xl;
     QMALLOC(node, double, nxnodes);	/* Interpolated map */
+    if (areaout)
+      QMALLOC(anode, double, nxnodes);	/* Interpolated map */
     }
   else
     {
-    node = NULL;			/* To avoid gcc -Wall warnings */
     ylstep = 0.0;			/* To avoid gcc -Wall warnings */
     dy = dy3 = cdy = cdy3 = nxnodes = 0.0;  /* To avoid gcc -Wall warnings */
     }
@@ -476,11 +577,69 @@ void	projapp_line(projappstruct *projapp, double *startposin, double step,
         }
       }
     else
-      *posout = *node;
+      {
+      posoutt = posout+d;
+      for (j=npos; j--;)
+        *(posout++) = *node;
+      }
+    }
+
+  if (areaout)
+    {
+    if (nby > 1)
+      {
+/*---- Interpolation along y for each node */
+      blo = projapp->projarea + ylstep + xl;
+      bhi = blo + nbx;
+      dblo = projapp->dprojarea2y + ylstep + xl;
+      dbhi = dblo + nbx;
+      nodep = anode;
+      for (x=nxnodes; x--;)
+        *(nodep++) = cdy**(blo++) + dy**(bhi++) + cdy3**(dblo++)+dy3**(dbhi++);
+      }
+    else
+      node =  projapp->projarea + xl;
+
+    if (nbx > 1)
+      {
+/*---- Interpolation along x */
+      blo = anode;
+      bhi = blo + 1;
+      dblo = projapp->dprojarea2x + xl;
+      dbhi = dblo + 1;
+      ax0 = xl;
+      areaoutt = areaout;
+      for (i=0,j=npos; j--; i++)
+        {
+        ax = (int)(ddx = xl + dx + i*xstep);
+        if ((int)(dax = ax-ax0) && ax<nbxm1)
+          {
+          blo+=dax;
+          bhi+=dax;
+          dblo+=dax;
+          dbhi+=dax;
+          ax0 = ax;
+          }
+        ddx -= (double)ax0;
+        cdx = 1.0 - ddx;
+        *(areaoutt++) = (cdx*(*blo+(cdx*cdx-1)**dblo)
+			+ ddx*(*bhi+(ddx*ddx-1)**dbhi));
+        }
+      }
+    else
+      {
+      areaoutt = areaout;
+      for (j=npos; j--;)
+        *(areaout++) = *anode;
+      }
     }
 
   if (nby>1)
+    {
+    if (areaout)
+      free(anode);
     free(node);
+    }
 
   return;
   }
