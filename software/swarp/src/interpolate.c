@@ -9,7 +9,7 @@
 *
 *	Contents:	Function related to vignet manipulations.
 *
-*	Last modify:	31/01/2006
+*	Last modify:	04/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -205,11 +205,11 @@ INPUT	Position,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	18/04/2003
+VERSION	04/01/2008
  ***/
 void	make_kernel(double pos, double *kernel, interpenum interptype)
   {
-   double	x, val, sinx1,sinx2,sinx3,sinx4;
+   double	x, val, sinx1,sinx2,sinx3,cosx1;
 
   if (interptype == INTERP_NEARESTNEIGHBOUR)
     *kernel = 1;
@@ -258,11 +258,15 @@ void	make_kernel(double pos, double *kernel, interpenum interptype)
     else
       {
       x = -PI/3.0*(pos+2.0);
-      val = (*(kernel++) = (sinx1=sin(x))/(x*x));
+      sinx1 = sin(x);
+      cosx1 = cos(x);
+      val = (*(kernel++) = sinx1/(x*x));
       x += PI/3.0;
-      val += (*(kernel++) = (sinx2=-sin(x))/(x*x));
+      val += (*(kernel++) = (sinx2=-0.5*sinx1-0.866025403785*cosx1)
+				/ (x*x));
       x += PI/3.0;
-      val += (*(kernel++) = (sinx3=sin(x))/(x*x));
+      val += (*(kernel++) = (sinx3=-0.5*sinx1+0.866025403785*cosx1)
+				/(x*x));
       x += PI/3.0;
       val += (*(kernel++) = sinx1/(x*x));
       x += PI/3.0;
@@ -294,21 +298,24 @@ void	make_kernel(double pos, double *kernel, interpenum interptype)
     else
       {
       x = -PI/4.0*(pos+3.0);
-      val = (*(kernel++) = (sinx1=sin(x))/(x*x));
+      sinx1 = sin(x);
+      cosx1 = cos(x);
+      val = (*(kernel++) = sinx1/(x*x));
       x += PI/4.0;
-      val +=(*(kernel++) = -(sinx2=sin(x))/(x*x));
+      val +=(*(kernel++) = -(sinx2=0.707106781186*(sinx1+cosx1))
+				/(x*x));
       x += PI/4.0;
-      val += (*(kernel++) = (sinx3=sin(x))/(x*x));
+      val += (*(kernel++) = cosx1/(x*x));
       x += PI/4.0;
-      val += (*(kernel++) = -(sinx4=sin(x))/(x*x));
+      val += (*(kernel++) = -(sinx3=0.707106781186*(cosx1-sinx1))/(x*x));
       x += PI/4.0;
       val += (*(kernel++) = -sinx1/(x*x));
       x += PI/4.0;
       val += (*(kernel++) = sinx2/(x*x));
       x += PI/4.0;
-      val += (*(kernel++) = -sinx3/(x*x));
+      val += (*(kernel++) = -cosx1/(x*x));
       x += PI/4.0;
-      val += (*kernel = sinx4/(x*x));
+      val += (*kernel = sinx3/(x*x));
       val = 1.0/val;
       *(kernel--) *= val;
       *(kernel--) *= val;

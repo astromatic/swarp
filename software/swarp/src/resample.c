@@ -9,7 +9,7 @@
 *
 *       Contents:       Resampling procedures
 *
-*       Last modify:    03/01/2008
+*       Last modify:    04/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -542,7 +542,7 @@ INPUT	Thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	03/01/2008
+VERSION	04/01/2008
  ***/
 void	warp_line(int p)
   {
@@ -618,7 +618,7 @@ void	warp_line(int p)
 			&pix,&pixw),pixw<BIG))
           {
           *(oversampt++) += area * (double)pix;
-          *(oversampwt++) += (double)pixw / area;
+          *(oversampwt++) += (double)pixw * area*area;
           (*(oversampnt++))++;
           }
         else
@@ -694,7 +694,7 @@ void	warp_line(int p)
         interpolate_pix(infield, inwfield, ikernel[p], rawbufc,out,outw);
         *(out++) *= area;
 /*----- Convert variance to weight */
-        *outw = (*outw < BIG) ? 1.0/(*outw*area) : 0.0;
+        *outw = (*outw < BIG) ? 1.0/(*outw*area*area) : 0.0;
         outw++;
         }
       else

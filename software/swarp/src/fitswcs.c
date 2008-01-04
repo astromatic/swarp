@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	03/01/2008
+*	Last modify:	04/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -1636,7 +1636,7 @@ INPUT	WCS structure,
 OUTPUT	-.
 NOTES	Epoch for coordinates should be J2000 (FK5 system).
 AUTHOR	E. Bertin (IAP)
-VERSION	26/01/2005
+VERSION	04/01/2008
  ***/
 void	precess_wcs(wcsstruct *wcs, double yearin, double yearout)
 
@@ -1667,7 +1667,7 @@ void	precess_wcs(wcsstruct *wcs, double yearin, double yearout)
 	- sin(wcs->crval[lat]*DEG)*cos(dalpha)))/DEG
 	: 0.0;
 
-/* A = B*C */
+/* A = C*B */
   c = wcs->cd;
 /* The B matrix is made of 2 numbers */
 
@@ -1685,7 +1685,7 @@ void	precess_wcs(wcsstruct *wcs, double yearin, double yearout)
       {
       val = 0.0;
       for (k=0; k<naxis; k++)
-        val += b[k+j*naxis]*c[i+k*naxis];
+        val += c[k+j*naxis]*b[i+k*naxis];
       *(at++) = val;
       }
 
