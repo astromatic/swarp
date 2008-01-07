@@ -110,7 +110,7 @@ AC_STRUCT_TM
 AC_FUNC_MMAP
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([atexit getenv gethostname memcpy memmove memset mmap strstr])
-AC_CHECK_FUNCS([cosd sind tand acosd asind atand atan2d])
+AC_CHECK_FUNCS([cosd sind tand acosd asind atand atan2d sincos])
 
 # Set the data directory to a true absolute path
 datadir2=$(URBI_RESOLVE_DIR([$datadir]))

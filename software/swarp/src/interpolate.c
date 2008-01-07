@@ -9,7 +9,7 @@
 *
 *	Contents:	Function related to vignet manipulations.
 *
-*	Last modify:	04/01/2008
+*	Last modify:	07/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -21,6 +21,7 @@
 #ifdef HAVE_MATHIMF_H
 #include <mathimf.h>
 #else
+#define _GNU_SOURCE
 #include <math.h>
 #endif
 #include	<stdio.h>
@@ -205,7 +206,7 @@ INPUT	Position,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	04/01/2008
+VERSION	07/01/2008
  ***/
 void	make_kernel(double pos, double *kernel, interpenum interptype)
   {
@@ -230,13 +231,19 @@ void	make_kernel(double pos, double *kernel, interpenum interptype)
     else
       {
       x = -PI/2.0*(pos+1.0);
-      val = (*(kernel++) = (sinx1=sin(x))/(x*x));
+#ifdef HAVE_SINCOS
+      sincos(x, &sinx1, &cosx1);
+#else
+      sinx1 = sin(x);
+      cosx1 = cos(x);
+#endif
+      val = (*(kernel++) = sinx1/(x*x));
       x += PI/2.0;
-      val += (*(kernel++) = -(sinx2=sin(x))/(x*x));
+      val += (*(kernel++) = -cosx1/(x*x));
       x += PI/2.0;
       val += (*(kernel++) = -sinx1/(x*x));
       x += PI/2.0;
-      val += (*kernel = sinx2/(x*x));
+      val += (*kernel = cosx1/(x*x));
       val = 1.0/val;
       *(kernel--) *= val;
       *(kernel--) *= val;
@@ -258,8 +265,12 @@ void	make_kernel(double pos, double *kernel, interpenum interptype)
     else
       {
       x = -PI/3.0*(pos+2.0);
+#ifdef HAVE_SINCOS
+      sincos(x, &sinx1, &cosx1);
+#else
       sinx1 = sin(x);
       cosx1 = cos(x);
+#endif
       val = (*(kernel++) = sinx1/(x*x));
       x += PI/3.0;
       val += (*(kernel++) = (sinx2=-0.5*sinx1-0.866025403785*cosx1)
@@ -298,8 +309,12 @@ void	make_kernel(double pos, double *kernel, interpenum interptype)
     else
       {
       x = -PI/4.0*(pos+3.0);
+#ifdef HAVE_SINCOS
+      sincos(x, &sinx1, &cosx1);
+#else
       sinx1 = sin(x);
       cosx1 = cos(x);
+#endif
       val = (*(kernel++) = sinx1/(x*x));
       x += PI/4.0;
       val +=(*(kernel++) = -(sinx2=0.707106781186*(sinx1+cosx1))

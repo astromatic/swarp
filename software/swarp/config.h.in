@@ -66,6 +66,9 @@
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 
+/* Define to 1 if you have the `sincos' function. */
+#undef HAVE_SINCOS
+
 /* Define to 1 if you have the `sind' function. */
 #undef HAVE_SIND
 

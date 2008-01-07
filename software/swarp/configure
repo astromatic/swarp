@@ -5994,7 +5994,8 @@ done
 
 
 
-for ac_func in cosd sind tand acosd asind atand atan2d
+
+for ac_func in cosd sind tand acosd asind atand atan2d sincos
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
