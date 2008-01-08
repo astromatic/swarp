@@ -1,12 +1,12 @@
 # configure.ac for SWarp
-# (C) E.Bertin 2002-2007
+# (C) E.Bertin 2002-2008
 # Process this file with autoconf to produce a configure script.
 # First, disable the annoying config.cache
 define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.17.0, [bertin@iap.fr])
+AC_INIT(swarp, 2.17.1, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AM_CONFIG_HEADER(config.h)
@@ -81,7 +81,7 @@ AC_ISC_POSIX
 
 # Special optimization options for the INTEL C compiler
 if test $use_icc = "yes" -a $CC = "icc"; then
-  CFLAGS="$CFLAGS -O3 -axPW -ip"
+  CFLAGS="$CFLAGS -O3 -axPWT -ip"
 else
   ACX_PROG_CC_OPTIM
 fi

@@ -9,7 +9,7 @@
 *
 *	Contents:	Parsing of the command line.
 *
-*	Last modify:	17/11/2007
+*	Last modify:	08/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -45,7 +45,7 @@ int	main(int argc, char *argv[])
   {
    char		**argkey, **argval,
 		*str, *listbuf;
-   int		a, narg, nim, opt, opt2, bufpos,bufsize;
+   int		a, narg, nim, ntok, opt, opt2, bufpos,bufsize;
 
 #ifdef HAVE_MPI
   MPI_Init (&argc,&argv);
@@ -116,7 +116,7 @@ int	main(int argc, char *argv[])
       for(; (a<argc) && (*argv[a]!='-'); a++)
         {
         str = (*argv[a] == '@'? listbuf=list_to_str(argv[a]+1) : argv[a]);
-        for (nim = 0; (str=strtok(nim?NULL:str, notokstr)); nim++)
+        for (ntok=0; (str=strtok(ntok?NULL:str, notokstr)); nim++,ntok++)
           if (nim<MAXINFIELD)
             prefs.infield_name[nim] = str;
           else
