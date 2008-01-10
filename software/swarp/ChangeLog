@@ -9,10 +9,16 @@
 *
 *       Contents:       log of changes made to the SWarp source
 *
-*       Last modify:    07/01/2008
+*       Last modify:    08/01/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
+
+------------------------------------------------------------------------
+r686 | bertin | 2008-01-08 12:20:00 +0100 (Tue, 08 Jan 2008) | 3 lines
+
+Fixed issue with multiple input files (only one would be considered).
+Version number pushed to 2.17.1.
 
 ------------------------------------------------------------------------
 r685 | bertin | 2008-01-07 15:46:53 +0100 (Mon, 07 Jan 2008) | 3 lines
