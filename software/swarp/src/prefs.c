@@ -9,7 +9,7 @@
 *
 *	Contents:	Functions to handle the configuration file.
 *
-*	Last modify:	17/11/2007
+*	Last modify:	06/02/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -414,7 +414,7 @@ INPUT	File name.
 OUTPUT	Pointer to an allocated string, or NULL if something went wrong.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	17/11/2007
+VERSION	06/02/2008
  ***/
 char	*list_to_str(char *listname)
   {
@@ -424,7 +424,7 @@ char	*list_to_str(char *listname)
    int		l, bufpos, bufsize;
 
   if (!(fp=fopen(listname,"r")))
-    return NULL;
+    error(EXIT_FAILURE, "*Error*: File not found: ", listname);
   bufsize = 8*MAXCHAR;
   QMALLOC(listbuf, char, bufsize);
   for (bufpos=0; fgets(liststr,MAXCHAR,fp);)
