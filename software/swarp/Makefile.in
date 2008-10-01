@@ -35,11 +35,11 @@ host_triplet = @host@
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_pkgdata_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in $(srcdir)/swarp-mp.spec.in \
-	$(srcdir)/swarp.spec.in $(top_srcdir)/configure AUTHORS \
-	COPYING ChangeLog INSTALL THANKS TODO autoconf/config.guess \
-	autoconf/config.sub autoconf/depcomp autoconf/install-sh \
-	autoconf/ltmain.sh autoconf/missing autoconf/mkinstalldirs
+	$(srcdir)/config.h.in $(srcdir)/swarp.spec.in \
+	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL \
+	THANKS TODO autoconf/config.guess autoconf/config.sub \
+	autoconf/depcomp autoconf/install-sh autoconf/ltmain.sh \
+	autoconf/missing autoconf/mkinstalldirs
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acx_pthread.m4 \
 	$(top_srcdir)/acx_prog_cc_optim.m4 \
@@ -51,7 +51,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(SHELL) $(top_srcdir)/autoconf/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = swarp.spec swarp-mp.spec
+CONFIG_CLEAN_FILES = swarp.spec
 depcomp =
 am__depfiles_maybe =
 SOURCES =
@@ -254,8 +254,6 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 distclean-hdr:
 	-rm -f config.h stamp-h1
 swarp.spec: $(top_builddir)/config.status $(srcdir)/swarp.spec.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-swarp-mp.spec: $(top_builddir)/config.status $(srcdir)/swarp-mp.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-dist_pkgdataDATA: $(dist_pkgdata_DATA)
 	@$(NORMAL_INSTALL)

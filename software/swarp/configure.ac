@@ -189,6 +189,5 @@ src/Makefile
 src/fits/Makefile
 src/wcs/Makefile
 swarp.spec
-swarp-mp.spec
 man/swarp.1])
 AC_OUTPUT

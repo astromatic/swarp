@@ -4085,56 +4085,70 @@ EOF
            $CC -c -O conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
         prog_cc_optim_flags="-O3 -axWPTS -ip -no-prec-div -unroll"
+        prog_ld_optim_flags="-static-intel"
+
             elif $CC -V 2>&1 | grep -i "Intel(R)" > /dev/null 2>&1 &&
            $CC -c -O conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
         prog_cc_optim_flags="-O -axKWNPTS -ip -no-prec-div"
+        prog_ld_optim_flags="-static-intel"
+
             elif test "$GCC" = "yes"; then
         prog_cc_optim_flags="-O3 -g -funroll-loops -fomit-frame-pointer -Wall"
+        prog_ld_optim_flags=""
+
             elif $CC -V 2>&1 | grep -i "WorkShop" > /dev/null 2>&1 &&
            $CC -c -O conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
         prog_cc_optim_flags="-O"
+        prog_ld_optim_flags=""
 
             elif ($CC -V 2>&1 | grep -i "Digital UNIX Compiler"> /dev/null 2>&1 ||
 	   $CC -V 2>&1 | grep -i "Compaq C"> /dev/null 2>&1) &&
            $CC -c -fast conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
-         prog_cc_optim_flags="-fast -tune host"
+        prog_cc_optim_flags="-fast -tune host"
+        prog_ld_optim_flags=""
 
             elif $CC 2>&1 | grep -i "C for AIX Compiler" > /dev/null 2>&1 &&
            $CC -c -qinfo=all -O2 conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
         prog_cc_optim_flags="-O2"
+        prog_ld_optim_flags=""
 
             elif $CC -version 2>&1 | grep -i "MIPSpro Compilers" > /dev/null 2>&1 &&
            $CC -c -fullwarn -O3 conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
         prog_cc_optim_flags="-O3"
+        prog_ld_optim_flags=""
 
             elif what $CC 2>&1 | grep -i "HP C Compiler" > /dev/null 2>&1 &&
            $CC -c -Aa +O3 conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
         prog_cc_optim_flags="+O3"
+        prog_ld_optim_flags=""
 
             elif $CC -V 2>&1 | grep "/SX" > /dev/null 2>&1 &&
            $CC -c -Xc -O conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
         prog_cc_optim_flags="-O"
+        prog_ld_optim_flags=""
 
             elif $CC -V 2>&1 | grep -i "Cray" > /dev/null 2>&1 &&
            $CC -c -h conform -O3 conftest.c > /dev/null 2>&1 &&
            test -f conftest.o; then
         prog_cc_optim_flags="-O3"
+        prog_ld_optim_flags=""
 
       fi
       rm -f conftest.*
     fi
     if test -n "$prog_cc_optim_flags"; then
       CFLAGS="$CFLAGS $prog_cc_optim_flags"
-      LDFLAGS="$LDFLAGS -static-intel"
+      LDFLAGS="$LDFLAGS $prog_ld_optim_flags"
     else
-      prog_cc_optim_flags="unknown"
+      prog_cc_optim_flags=""
+      prog_ld_optim_flags=""
     fi
 
 fi
@@ -7891,7 +7905,7 @@ echo "${ECHO_T}Default XSLT URL: $xsl_url" >&6; }
 { echo "$as_me:$LINENO: result: ***************************************************************" >&5
 echo "${ECHO_T}***************************************************************" >&6; }
 
-ac_config_files="$ac_config_files Makefile man/Makefile src/Makefile src/fits/Makefile src/wcs/Makefile swarp.spec swarp-mp.spec man/swarp.1"
+ac_config_files="$ac_config_files Makefile man/Makefile src/Makefile src/fits/Makefile src/wcs/Makefile swarp.spec man/swarp.1"
 
 
 
@@ -8420,7 +8434,6 @@ do
     "src/fits/Makefile") CONFIG_FILES="$CONFIG_FILES src/fits/Makefile" ;;
     "src/wcs/Makefile") CONFIG_FILES="$CONFIG_FILES src/wcs/Makefile" ;;
     "swarp.spec") CONFIG_FILES="$CONFIG_FILES swarp.spec" ;;
-    "swarp-mp.spec") CONFIG_FILES="$CONFIG_FILES swarp-mp.spec" ;;
     "man/swarp.1") CONFIG_FILES="$CONFIG_FILES man/swarp.1" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

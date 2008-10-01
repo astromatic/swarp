@@ -9,7 +9,7 @@
 *
 *	Contents:	global definitions.
 *
-*	Last modify:	16/08/2003
+*	Last modify:	01/10/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -25,11 +25,7 @@
 /*------------------------ what, who, when and where ------------------------*/
 
 #define         BANNER          "SWarp"
-#ifdef USE_THREADS
-#define		MYVERSION	VERSION "-MP"
-#else
 #define		MYVERSION	VERSION
-#endif
 #define         COPYRIGHT       "Emmanuel BERTIN <bertin@iap.fr>"
 #define		WEBSITE		"http://terapix.iap.fr/soft/swarp/"
 #define         INSTITUTE       "TERAPIX team at IAP  http://terapix.iap.fr"
