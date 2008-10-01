@@ -38,8 +38,8 @@ DIST_COMMON = README $(am__configure_deps) $(dist_pkgdata_DATA) \
 	$(srcdir)/config.h.in $(srcdir)/swarp.spec.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL \
 	THANKS TODO autoconf/config.guess autoconf/config.sub \
-	autoconf/depcomp autoconf/install-sh autoconf/ltmain.sh \
-	autoconf/missing autoconf/mkinstalldirs
+	autoconf/depcomp autoconf/install-sh autoconf/missing \
+	autoconf/mkinstalldirs
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acx_pthread.m4 \
 	$(top_srcdir)/acx_prog_cc_optim.m4 \
