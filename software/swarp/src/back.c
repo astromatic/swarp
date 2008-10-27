@@ -9,7 +9,7 @@
 *
 *	Contents:	functions dealing with background computation.
 *
-*	Last modify:	10/12/2004
+*	Last modify:	27/10/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -654,20 +654,18 @@ void	filter_back(fieldstruct *field)
   {
    float	*back,*sigma, *back2,*sigma2, *bmask,*smask, *sigmat,
 		d2,d2min, fthresh, med, val,sval;
-   int		i,j,px,py, np, nx,ny, npxm,npxp, npym,npyp, dpx,dpy, x,y, nmin;
+   int		i,j,px,py, np, nx,ny, npx,npx2, npy,npy2, dpx,dpy, x,y, nmin;
 
   fthresh = prefs.back_fthresh;
   nx = field->nbackx;
   ny = field->nbacky;
   np = field->nback;
-  npxm = field->nbackfx/2;
-  npxp = field->nbackfx - npxm;
-  npym = field->nbackfy/2;
-  npyp = field->nbackfy - npym;
-  npym *= nx;
-  npyp *= nx;
-  QMALLOC(bmask, float, field->nbackfx*field->nbackfy);
-  QMALLOC(smask, float, field->nbackfx*field->nbackfy);
+  npx = field->nbackfx/2;
+  npy = field->nbackfy/2;
+  npy *= nx;
+
+  QMALLOC(bmask, float, (2*npx+1)*(2*npy+1));
+  QMALLOC(smask, float, (2*npx+1)*(2*npy+1));
   QMALLOC(back2, float, np);
   QMALLOC(sigma2, float, np);
 
@@ -709,20 +707,30 @@ void	filter_back(fieldstruct *field)
 
 /* Do the actual filtering */
   for (py=0; py<np; py+=nx)
+    {
+    npy2 = np - py - nx;
+    if (npy2>npy)
+      npy2 = npy;
+    if (npy2>py)
+      npy2 = py;
     for (px=0; px<nx; px++)
       {
+      npx2 = nx - px - 1;
+      if (npx2>npx)
+        npx2 = npx;
+      if (npx2>px)
+        npx2 = px;
       i=0;
-      for (dpy = -npym; dpy< npyp; dpy+=nx)
-        for (dpx = -npxm; dpx < npxp; dpx++)
+      for (dpy = -npy2; dpy<=npy2; dpy+=nx)
+        {
+        y = py+dpy;
+        for (dpx = -npx2; dpx <= npx2; dpx++)
           {
-          y = py+dpy;
           x = px+dpx;
-          if (y>=0 && y<np && x>=0 && x<nx)
-            {
-            bmask[i] = back[x+y];
-            smask[i++] = sigma[x+y];
-            }
+          bmask[i] = back[x+y];
+          smask[i++] = sigma[x+y];
           }
+        }
       if (fabs((med=hmedian(bmask, i))-back[px+py])>=fthresh)
         {
         back2[px+py] = med;
@@ -734,6 +742,7 @@ void	filter_back(fieldstruct *field)
         sigma2[px+py] = sigma[px+py];
         }
       }
+    }
 
   free(bmask);
   free(smask);
