@@ -9,7 +9,7 @@
 *
 *       Contents:       Approximation to astrometric (re-)projection
 *
-*       Last modify:    03/01/2008
+*       Last modify:    02/12/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -47,7 +47,7 @@ OUTPUT	Pointer to an allocated projappstruct structure, or NULL if
 	approximation failed 
 NOTES	Currently limited to 2D (returns NULL otherwise).
 AUTHOR	E. Bertin (IAP)
-VERSION	03/01/2008
+VERSION	02/12/2008
  ***/
 projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
 			double projmaxerr, int areaflag, double meanscale)
@@ -59,11 +59,11 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
 			stepc[NAXIS],
 			*step, *projline,*projlinet,*projappline,*projapplinet,
 			*projarea,
-			maxerror, cerror, defstep, stepcx, invscale;
+			maxerror, cerror, defstep, stepcx, invscale, worldc;
    int			linecount[NAXIS], stepcount[NAXIS], npointsc[NAXIS],
 			*npoints,
 			d,i,j, naxis,naxisnmax, ngridpoints,npointstot,
-			npointsmax, npointscx, stepcountx, nlinesc;
+			npointsmax, npointscx, stepcountx, nlinesc, swapflag;
 
 /* The present version only works in 2D */
   if (wcsin->naxis != 2 || wcsout->naxis != 2)
@@ -90,6 +90,10 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
   for (d=0; d<naxis; d++)
     if (wcsout->naxisn[d] > naxisnmax)
       naxisnmax = wcsout->naxisn[d];
+
+/* Check if lng and lat are swapped between in and out wcs (vicious idea!) */
+  swapflag = (((wcsin->lng != wcsout->lng) || (wcsin->lat != wcsout->lat))
+	&& (wcsin->lng != wcsin->lat) && (wcsout->lng != wcsout->lat));
 
 /* Loop until the error is small enough */
   ngridpoints = PROJAPP_NGRIDPOINTS;
@@ -148,8 +152,7 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
 /*-- Fill the arrays */
     for (i=npointstot; i--;)
       {
-      if (raw_to_wcs(wcsout, rawposout, wcspos) != RETURN_OK
-	|| wcs_to_raw(wcsin, wcspos, rawpos) != RETURN_OK)
+      if (raw_to_wcs(wcsout, rawposout, wcspos) != RETURN_OK)
 /*---- There is a coordinate "outside the sky" */
         {
         warning("Astrometric approximation impossible for ",
@@ -157,6 +160,21 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
         projapp_end(projapp);
         return (projappstruct *)NULL;
         }
+      if (swapflag)
+        {
+        worldc = wcspos[wcsout->lat];
+        wcspos[wcsout->lat] = wcspos[wcsin->lat];
+        wcspos[wcsin->lat] = worldc;
+        }
+      if (wcs_to_raw(wcsin, wcspos, rawpos) != RETURN_OK)
+/*---- There is a coordinate "outside the sky" */
+        {
+        warning("Astrometric approximation impossible for ",
+		"this re-projection");
+        projapp_end(projapp);
+        return (projappstruct *)NULL;
+        }
+
       for (d=0; d<naxis; d++)
         *(projpos[d]++) = rawpos[d];
       if (areaflag)
@@ -205,6 +223,12 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
       for (j=npointscx; j--; projlinet += naxis)
         {
         raw_to_wcs(wcsout, rawposout, wcspos);
+        if (swapflag)
+          {
+          worldc = wcspos[wcsout->lat];
+          wcspos[wcsout->lat] = wcspos[wcsin->lat];
+          wcspos[wcsin->lat] = worldc;
+          }
         wcs_to_raw(wcsin, wcspos, projlinet);
         rawposout[0] = rawposmin[0] + (++stepcountx)*stepcx;
         }

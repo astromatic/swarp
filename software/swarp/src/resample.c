@@ -542,19 +542,19 @@ INPUT	Thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	04/01/2008
+VERSION	02/12/2008
  ***/
 void	warp_line(int p)
   {
    wcsstruct		*wcsin,*wcsout;
    double		rawposover[NAXIS], wcspos[NAXIS],
 			*rawpos, *rawbufc, *oversampt,*oversampwt, *rawbufareac,
-			invscale, area;
+			invscale, area, worldc;
    PIXTYPE		*out, *outw,
 			pix,pixw;
    int			nstepover[NAXIS],stepcount[NAXIS],
 			*oversampnt,
-			d, o, x, ninput;
+			d, o, x, ninput, swapflag;
 
   out = outbuf[p];
   outw = outwbuf[p];
@@ -563,6 +563,9 @@ void	warp_line(int p)
   wcsout = wcsoutp[p];
   invscale = 1.0/infield->fascale;
   area = 1.0;
+/* Check if lng and lat are swapped between in and out wcs (vicious idea!) */
+  swapflag = (((wcsin->lng != wcsout->lng) || (wcsin->lat != wcsout->lat))
+	&& (wcsin->lng != wcsin->lat) && (wcsout->lng != wcsout->lat));
 
 /* Compute all alpha's and delta's for the current line */
   rawpos[0] = rawmin[0];
@@ -594,6 +597,12 @@ void	warp_line(int p)
             *rawbufc = WCS_NOCOORD;
           else
             {
+            if (swapflag)
+              {
+              worldc = wcspos[wcsout->lat];
+              wcspos[wcsout->lat] = wcspos[wcsin->lat];
+              wcspos[wcsin->lat] = worldc;
+              }
             wcs_to_raw(wcsin, wcspos, rawbufc);
             if (rawbufareac)
               *rawbufareac = invscale * wcs_scale(wcsout, rawposover)
@@ -674,6 +683,12 @@ void	warp_line(int p)
           *rawbufc = WCS_NOCOORD;
         else
           {
+          if (swapflag)
+            {
+            worldc = wcspos[wcsout->lat];
+            wcspos[wcsout->lat] = wcspos[wcsin->lat];
+            wcspos[wcsin->lat] = worldc;
+            }
           wcs_to_raw(wcsin, wcspos, rawbufc);
           if (rawbufareac)
             *rawbufareac = invscale * wcs_scale(wcsout, rawpos)

@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	16/07/2007
+*	Last modify:	02/12/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -915,22 +915,29 @@ NOTES   If scaleflag is set, pixel values are scaled in such a way that fluxes
 	are conserved (but not surface brightness), otherwise, the scaling
 	only applies to the output gain.
 AUTHOR  E. Bertin (IAP)
-VERSION 16/07/2007
+VERSION 02/12/2008
  ***/
 void	scale_field(fieldstruct *field, fieldstruct *reffield, int scaleflag)
   {
    wcsstruct		*wcs;
-   static double	raw[NAXIS], wcspos2[NAXIS];
-   double		*wcspos,*wcsscale,
+   static double	raw[NAXIS], wcspos[NAXIS], wcspos2[NAXIS];
+   double		*wcsscale,
 			inscale,outscale;
-   int			i, naxis, lng,lat;
+   int			i, naxis, lng,lat, lngin,latin;
 
   wcs = reffield->wcs;
   naxis = wcs->naxis;
-  lng = wcs->lng;
-  lat = wcs->lat;
+  lngin = lng = wcs->lng;
+  latin = lat = wcs->lat;
+  if (lng != -1 && field->wcs->lng != -1)
+    lngin = field->wcs->lng;
+  if (lat != -1 && field->wcs->lat != -1)
+    latin = field->wcs->lat;
 /* ``Go'' to the position where scale has been computed on input image */
-  wcspos = field->wcs->wcsscalepos;
+  for (i=0; i<naxis; i++)
+    wcspos[i] = field->wcs->wcsscalepos[i];
+  wcspos[lng] = field->wcs->wcsscalepos[lngin];
+  wcspos[lat] = field->wcs->wcsscalepos[latin];
   wcs_to_raw(wcs, wcspos, raw);
   wcsscale = field->wcs->wcsscale;
 /* Compute scaling factors for input and output images */
