@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	03/01/2008
+*	Last modify:	05/12/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -40,8 +40,8 @@
 /*----------------------------- Internal constants --------------------------*/
 
 #define         MAXCHARL	16384	/* max. nb of chars in a string list */
-#define		MAXLIST		256	/* max. nb of list members */
-#define		MAXLISTSIZE	2000000 /* max size of list */
+#define		MAXLIST		200000	/* max. nb of list members */
+#define		MAXLISTSIZE	(100*MAXLIST) /* max size of list */
 
 /*--------------------------------- typedefs --------------------------------*/
 /*------------------------------- preferences -------------------------------*/

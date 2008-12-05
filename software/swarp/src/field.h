@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	17/11/2007
+*	Last modify:	05/12/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -21,7 +21,7 @@
 #ifndef _FIELD_H_
 #define _FIELD_H_
 
-#define		MAXINFIELD	100000	/* Maximum number of input files */
+#define		MAXINFIELD	200000	/* Maximum number of input files */
 
 /*------------------------------ field flags --------------------------------*/
 #define		DETECT_FIELD	0x01	/* Detection */
