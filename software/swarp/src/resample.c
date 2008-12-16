@@ -121,7 +121,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   strcpy(filename2, infield->rfilename);
   if ((pstr=strrchr(filename2, '.')))
     *pstr = '\0';
-  if (infield->version)
+  if (infield->version>1)
     sprintf(pstr, "_v%d", infield->version);
   if (infield->frameno)
     sprintf(filename, "%s/%s.%04d%s", prefs.resampdir_name, filename2,

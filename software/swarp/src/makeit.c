@@ -162,7 +162,7 @@ void	makeit(void)
 /*-- Put version to reduced filenames (to avoid duplicated resamps later) */
     if (k)
       {
-      version = 0;
+      version = 1;
       rfilename = infield[k-1]->rfilename;
       for (l=0; l<ntinfield; l++)
         {
@@ -171,9 +171,8 @@ void	makeit(void)
 		&& !strcmp(infield[l]->rfilename, rfilename))
           version++;
         }
-      if (version)
+      if (version>1)
         {
-        version++;
         ntinfield2 = ntinfield + next[i];
         for (l=ntinfield; l<ntinfield2; l++)
           infield[l]->version = version;
