@@ -40,7 +40,7 @@
 /*----------------------------- Internal constants --------------------------*/
 
 #define         MAXCHARL	16384	/* max. nb of chars in a string list */
-#define		MAXLIST		200000	/* max. nb of list members */
+#define		MAXLIST		(MAXINFIELD)	/* max. nb of list members */
 #define		MAXLISTSIZE	(100*MAXLIST) /* max size of list */
 
 /*--------------------------------- typedefs --------------------------------*/

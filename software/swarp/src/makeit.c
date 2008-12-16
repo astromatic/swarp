@@ -9,7 +9,7 @@
 *
 *       Contents:       Main loop
 *
-*       Last modify:    03/01/2008
+*       Last modify:    16/12/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -61,9 +61,10 @@ void	makeit(void)
    tabstruct		*tab;
    time_t		thetimef; 
    struct tm		*tm;
+   char			*rfilename;
    int		       	*next;
-   int			i,j,k,l, ninfield, ntinfield, lng,lat, nfield,
-			jima,jweight;
+   int			i,j,k,l, ninfield, ntinfield,ntinfield2, lng,lat,
+			nfield,	jima,jweight, version;
    int			mpiflag, mpitask;
 
 /* Install error logging */
@@ -145,18 +146,38 @@ void	makeit(void)
       for (l=0; l<ntinfield; l++)
         if ((infield[l]->wcs->lng != -1 &&  infield[l]->wcs->lat != -1)
 		&&  infield[l]->wcs->lat < infield[l]->wcs->lng)
-        {
-        lng = infield[l]->wcs->lat;
-        lat = infield[l]->wcs->lng;
+          {
+          lng = infield[l]->wcs->lat;
+          lat = infield[l]->wcs->lng;
 /*------ Force axis labeling to verify lat>lng */
 /*
-        reaxe_wcs(infield[l]->wcs, lng, lat);
+          reaxe_wcs(infield[l]->wcs, lng, lat);
 */
-        }
+          }
       inwfield[k] = wcat? load_weight(wcat, infield[k], jweight<0? j:jweight, i,
 				prefs.weight_type[i]) : NULL;
       next[i]++;
       k++;
+      }
+/*-- Put version to reduced filenames (to avoid duplicated resamps later) */
+    if (k)
+      {
+      version = 0;
+      rfilename = infield[k-1]->rfilename;
+      for (l=0; l<ntinfield; l++)
+        {
+/*------ Check only the 1st valid image extension matching current filename */
+        if ((infield[l]->frameno==0 || infield[l]->frameno==1)
+		&& !strcmp(infield[l]->rfilename, rfilename))
+          version++;
+        }
+      if (version)
+        {
+        version++;
+        ntinfield2 = ntinfield + next[i];
+        for (l=ntinfield; l<ntinfield2; l++)
+          infield[l]->version = version;
+        }
       }
     ntinfield += next[i];
     if (!next[i])

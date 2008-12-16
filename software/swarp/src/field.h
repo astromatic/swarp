@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	05/12/2008
+*	Last modify:	16/12/2008
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -50,6 +50,7 @@ typedef struct field
 /* ---- main image parameters */
   int		fieldno;		/* pos of parent ima in command line */
   int		frameno;		/* pos in Multi-extension FITS file */
+  int		version;		/* filename version */
   int		width, height;		/* x,y size of the field */
   size_t	npix;			/* total number of pixels */
   double	gain;			/* conversion factor e-/ADU */
