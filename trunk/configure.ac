@@ -1,12 +1,12 @@
 # configure.ac for SWarp
-# (C) E.Bertin 2002-2008
+# (C) E.Bertin 2002-2009
 # Process this file with autoconf to produce a configure script.
 # First, disable the annoying config.cache
 define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.17.3, [bertin@iap.fr])
+AC_INIT(swarp, 2.17.4, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AM_CONFIG_HEADER(config.h)
