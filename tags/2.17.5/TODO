@@ -1,0 +1,6 @@
+Correct the small (10^-4) jittering due to kernel aliasing in Lanczos mode.
+Add support for compressed input images.
+Improve the quality of background subtraction, and make it multithreaded.
+Add support for PV/DV parameters according to the final WCS documents
+(when they are released!).
+Add "Drizzle-like" RESAMPLING_TYPE (square top-hat with width < 1 pixel).
