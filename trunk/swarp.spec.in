@@ -15,7 +15,8 @@ BuildRoot: %{_tmppath}/%{name}-buildroot
 BuildRequires: pkgconfig
 
 %description
-SWarp is a program that resamples and coadd FITS images to any arbitrary astrometric projection recognized by the WCS standard.
+SWarp is a program that resamples and coadd FITS images to any arbitrary
+astrometric projection recognized by the WCS standard.
 
 %prep
 %setup -q
@@ -37,7 +38,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc AUTHORS BUGS ChangeLog COPYRIGHT HISTORY INSTALL README THANKS doc/swarp.pdf
+%doc AUTHORS BUGS ChangeLog COPYING HISTORY INSTALL README THANKS doc/swarp.pdf
 %{_bindir}/@PACKAGE_NAME@
 %{_mandir}/man1/@PACKAGE_NAME@.1*
 %{_mandir}/manx/@PACKAGE_NAME@.x*
