@@ -9,7 +9,7 @@
 *
 *	Contents:	global definitions.
 *
-*	Last modify:	01/10/2008
+*	Last modify:	01/04/2009
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -27,8 +27,8 @@
 #define         BANNER          "SWarp"
 #define		MYVERSION	VERSION
 #define         COPYRIGHT       "Emmanuel BERTIN <bertin@iap.fr>"
-#define		WEBSITE		"http://terapix.iap.fr/soft/swarp/"
-#define         INSTITUTE       "TERAPIX team at IAP  http://terapix.iap.fr"
+#define		WEBSITE		"http://astromatic.iap.fr/software/swarp/"
+#define         INSTITUTE       "IAP  http://www.iap.fr"
 
 /*----------------------------- Physical constants --------------------------*/
 
