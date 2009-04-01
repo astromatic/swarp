@@ -5,7 +5,7 @@ http://www.cv.nrao.edu/fits/documents/wcs/wcs.html )
 This file describes shortly the SYNTAX of Swarp.
 See INSTALL for instructions about install.
 For more information, please refer to the documentation
-(see http://terapix.iap.fr/soft/swarp/ )
+(see http://astromatic.iap.fr/software/swarp/ )
 
 The general SYNTAX is similar to that of SExtractor:
 
