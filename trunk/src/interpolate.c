@@ -9,7 +9,7 @@
 *
 *	Contents:	Function related to vignet manipulations.
 *
-*	Last modify:	07/01/2008
+*	Last modify:	28/04/2009
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -206,7 +206,7 @@ INPUT	Position,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	07/01/2008
+VERSION	28/04/2000
  ***/
 void	make_kernel(double pos, double *kernel, interpenum interptype)
   {
@@ -221,7 +221,7 @@ void	make_kernel(double pos, double *kernel, interpenum interptype)
     }
   else if (interptype == INTERP_LANCZOS2)
     {
-    if (pos<1e-5 && pos>-1e5)
+    if (pos<1e-5 && pos>-1e-5)
       {
       *(kernel++) = 0.0;
       *(kernel++) = 1.0;
@@ -253,7 +253,7 @@ void	make_kernel(double pos, double *kernel, interpenum interptype)
     }
   else if (interptype == INTERP_LANCZOS3)
     {
-    if (pos<1e-5 && pos>-1e5)
+    if (pos<1e-5 && pos>-1e-5)
       {
       *(kernel++) = 0.0;
       *(kernel++) = 0.0;
@@ -295,7 +295,7 @@ void	make_kernel(double pos, double *kernel, interpenum interptype)
     }
   else if (interptype == INTERP_LANCZOS4)
     {
-    if (pos<1e-5 && pos>-1e5)
+    if (pos<1e-5 && pos>-1e-5)
       {
       *(kernel++) = 0.0;
       *(kernel++) = 0.0;
