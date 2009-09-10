@@ -22,7 +22,9 @@ astrometric projection recognized by the WCS standard.
 %setup -q
 
 %build
-if test "$USE_ICC"; then
+if test "$USE_BEST"; then
+%configure --enable-icc --enable-auto-flags --enable-best-link
+elif test "$USE_ICC"; then
 %configure --enable-icc
 else
 %configure

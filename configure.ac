@@ -6,7 +6,7 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.17.6, [bertin@iap.fr])
+AC_INIT(swarp, 2.18.0, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AM_CONFIG_HEADER(config.h)
@@ -30,11 +30,16 @@ AC_MSG_RESULT([*********** Configuring:  $PACKAGE $VERSION ($date) **********])
 # Initialize the list of compilers to consider
 cclist="cc gcc"
 
-# Backup and reset the input CFLAGS and LDFLAGS
-mycflags="$CFLAGS"
-CFLAGS=""
-myldflags="$LDFLAGS"
-LDFLAGS=""
+# Provide special option for choosing automatically the compilation flags.
+AC_MSG_CHECKING([if compilation flags are set automatically])
+AC_ARG_ENABLE(auto-flags,
+	[AC_HELP_STRING([--enable-auto-flags],
+	[Let the configure script choose the compilation flags \
+(off by default)])],
+	use_autoflag="yes"
+	AC_MSG_RESULT([yes]),
+	use_autoflag="no"
+	AC_MSG_RESULT([no]))
 
 # Provide special option for the Linux Intel C compiler
 AC_MSG_CHECKING([for Linux Intel C compiler mode])
@@ -55,7 +60,12 @@ AC_PROG_CC([$cclist])
 AM_PROG_CC_STDC
 # C Compiler: Check that it is POSIX-compliant
 AC_ISC_POSIX
-ACX_PROG_CC_OPTIM
+# Override automatic CFLAGS and LDFLAGS with those of user
+if test "$use_autoflag" = "yes"; then
+  CFLAGS=""
+  LDFLAGS =""
+  ACX_PROG_CC_OPTIM
+fi
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 
@@ -66,7 +76,7 @@ AC_CHECK_LIB(m, sin)
 AC_HEADER_STDC
 AC_CHECK_HEADERS(malloc.h unistd.h sys/mman.h)
 if test $use_icc = "yes" -a $CC = "icc"; then
-AC_CHECK_HEADERS(mathimf.h)
+  AC_CHECK_HEADERS(mathimf.h)
 fi
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -128,15 +138,15 @@ AC_ARG_ENABLE(gprof,
         use_gprof="no"
 	AC_MSG_RESULT([no]))
 
-# Enable static linking
-AC_MSG_CHECKING([static linking])
-AC_ARG_ENABLE(static,
-	[AC_HELP_STRING([--enable-static],
-	[Enable static linking \
-(off by default)])],
-        use_static="yes"
+# Enable linking options for making the executable as portable as possible.
+AC_MSG_CHECKING([best linking option])
+AC_ARG_ENABLE(best-link,
+	[AC_HELP_STRING([--enable-best-link],
+	[Choose the right combination of static and dynamic linking to make \
+the executable as portable as possible (off by default)])],
+	use_best="yes"
 	AC_MSG_RESULT([yes]),
-        use_static="no"
+	use_best="no"
 	AC_MSG_RESULT([no]))
 
 ################# Actions to complete in case of multhreading ################
@@ -148,7 +158,7 @@ if test "$use_pthreads" = "yes"; then
 # CC, CFLAGS and LIBS are system and compiler-dependent
   ACX_PTHREAD
   CC="$PTHREAD_CC"
-  [CFLAGS="$CFLAGS $PTHREAD_CFLAGS -D_REENTRANT"]
+  [AM_CFLAGS="$AM_CFLAGS $PTHREAD_CFLAGS -D_REENTRANT"]
   LIBS="$PTHREAD_LIBS $LIBS"
 fi
 AM_CONDITIONAL(USE_THREADS, test $use_pthreads = "yes")
@@ -156,29 +166,26 @@ AM_CONDITIONAL(USE_THREADS, test $use_pthreads = "yes")
 # Link with gprof option
 if test "$use_gprof" = "yes"; then
   if test "$use_icc" = "yes"; then
-    CFLAGS="$CFLAGS -pq"
+    AM_CFLAGS="$AM_CFLAGS -pq"
   else
-    CFLAGS="$CFLAGS -pg"
+    AM_CFLAGS="$AM_CFLAGS -pg"
   fi
-  use_static="no"
+  use_best="no"
 fi
 
-if test "$use_static" = "yes"; then
-  LDFLAGS="-static -shared-libgcc $LDFLAGS"
+# "Best" linking option
+if test "$use_best" = "yes"; then
+  AM_LDFLAGS="-shared-libgcc -static-libtool-libs $AM_LDFLAGS"
 fi
 
-# Override automatic CFLAGS and LDFLAGS with those of user
-#if test -n "$mycflags"; then
-#CFLAGS="$mycflags"
-#fi
-#if test -n "$myldflags"; then
-#LDFLAGS="$myldflags"
-#fi
+AC_SUBST(AM_CFLAGS)
+AC_SUBST(AM_CPPFLAGS)
+AC_SUBST(AM_LDFLAGS)
 
 # Display compiler and linker flags
 AC_MSG_RESULT([***************************************************************])
-AC_MSG_RESULT([Compile cmdline:  $CC $CFLAGS])
-AC_MSG_RESULT([Link    cmdline:  $CC $LDFLAGS $LIBS])
+AC_MSG_RESULT([Compile cmdline:  $CC $AM_CPPFLAGS $CPPFLAGS $AM_CFLAGS $CFLAGS])
+AC_MSG_RESULT([Link    cmdline:  $CC $AM_LDFLAGS $LDFLAGS $LIBS])
 AC_MSG_RESULT([Default XSLT URL: $xsl_url])
 AC_MSG_RESULT([***************************************************************])
 
