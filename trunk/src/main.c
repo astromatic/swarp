@@ -9,7 +9,7 @@
 *
 *	Contents:	Parsing of the command line.
 *
-*	Last modify:	08/01/2008
+*	Last modify:	21/05/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -32,7 +32,7 @@
 #include	"prefs.h"
 
 #define		SYNTAX \
-BANNER " image1 [image2 ...][@image_list1 [@image_list2 ...]]\n" \
+"swarp image1 [image2 ...][@image_list1 [@image_list2 ...]]\n" \
 "\t\t[-c <configuration_file>][-<keyword> <value>]\n" \
 "> to dump a default configuration file: " BANNER " -d \n" \
 "> to dump a default extended configuration file: " BANNER " -dd \n"
