@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	16/12/2008
+*	Last modify:	25/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -54,7 +54,9 @@ typedef struct field
   int		width, height;		/* x,y size of the field */
   size_t	npix;			/* total number of pixels */
   double	gain;			/* conversion factor e-/ADU */
+  double	fgain;			/* flux-scaled gain */
   double	saturation;		/* saturation limit in ADU */
+  double	fsaturation;		/* flux scale saturation */
   double	exptime;		/* exposure time (s) */
   double	fscale;			/* relative photometric scale */
   double	fascale;		/* relative phot. scale from astrom. */
@@ -71,7 +73,9 @@ typedef struct field
   int		nbackfx, nbackfy;	/* x,y size of bkgnd filtering mask */
   double       	backdefault;		/* default background value */
   double       	backmean;		/* median bkgnd value in image */
+  double       	fbackmean;		/* flux-scaled median bkgnd  */
   double       	backsig;		/* median bkgnd rms in image */
+  double       	fbacksig;		/* flux-scaled bkgnd rms */
   double	sigfac;			/* scaling RMS factor (for WEIGHTs) */
   PIXTYPE	*pix;			/* pixel data */
   PIXTYPE	*backline;		/* current interpolated bkgnd line */

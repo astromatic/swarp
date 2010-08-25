@@ -232,12 +232,12 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
     fieldno = infield[n1]->fieldno;
     exptime += infield[n1]->exptime;
     w = (coaddtype == COADD_WEIGHTED && infield[n1]->backsig > 0.0)?
-	1.0/(infield[n1]->backsig*infield[n1]->backsig) : 1.0;
+	1.0/(infield[n1]->fbacksig*infield[n1]->fbacksig) : 1.0;
     w1 += w;
-    if (infield[n1]->gain > 0.0)
+    if (infield[n1]->fgain > 0.0)
       {
-      w2 += w*w/infield[n1]->gain;
-      mw += infield[n1]->gain;
+      w2 += w*w/infield[n1]->fgain;
+      mw += infield[n1]->fgain;
       }
     }
   free(maxclique);
@@ -246,39 +246,41 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
   outfield->exptime = exptime;
 
 /* Approximation to the final equivalent gain */
-  outfield->gain = 0.0;
+  outfield->fgain = 0.0;
   if (coaddtype == COADD_WEIGHTED || coaddtype == COADD_AVERAGE)
     {
     if (w2 > 0.0)
-      outfield->gain = w1*w1/w2;
+      outfield->fgain = w1*w1/w2;
     }
   else if (coaddtype == COADD_MEDIAN)
     {
     if (w2 > 0.0)
-      outfield->gain = w1*w1/w2;
+      outfield->fgain = w1*w1/w2;
     if (omax2 > 2)
-      outfield->gain /= PI;
+      outfield->fgain /= PI;
     }
   else if (coaddtype == COADD_SUM)
     {
     if (w2 > 0.0)
-      outfield->gain = w1*w1/w2/omax2;
+      outfield->fgain = w1*w1/w2/omax2;
     }
   else
-    outfield->gain = mw/omax2;
+    outfield->fgain = mw/omax2;
+
+  outfield->gain = outfield->fgain;	/* "true" gain = effective gain */
 
 /* Compute output saturation level (the minimum on all saturation) */
   satlev = BIG;
   for (n=0; n<ninput; n++)
     {
-    infield[n]->saturation = (prefs.subback_flag[n]
-		&& infield[n]->saturation > infield[n]->backmean)?
-			(infield[n]->saturation - infield[n]->backmean)
-		: infield[n]->saturation;
-    if (infield[n]->saturation < satlev)
-      satlev = infield[n]->saturation;
+    infield[n]->fsaturation = (prefs.subback_flag[n]
+		&& infield[n]->fsaturation > infield[n]->fbackmean)?
+			(infield[n]->fsaturation - infield[n]->fbackmean)
+		: infield[n]->fsaturation;
+    if (infield[n]->fsaturation < satlev)
+      satlev = infield[n]->fsaturation;
     }
-  outfield->saturation = satlev;
+  outfield->saturation = outfield->fsaturation = satlev;
 
 /* Add relevant information to output FITS headers */
   writefitsinfo_outfield(outfield, *infield);

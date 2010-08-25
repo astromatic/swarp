@@ -9,7 +9,7 @@
 *
 *       Contents:       Main loop
 *
-*       Last modify:    16/12/2008
+*       Last modify:    25/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -28,10 +28,6 @@
 #include <string.h>
 #include <time.h>
 
-#ifdef HAVE_MPI
-#include <mpi.h>
-#endif
-
 #include "define.h"
 #include "globals.h"
 #include "fits/fitscat.h"
@@ -43,10 +39,6 @@
 #include "prefs.h"
 #include "resample.h"
 #include "xml.h"
-
-#ifdef HAVE_MPI
-void	control_mpi(int nnodes, int ntasks);
-#endif
 
 #define	NFIELD	128	/* Increment in the number of fields */
 
@@ -65,7 +57,6 @@ void	makeit(void)
    int		       	*next;
    int			i,j,k,l, ninfield, ntinfield,ntinfield2, lng,lat,
 			nfield,	jima,jweight, version;
-   int			mpiflag, mpitask;
 
 /* Install error logging */
   error_installfunc(write_error);
@@ -149,10 +140,6 @@ void	makeit(void)
           {
           lng = infield[l]->wcs->lat;
           lat = infield[l]->wcs->lng;
-/*------ Force axis labeling to verify lat>lng */
-/*
-          reaxe_wcs(infield[l]->wcs, lng, lat);
-*/
           }
       inwfield[k] = wcat? load_weight(wcat, infield[k], jweight<0? j:jweight, i,
 				prefs.weight_type[i]) : NULL;
@@ -224,117 +211,81 @@ void	makeit(void)
     goto the_end;
     }
 
-/* Compute projected limits and scaling in output frame (avoid unnecessary */
-/* computations) */
-  if (prefs.resample_flag || !prefs.combine_flag)
+/* Read and transform the data */
+  NFPRINTF(OUTPUT, "Loading input data...")
+  k = 0;
+  for (i=0; i<ninfield; i++)
     {
-    NFPRINTF(OUTPUT, "Framing and scaling images...")
-    for (i=0; i<ntinfield; i++)
+/*-- Processing start date and time */
+    for (j=0; j<next[i]; j++, k++)
       {
-      frame_wcs(infield[i]->wcs, outfield->wcs);
-      scale_field(infield[i],outfield, prefs.fscalastro_type!=FSCALASTRO_NONE);
-      }
-    }
-
-#ifdef HAVE_MPI
-  if (!prefs.node_index)
-    control_mpi(prefs.nnodes, ntinfield);
-  else
-#endif
-    {
-/*-- Read and transform the data */
-    NFPRINTF(OUTPUT, "Loading input data...")
-    k = 0;
-    mpiflag = 1;
-    mpitask = 0;
-    for (i=0; i<ninfield; i++)
-      {
-/*---- Processing start date and time */
-      for (j=0; j<next[i]; j++, k++)
+      thetimef = time(NULL);
+/*---- Display some info */
+      if (!j)
         {
-        thetimef = time(NULL);
-#ifdef HAVE_MPI
-        if (mpiflag)
-          {
-          MPI_Send(&mpitask, 1 , MPI_INT, 0, prefs.node_index, MPI_COMM_WORLD);
-          MPI_Recv(&mpitask, 1 , MPI_INT, 0, prefs.node_index, MPI_COMM_WORLD,
-		MPI_STATUS_IGNORE);
-          mpiflag = 0;
-          }
-        if (mpitask<0 || k != mpitask)
-          continue;
-        mpiflag = 1;
-#endif
-/*------ Display some info */
-        if (!j)
-          {
-          NFPRINTF(OUTPUT, "")
-          QPRINTF(OUTPUT, "-------------- File %s:\n", infield[k]->rfilename);
-          }
-        printinfo_field(infield[k], inwfield[k]);
+        NFPRINTF(OUTPUT, "")
+        QPRINTF(OUTPUT, "-------------- File %s:\n", infield[k]->rfilename);
+        }
+/*---- Compute projected limits and scaling in output frame */
+      if (prefs.resample_flag)
+        {
+        frame_wcs(infield[k]->wcs, outfield->wcs);
+        scale_field(infield[k],outfield,prefs.fscalastro_type!=FSCALASTRO_NONE);
+        }
 
-        if (prefs.resample_flag)
-          {
-/*-------- Open input files */
-          if (open_cat(infield[k]->cat, READ_ONLY) != RETURN_OK)
-            error(EXIT_FAILURE, "*Error*: Cannot re-open ",
-		infield[k]->filename);
-          if (inwfield[k])
-            {
-            if (open_cat(inwfield[k]->cat, READ_ONLY) != RETURN_OK)
-              error(EXIT_FAILURE, "*Error*: Cannot re-open ",
-		inwfield[k]->filename);
-            }
-/*-------- Pre-compute the background map */
-          make_back(infield[k], inwfield[k]);
-          }
+      printinfo_field(infield[k], inwfield[k]);
+
+      if (prefs.resample_flag)
+        {
+/*------ Open input files */
+        if (open_cat(infield[k]->cat, READ_ONLY) != RETURN_OK)
+          error(EXIT_FAILURE, "*Error*: Cannot re-open ", infield[k]->filename);
         if (inwfield[k])
-          sprintf(gstr, "   Weight scale: %.7g", inwfield[k]->sigfac);
-        else
-          *gstr = '\0';
-        NPRINTF(OUTPUT, "    Background: %.7g   RMS: %.7g%s\n",
+          {
+          if (open_cat(inwfield[k]->cat, READ_ONLY) != RETURN_OK)
+            error(EXIT_FAILURE, "*Error*: Cannot re-open ",
+			inwfield[k]->filename);
+          }
+/*------ Pre-compute the background map */
+        make_back(infield[k], inwfield[k], prefs.wscale_flag[i]);
+        }
+      if (inwfield[k])
+        sprintf(gstr, "   Weight scale: %.7g", inwfield[k]->sigfac);
+      else
+        *gstr = '\0';
+      NPRINTF(OUTPUT, "    Background: %.7g   RMS: %.7g%s\n",
 		infield[k]->backmean, infield[k]->backsig, gstr);
 
-        if (prefs.resample_flag)
+      if (prefs.resample_flag)
+        {
+/*------ Read (and convert) the weight data */
+        if (inwfield[k])
           {
-/*-------- Read (and convert) the weight data */
-          if (inwfield[k])
-            {
-            sprintf(gstr, "Reading %s", inwfield[k]->filename);
-            NFPRINTF(OUTPUT, gstr)
-            read_weight(inwfield[k]);
-            }
-/*-------- Read (and convert) the data */
-          sprintf(gstr, "Reading %s", infield[k]->filename);
+          sprintf(gstr, "Reading %s", inwfield[k]->filename);
           NFPRINTF(OUTPUT, gstr)
-          read_data(infield[k], inwfield[k]);
-/*-------- Resample the data (no need to close catalogs) */
-          sprintf(gstr, "Resampling %s", infield[k]->filename);
-          NFPRINTF(OUTPUT, gstr)
-          resample_field(&infield[k], &inwfield[k], outfield, outwfield,
-		prefs.resamp_type);
+          read_weight(inwfield[k]);
           }
-        thetime2 = time(NULL);
-        tm = localtime(&thetime2);
-        sprintf(infield[k]->sdate_end,"%04d-%02d-%02d",
-		tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
-        sprintf(infield[k]->stime_end,"%02d:%02d:%02d",
-		tm->tm_hour, tm->tm_min, tm->tm_sec);
-        infield[k]->time_diff = difftime(thetime2, thetimef);
-        if (prefs.xml_flag)
-          update_xml(infield[k], inwfield[k]);
+/*------ Read (and convert) the data */
+        sprintf(gstr, "Reading %s", infield[k]->filename);
+        NFPRINTF(OUTPUT, gstr)
+        read_data(infield[k], inwfield[k]);
+/*------ Resample the data (no need to close catalogs) */
+        sprintf(gstr, "Resampling %s", infield[k]->filename);
+        NFPRINTF(OUTPUT, gstr)
+        resample_field(&infield[k], &inwfield[k], outfield, outwfield,
+		prefs.resamp_type);
         }
+      thetime2 = time(NULL);
+      tm = localtime(&thetime2);
+      sprintf(infield[k]->sdate_end,"%04d-%02d-%02d",
+		tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
+      sprintf(infield[k]->stime_end,"%02d:%02d:%02d",
+		tm->tm_hour, tm->tm_min, tm->tm_sec);
+      infield[k]->time_diff = difftime(thetime2, thetimef);
+      if (prefs.xml_flag)
+        update_xml(infield[k], inwfield[k]);
       }
     }
-
-#ifdef HAVE_MPI
-/* Synchronize all nodes */
-  MPI_Barrier(MPI_COMM_WORLD);
-
-/* Exit if computing is distributed and it is not the main node */
-  if (prefs.nnodes>1 && prefs.node_index)
-    goto the_end;
-#endif
 
   if (!prefs.combine_flag)
     goto the_end;
@@ -345,10 +296,10 @@ void	makeit(void)
     infield[k]->cat->tab->bscale *= infield[k]->fscale;
     if (inwfield[k])
       inwfield[k]->cat->tab->bscale /= (infield[k]->fscale*infield[k]->fscale);
-    infield[k]->backmean *= infield[k]->fscale;
-    infield[k]->backsig *= infield[k]->fscale;
-    infield[k]->gain /= infield[k]->fscale;
-    infield[k]->saturation *= infield[k]->fscale;
+    infield[k]->fbackmean *= infield[k]->fscale;
+    infield[k]->fbacksig *= infield[k]->fscale;
+    infield[k]->fgain /= infield[k]->fscale;
+    infield[k]->fsaturation *= infield[k]->fscale;
     }
 
 /* Go! */
@@ -446,63 +397,4 @@ void    write_error(char *msg1, char *msg2)
   return;
   }
 
-
-#ifdef HAVE_MPI
-/****** control_mpi *******************************************************
-PROTO	void control_mpi(int nnodes, int ntasks)
-PURPOSE	Control task operations across nodes and provide load balancing.
-INPUT	Total number of nodes involved in the processing.
-OUTPUT	-.
-NOTES	This is your standard Master-Slave control function. If a node does not
-	respond at the beginning, it is ignored for the rest of the processing.
-AUTHOR	E. Bertin (IAP)
-VERSION	08/05/2003
- ***/
-void	control_mpi(int nnodes, int ntasks)
-  {
-    MPI_Request	*request;
-    int		*nindex,
-		n, t, node, ndone, dummy;
-
-  QMALLOC(request, MPI_Request, nnodes);
-  QMALLOC(nindex, int, nnodes);
-  for (n=1; n<nnodes; n++)
-    MPI_Irecv(&dummy, 1, MPI_INT, n, n, MPI_COMM_WORLD, &request[n]);
-
-  for (t=0; t<ntasks;)
-    {
-    MPI_Waitsome(nnodes-1, request+1, &ndone, nindex, MPI_STATUSES_IGNORE);
-    for (n=0; n<ndone; n++)
-      {
-      node = nindex[n]+1;
-      if (t<ntasks)
-        {
-        MPI_Send(&t, 1 , MPI_INT, node, node, MPI_COMM_WORLD);
-	printf("(%d)  %d --> %d\n", ndone, node, t);
-        MPI_Irecv(&dummy, 1, MPI_INT, node, node, MPI_COMM_WORLD,
-		&request[node]);
-        t++;
-	}
-      else
-        {
-        dummy = -1;
-        MPI_Send(&dummy, 1 , MPI_INT, node, node, MPI_COMM_WORLD);
-        }
-      }
-    }
-
-/* Wait for remaining active communications to complete */
-  dummy = -1;
-  for (n=1; n<nnodes;)
-    MPI_Send(&dummy, 1 , MPI_INT, n, n, MPI_COMM_WORLD);
-
-  free(request);
-  free(nindex);
-
-/* Synchronize all nodes */
-  MPI_Barrier(MPI_COMM_WORLD);
-
-  return;
-  }
-#endif
 

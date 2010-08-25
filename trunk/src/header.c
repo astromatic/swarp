@@ -174,7 +174,7 @@ INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/06/2007
+VERSION	25/08/2010
  ***/
 void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
 
@@ -194,9 +194,9 @@ void	writefitsinfo_outfield(fieldstruct *field, fieldstruct *infield)
   addkeywordto_head(tab, "EXPTIME ", "Maximum equivalent exposure time (s)");
   fitswrite(tab->headbuf, "EXPTIME ", &field->exptime, H_EXPO,T_DOUBLE);
   addkeywordto_head(tab, "GAIN    ", "Maximum equivalent gain (e-/ADU)");
-  fitswrite(tab->headbuf, "GAIN    ", &field->gain, H_EXPO,T_DOUBLE);
+  fitswrite(tab->headbuf, "GAIN    ", &field->fgain, H_EXPO,T_DOUBLE);
   addkeywordto_head(tab, "SATURATE", "Saturation Level (ADU)");
-  fitswrite(tab->headbuf, "SATURATE", &field->saturation, H_EXPO,T_DOUBLE);
+  fitswrite(tab->headbuf, "SATURATE", &field->fsaturation, H_EXPO,T_DOUBLE);
   fitswrite(tab->headbuf, "EXPTIME ", &field->exptime, H_EXPO,T_DOUBLE);
   addkeywordto_head(tab, "COMMENT ", "");
   addkeywordto_head(tab, "SOFTNAME", "The software that processed those data");
@@ -357,7 +357,7 @@ INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/06/2007
+VERSION	25/08/2010
  ***/
 void	writefitsinfo_field(fieldstruct *field, fieldstruct *infield)
 
@@ -478,17 +478,17 @@ void	writefitsinfo_field(fieldstruct *field, fieldstruct *infield)
 /* Gain (conversion factor) */
   addkeywordto_head(tab, prefs.gain_keyword,
 	"Effective conversion factor in e-/ADU");
-  fitswrite(tab->headbuf,prefs.gain_keyword, &field->gain, H_EXPO,T_DOUBLE);
+  fitswrite(tab->headbuf,prefs.gain_keyword, &field->fgain, H_EXPO,T_DOUBLE);
 
 /* Saturation level */
   addkeywordto_head(tab, prefs.sat_keyword, "Saturation level");
-  fitswrite(tab->headbuf,prefs.sat_keyword, &field->saturation,H_EXPO,T_DOUBLE);
+  fitswrite(tab->headbuf,prefs.sat_keyword,&field->fsaturation,H_EXPO,T_DOUBLE);
 
 /* Background */
-  addkeywordto_head(tab, "BACKMEAN", "Measured background level");
-  fitswrite(tab->headbuf, "BACKMEAN", &field->backmean, H_EXPO,T_DOUBLE);
-  addkeywordto_head(tab, "BACKSIG ", "Measured background RMS");
-  fitswrite(tab->headbuf, "BACKSIG ", &field->backsig, H_EXPO,T_DOUBLE);
+  addkeywordto_head(tab, "BACKMEAN", "Effective background level");
+  fitswrite(tab->headbuf, "BACKMEAN", &field->fbackmean, H_EXPO,T_DOUBLE);
+  addkeywordto_head(tab, "BACKSIG ", "Effective background RMS");
+  fitswrite(tab->headbuf, "BACKSIG ", &field->fbacksig, H_EXPO,T_DOUBLE);
 /* Input image */
   addkeywordto_head(tab, "ORIGFILE", "Input filename");
   fitswrite(tab->headbuf, "ORIGFILE", field->rfilename, H_STRING, T_STRING);

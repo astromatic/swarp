@@ -9,7 +9,7 @@
 *
 *       Contents:       Resampling procedures
 *
-*       Last modify:    16/12/2008
+*       Last modify:    25/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -94,7 +94,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	16/12/2008
+VERSION	25/08/2010
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -133,9 +133,13 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 /* We make a copy of the output field */
   field = inherit_field(filename, outfield, FIELD_WRITE);
   field->backmean = infield->backmean;
+  field->fbackmean = infield->fbackmean;
   field->backsig = infield->backsig;
+  field->fbacksig = infield->fbacksig;
   field->gain = infield->gain;
+  field->fgain = infield->fgain;
   field->saturation = infield->saturation;
+  field->fsaturation = infield->fsaturation;
   field->exptime = infield->exptime;
   field->fieldno = infield->fieldno;
   field->fscale = infield->fscale;
@@ -544,14 +548,14 @@ INPUT	Thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	02/12/2008
+VERSION	25/08/2010
  ***/
 void	warp_line(int p)
   {
    wcsstruct		*wcsin,*wcsout;
    double		rawposover[NAXIS], wcspos[NAXIS],
 			*rawpos, *rawbufc, *oversampt,*oversampwt, *rawbufareac,
-			invscale, area, worldc;
+			area, worldc;
    PIXTYPE		*out, *outw,
 			pix,pixw;
    int			nstepover[NAXIS],stepcount[NAXIS],
@@ -563,8 +567,7 @@ void	warp_line(int p)
   rawpos = rawposp[p];
   wcsin = wcsinp[p];
   wcsout = wcsoutp[p];
-  invscale = 1.0/infield->fascale;
-  area = 1.0;
+  area = infield->fascale;
 /* Check if lng and lat are swapped between in and out wcs (vicious idea!) */
   swapflag = (((wcsin->lng != wcsout->lng) || (wcsin->lat != wcsout->lat))
 	&& (wcsin->lng != wcsin->lat) && (wcsout->lng != wcsout->lat));
@@ -607,7 +610,7 @@ void	warp_line(int p)
               }
             wcs_to_raw(wcsin, wcspos, rawbufc);
             if (rawbufareac)
-              *rawbufareac = invscale * wcs_scale(wcsout, rawposover)
+              *rawbufareac = wcs_scale(wcsout, rawposover)
 			/ wcs_scale(wcsin, rawbufc);
             }
           if (rawbufareac)
@@ -693,7 +696,7 @@ void	warp_line(int p)
             }
           wcs_to_raw(wcsin, wcspos, rawbufc);
           if (rawbufareac)
-            *rawbufareac = invscale * wcs_scale(wcsout, rawpos)
+            *rawbufareac = wcs_scale(wcsout, rawpos)
 			/ wcs_scale(wcsin, rawbufc);
           }
         if (rawbufareac)

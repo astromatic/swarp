@@ -9,7 +9,7 @@
 *
 *	Contents:	Parsing of the command line.
 *
-*	Last modify:	21/05/2010
+*	Last modify:	25/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -22,9 +22,6 @@
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
-#ifdef HAVE_MPI
-#include	<mpi.h>
-#endif
 
 #include	"define.h"
 #include	"globals.h"
@@ -46,10 +43,6 @@ int	main(int argc, char *argv[])
    char		**argkey, **argval,
 		*str, *listbuf;
    int		a, narg, nim, ntok, opt, opt2, bufpos,bufsize;
-
-#ifdef HAVE_MPI
-  MPI_Init (&argc,&argv);
-#endif
 
   if (argc<2)
     {
@@ -133,11 +126,6 @@ int	main(int argc, char *argv[])
   free(argkey);
   free(argval);
 
-#ifdef HAVE_MPI
-  MPI_Comm_size(MPI_COMM_WORLD,&prefs.nnodes);
-  MPI_Comm_rank(MPI_COMM_WORLD,&prefs.node_index);
-#endif
-
   makeit();
 
   free(listbuf);
@@ -145,9 +133,6 @@ int	main(int argc, char *argv[])
   NFPRINTF(OUTPUT, "");
   NPRINTF(OUTPUT, "> All done (in %.0f s)\n", prefs.time_diff);
 
-#ifdef HAVE_MPI
-  MPI_Finalize();
-#endif
   exit(EXIT_SUCCESS);
   }
 

@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	20/02/2009
+*	Last modify:	25/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -898,7 +898,7 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	09/08/2006
+VERSION	24/08/2010
  ***/
 void	range_wcs(wcsstruct *wcs)
 
@@ -936,7 +936,7 @@ void	range_wcs(wcsstruct *wcs)
     }
 
   if (lng!=lat)
-    lc = fmod(world[lng]+180.0, 360.0);
+    lc = world[lng];
   else
     {
     lc = 0.0;   /* to avoid gcc -Wall warnings */
@@ -978,20 +978,26 @@ void	range_wcs(wcsstruct *wcs)
   for (j=npoints; j--;)
     {
     raw_to_wcs(wcs, raw, world);
+/*-- Compute maximum distance to center */
+    if ((rad=wcs_dist(wcs, world, worldc)) > radmax)
+      radmax = rad;
     for (i=0; i<naxis; i++)
       {
 /*---- Handle longitudes around 0 */
-      if (i==lng && world[i]>lc)
-        world[i] -= 359.9999;
+      if (i==lng)
+        {
+        world[i] -= lc;
+        if (world[i]>180.0)
+          world[i] -= 360.0;
+        else if (world[i] <= -180.0)
+          world[i] += 360.0;
+        }
       if (world[i]<worldmin[i])
         worldmin[i] = world[i];
       if (world[i]>worldmax[i])
         worldmax[i] = world[i];
       }
 
-/*-- Compute maximum distance to center */
-    if ((rad=wcs_dist(wcs, world, worldc)) > radmax)
-      radmax = rad;
 
     for (i=0; i<naxis; i++)
       {
@@ -1010,6 +1016,8 @@ void	range_wcs(wcsstruct *wcs)
 
   if (lng!=lat)
     {
+    worldmin[lng] = fmod_0_p360(worldmin[lng]+lc);
+    worldmax[lng] = fmod_0_p360(worldmax[lng]+lc);
     if (worldmax[lat]<-90.0)
       worldmax[lat] = -90.0;
     if (worldmax[lat]>90.0)
@@ -2006,6 +2014,18 @@ Fold input angle in the [-90,+90[ domain.
 double  fmod_m90_p90(double angle)
   {
   return angle>0.0? fmod(angle+90.0,180.0)-90.0 : fmod(angle-90.0,180.0)+90.0;
+  }
+
+
+/********************************* fcmp_0_p360 *******************************/
+/*
+Compare angles in the [0,+360[ domain: return 1 if anglep>anglem, 0 otherwise.
+*/
+int  fcmp_0_p360(double anglep, double anglem)
+  {
+   double dval = anglep - anglem;
+
+  return (int)((dval>0.0 && dval<180.0) || dval<-180.0);
   }
 
 

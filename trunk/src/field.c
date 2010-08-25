@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	02/12/2008
+*	Last modify:	25/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -50,7 +50,7 @@ INPUT	Cat structure,
 OUTPUT	The new field pointer if OK, NULL otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/06/2007
+VERSION	25/08/2010
  ***/
 fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
 
@@ -126,6 +126,12 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
 
 /* Read additional field-related information in FITS header */
   readfitsinfo_field(field, tab);
+
+/* Initialize effective (flux-scaled) levels */
+  field->fgain = field->gain;
+  field->fsaturation = field->saturation;
+  field->fbackmean = field->backmean;
+  field->fbacksig = field->backsig;
 
 /* Set field width and field height (the latter can be "virtual") */
   field->width = tab->naxisn[0];
@@ -340,7 +346,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 25/06/2007
+VERSION 25/08/2010
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -486,14 +492,14 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
               wcsmin2 = infield[i]->wcs->wcsmin[axis[i*naxis+n]];
               wcsmax2 = infield[i]->wcs->wcsmax[axis[i*naxis+n]];
 /*------------ Test for the lower limit */
-              if (wcsmin2<=wcsmin1)
+              if ((n==lng && fcmp_0_p360(wcsmin1, wcsmin2)) || wcsmin1>wcsmin2)
                 countmin++;
-              if (wcsmax2>wcsmin1)
+              if ((n==lng && fcmp_0_p360(wcsmax2, wcsmin1)) || wcsmax2>wcsmin1)
                 countmin++;
 /*------------ Test for the upper limit */
-              if (wcsmax2>=wcsmax1)
+              if ((n==lng && fcmp_0_p360(wcsmax2, wcsmax1)) || wcsmax2>wcsmax1)
                 countmax++;
-              if (wcsmin2<wcsmax1)
+              if ((n==lng && fcmp_0_p360(wcsmax1, wcsmin2)) || wcsmax1>wcsmin2)
                 countmax++;
               }
 
@@ -510,37 +516,43 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
               }
             }
           wcs->crval[n] = (wcsmin[n]+wcsmax[n])/2.0;
+          if (n==lng)
+            wcs->crval[n] = wcsmax[n]>wcsmin[n]? fmod_0_p360(wcs->crval[n])
+					: fmod_0_p360(wcs->crval[n] - 180.0);
           break;
 
         case CENTER_ALL:
-          wcsmin[n] = BIG;
-          wcsmax[n] = -BIG;
-          for (i=0; i<ninput; i++)
+          wcsmin[n] = infield[0]->wcs->wcsmin[axis[n]];
+          wcsmax[n] = infield[0]->wcs->wcsmax[axis[n]];
+          for (i=1; i<ninput; i++)
             {
             wcsmin2 = infield[i]->wcs->wcsmin[axis[i*naxis+n]];
             wcsmax2 = infield[i]->wcs->wcsmax[axis[i*naxis+n]];
 /*---------- Test for the lower limit */
-            if (wcsmin2<wcsmin[n])
+            if ((n==lng && fcmp_0_p360(wcsmin[n],wcsmin2)) || wcsmin[n]>wcsmin2)
               wcsmin[n] = wcsmin2;
 /*---------- Test for the upper limit */
-            if (wcsmax2>wcsmax[n])
+            if ((n==lng && fcmp_0_p360(wcsmax2,wcsmax[n])) || wcsmax2>wcsmax[n])
               wcsmax[n] = wcsmax2;
             }
           wcs->crval[n] = (wcsmin[n]+wcsmax[n])/2.0;
+          if (n==lng)
+            wcs->crval[n] = wcsmax[n]>wcsmin[n]? fmod_0_p360(wcs->crval[n])
+					: fmod_0_p360(wcs->crval[n] - 180.0);
           break;
 
         case CENTER_MANUAL:
-          wcsmin[n] = BIG;
-          wcsmax[n] = -BIG;
-          for (i=0; i<ninput; i++)
+          wcsmin[n] = infield[0]->wcs->wcsmin[axis[n]];
+          wcsmax[n] = infield[0]->wcs->wcsmax[axis[n]];
+          for (i=1; i<ninput; i++)
             {
             wcsmin2 = infield[i]->wcs->wcsmin[axis[i*naxis+n]];
             wcsmax2 = infield[i]->wcs->wcsmax[axis[i*naxis+n]];
 /*---------- Test for the lower limit */
-            if (wcsmin2<wcsmin[n])
+            if ((n==lng && fcmp_0_p360(wcsmin[n],wcsmin2)) || wcsmin[n]>wcsmin2)
               wcsmin[n] = wcsmin2;
 /*---------- Test for the upper limit */
-            if (wcsmax2>wcsmax[n])
+            if ((n==lng && fcmp_0_p360(wcsmax2,wcsmax[n])) || wcsmax2>wcsmax[n])
               wcsmax[n] = wcsmax2;
             }
 /*-------- Handled swapped ra, dec axes (e.g. SDSS) */
@@ -649,10 +661,11 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
           {
 /*-------- This is a special case where CRPIX is not NAXISN/2 */
           
-          val = wcs->cdelt[n] >=0 ? wcs->crval[n] - wcsmin[n] : wcsmax[n] - wcs->crval[n];
+          val = wcs->cdelt[n] >=0 ? wcs->crval[n] - wcsmin[n] :
+		wcsmax[n] - wcs->crval[n];
           if ((n==lng || n==lat) && lat!=lng)
             {
-            if (val<-180.0)
+            if (val<0.0)
               val += 360.0;
             wcs->crpix[n] = (int)(fmod(val, 180.0)/pixscale[n]) + 1.0;
 /*-------- Add a 5% margin in field size */
@@ -672,7 +685,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 /*-------- Add a 5% margin in field size */
           if (lat!=lng && (n==lng || n==lat))
             tab->naxisn[n] = wcs->naxisn[n]
-		= (int)(fmod(wcsmax[n]-wcsmin[n]+360.0, 360.0)*1.05/pixscale[n])
+		= (int)(fmod_0_p360(wcsmax[n]-wcsmin[n])*1.05/pixscale[n])
 		  + 1;
           else
             tab->naxisn[n] = wcs->naxisn[n]
@@ -915,7 +928,7 @@ NOTES   If scaleflag is set, pixel values are scaled in such a way that fluxes
 	are conserved (but not surface brightness), otherwise, the scaling
 	only applies to the output gain.
 AUTHOR  E. Bertin (IAP)
-VERSION 02/12/2008
+VERSION 25/08/2010
  ***/
 void	scale_field(fieldstruct *field, fieldstruct *reffield, int scaleflag)
   {
@@ -960,14 +973,14 @@ void	scale_field(fieldstruct *field, fieldstruct *reffield, int scaleflag)
     {
     if (scaleflag)
       {
-      field->tab->bscale *= (field->fascale = (outscale/inscale));
-      field->tab->bzero *= field->fascale;
-      field->saturation *= field->fascale;
+      field->fascale = (outscale/inscale);
+      field->fsaturation = field->saturation*field->fascale;
       }
     else
-      field->gain *= (inscale/outscale);
+      field->fgain = field->gain*(inscale/outscale);
     }
 
   return;
   }
+
 

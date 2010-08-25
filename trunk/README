@@ -5,7 +5,7 @@ http://www.cv.nrao.edu/fits/documents/wcs/wcs.html )
 This file describes shortly the SYNTAX of Swarp.
 See INSTALL for instructions about install.
 For more information, please refer to the documentation
-(see http://astromatic.iap.fr/software/swarp/ )
+(see http://astromatic.net/software/swarp/ )
 
 The general SYNTAX is similar to that of SExtractor:
 
@@ -32,6 +32,6 @@ The general SYNTAX is similar to that of SExtractor:
 prints a default configuration file on the standard output
 
 Please report any bug or strange behaviour in the SWarp forum:
-http://terapix.iap.fr/forum/forumdisplay.php?fid=5
+http://astromatic.net/forum/forumdisplay.php?fid=5
 
 					Emmanuel Bertin <bertin@iap.fr>
