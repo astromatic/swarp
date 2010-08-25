@@ -9,7 +9,7 @@
 *
 *	Contents:	functions dealing with background computation.
 *
-*	Last modify:	27/10/2008
+*	Last modify:	25/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -41,7 +41,7 @@
 Background maps are established from the images themselves; thus we need to
 make at least one first pass through the data.
 */
-void	make_back(fieldstruct *field, fieldstruct *wfield)
+void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
 
   {
    backstruct	*backmesh,*wbackmesh, *bm,*wbm;
@@ -294,7 +294,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield)
     filter_back(wfield);
 
 /* Compute normalization for variance- or weight-maps*/
-  if (wfield && wfield->flags&(VAR_FIELD|WEIGHT_FIELD))
+  if (wfield && wscale_flag && wfield->flags&(VAR_FIELD|WEIGHT_FIELD))
     {      
     nr = 0;
     QMALLOC(ratio, float, wfield->nback);
@@ -334,6 +334,9 @@ void	make_back(fieldstruct *field, fieldstruct *wfield)
 /* If asked for, force the backmean parameter to the supplied value */
   if (field->back_type == BACK_ABSOLUTE)
     field->backmean = field->backdefault;
+
+  field->fbackmean = field->backmean*field->fascale;
+  field->fbacksig = field->backsig*field->fascale;
 
   return;
   }

@@ -9,7 +9,7 @@
 *
 *	Contents:	Functions to handle the configuration file.
 *
-*	Last modify:	06/02/2008
+*	Last modify:	24/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -579,6 +579,11 @@ void	useprefs(void)
     for (i=prefs.nweight_type; i<prefs.ninwfield; i++)
       prefs.weight_type[i] = prefs.weight_type[prefs.nweight_type-1];
     prefs.nweight_type = prefs.ninwfield;
+
+/*-- Weight rescaling flag */
+    for (i=prefs.nwscale_flag; i<prefs.ninfield; i++)
+      prefs.wscale_flag[i] = prefs.wscale_flag[prefs.nwscale_flag-1];
+    prefs.nwscale_flag = prefs.ninfield;
     }
 
 /* If flags and types are less than images, copy the last one */

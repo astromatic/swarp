@@ -9,7 +9,7 @@
 *
 *	Contents:	Include for prefs.c.
 *
-*	Last modify:	05/12/2008
+*	Last modify:	24/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -63,6 +63,8 @@ typedef struct
   int		nweight_type;		/* nb of params */
   double	weight_thresh[MAXINFIELD];/* Weight threshold */
   int		nweight_thresh;		/* nb of params */
+  int		wscale_flag[MAXINFIELD];/* Weight rescaling flag */
+  int		nwscale_flag;		/* nb of params */
   int		interp_flag[MAXINFIELD];/* Interpolation flag */
   int		ninterp_flag;		/* nb of params */
   int		subback_flag[MAXINFIELD];/* Background-subtraction flag */

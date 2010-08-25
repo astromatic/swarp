@@ -9,7 +9,7 @@
 *
 *	Contents:	Keywords for the configuration file.
 *
-*	Last modify:	03/01/2008
+*	Last modify:	24/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -102,6 +102,8 @@ pkeystruct key[] =
   {"RESAMPLING_TYPE", P_KEYLIST, prefs.resamp_type, 0,0, 0.0,0.0,
    {"NEAREST", "BILINEAR", "LANCZOS2", "LANCZOS3", "LANCZOS4", ""},
    1, INTERP_MAXDIM, &prefs.nresamp_type},
+  {"RESCALE_WEIGHTS", P_BOOLLIST, prefs.wscale_flag, 0,0, 0.0,0.0,
+   {""}, 1, MAXINFIELD, &prefs.nwscale_flag},
   {"SATLEV_DEFAULT", P_FLOATLIST, prefs.sat_default, 0,0, -BIG, BIG,
    {""}, 1, MAXINFIELD, &prefs.nsat_default},
   {"SUBTRACT_BACK", P_BOOLLIST, prefs.subback_flag, 0,0, 0.0,0.0,
@@ -145,6 +147,7 @@ char *default_prefs[] =
 " ",
 "WEIGHT_TYPE            NONE            # BACKGROUND,MAP_RMS,MAP_VARIANCE",
 "                                       # or MAP_WEIGHT",
+"*RESCALE_WEIGHTS        Y               # Rescale input weights/variances (Y/N)?",
 "WEIGHT_SUFFIX          .weight.fits    # Suffix to use for weight-maps",
 "WEIGHT_IMAGE                           # Weightmap filename if suffix not used",
 "                                       # (all or for each weight-map)",
@@ -214,8 +217,8 @@ char *default_prefs[] =
 " ",
 "VMEM_DIR               .               # Directory path for swap files",
 "VMEM_MAX               2047            # Maximum amount of virtual memory (MB)",
-"MEM_MAX                128             # Maximum amount of usable RAM (MB)",
-"COMBINE_BUFSIZE        64              # RAM dedicated to co-addition(MB)",
+"MEM_MAX                256             # Maximum amount of usable RAM (MB)",
+"COMBINE_BUFSIZE        256             # RAM dedicated to co-addition(MB)",
 " ",
 "#------------------------------ Miscellaneous ---------------------------------",
 " ",

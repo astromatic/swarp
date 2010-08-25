@@ -9,7 +9,7 @@
 *
 *	Contents:	functions dealing with background computation.
 *
-*	Last modify:	10/12/2004
+*	Last modify:	24/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -53,7 +53,7 @@ extern void	backhisto(backstruct *, backstruct *, PIXTYPE *, PIXTYPE *,
 		backrmsline(fieldstruct *, int, PIXTYPE *),
 		end_back(fieldstruct *),
 		filter_back(fieldstruct *),
-		make_back(fieldstruct *, fieldstruct *);
+		make_back(fieldstruct *, fieldstruct *, int);
 
 extern float	backguess(backstruct *, float *, float *),
 		*make_backspline(fieldstruct *, float *);

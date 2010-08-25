@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for fitswcs.c
 *
-*	Last modify:	26/04/2008
+*	Last modify:	25/08/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -111,6 +111,7 @@ extern double		fmod_0_p360(double angle),
 
 extern int		celsys_to_eq(wcsstruct *wcs, double *wcspos),
 			eq_to_celsys(wcsstruct *wcs, double *wcspos),
+			fcmp_0_p360(double anglep, double anglem),
 			raw_to_red(wcsstruct *wcs,
 				double *pixpos, double *redpos),
 			raw_to_wcs(wcsstruct *wcs,
