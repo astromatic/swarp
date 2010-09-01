@@ -476,11 +476,11 @@ int	fitswrite(char *fitsbuf, char *keyword, void *ptr, h_type htype,
 #endif
 			break;
 
-    case H_FLOAT:	sprintf(str, "        %12.4f", (ttype==T_DOUBLE)?
+    case H_FLOAT:	sprintf(str, "    %16.8f", (ttype==T_DOUBLE)?
 				*(double *)ptr: *(float *)ptr);
 			break;
 
-    case H_EXPO:	sprintf(str, "    %16.9E", (ttype==T_DOUBLE)?
+    case H_EXPO:	sprintf(str, " %19.12E", (ttype==T_DOUBLE)?
 				*(double *)ptr: *(float *)ptr);
 			break;
 

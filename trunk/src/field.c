@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	25/08/2010
+*	Last modify:	01/09/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -346,7 +346,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 25/08/2010
+VERSION 01/09/2010
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -356,7 +356,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
    tabstruct		*tab;
    wcsstruct		*wcs;
    double		pixscale[NAXIS],
-			val, epoch;
+			val, epoch, obsdate;
    float		*scale;
    char			*ctype[NAXIS],
 			*pstr;
@@ -871,9 +871,15 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 
 /* Compute mean epoch */
   epoch = 0.0;
+  obsdate = BIG;
   for (j=0; j<ninput; j++)
+    {
     epoch += infield[j]->wcs->epoch;
+    if (infield[j]->wcs->obsdate<obsdate)
+      obsdate = infield[j]->wcs->obsdate;
+    }
   field->wcs->epoch = epoch / ninput;
+  field->wcs->obsdate = obsdate;
   update_head(tab);
   write_wcs(tab, wcs);
 /* Insert additional header informations from the "header" file */
