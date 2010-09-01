@@ -9,7 +9,7 @@
 *
 *	Contents:       Read and write WCS header info.
 *
-*	Last modify:	25/08/2010
+*	Last modify:	01/09/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -600,11 +600,12 @@ INPUT	tab structure,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	17/07/2006
+VERSION	01/09/2010
  ***/
 void	write_wcs(tabstruct *tab, wcsstruct *wcs)
 
   {
+   double	mjd;
    char		str[MAXCHARS];
    int		j, l, naxis;
 
@@ -621,6 +622,12 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
     }
   addkeywordto_head(tab, "EQUINOX ", "Mean equinox");
   fitswrite(tab->headbuf, "EQUINOX ", &wcs->equinox, H_FLOAT, T_DOUBLE);
+  if (wcs->obsdate!=0.0)
+    {
+    mjd = (wcs->obsdate-2000.0)*365.25 + MJD2000;
+    addkeywordto_head(tab, "MJD-OBS ", "Modified Julian date at start");
+    fitswrite(tab->headbuf, "MJD-OBS ", &mjd, H_EXPO,T_DOUBLE);
+    }
   addkeywordto_head(tab, "RADECSYS", "Astrometric system");
   switch(wcs->radecsys)
     {
