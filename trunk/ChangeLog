@@ -9,78 +9,270 @@
 *
 *       Contents:       log of changes made to the SWarp source
 *
-*       Last modify:    08/01/2008
+*       Last modify:    03/09/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
 
 ------------------------------------------------------------------------
-r686 | bertin | 2008-01-08 12:20:00 +0100 (Tue, 08 Jan 2008) | 3 lines
+r95 | bertin | 2010-09-01 11:39:26 +0200 (Wed, 01 Sep 2010) | 3 lines
+
+Added MJD-OBS (start of observations) to output FITS headers.
+Pushed version number to 2.19.1.
+
+------------------------------------------------------------------------
+r94 | bertin | 2010-08-26 00:19:37 +0200 (Thu, 26 Aug 2010) | 7 lines
+
+Rewrote astrometric flux rescaling code to solve problem with manual background
+subtraction (thanks to D.G.Bonfield for reporting). Expect slight changes at the
+1e-5 level for background-subtracted resampled pixels. The displayed background
+values are now those of the original image.
+Added RESCALE_WEIGHTS configuration switch (defaulted to Y). Setting
+RESCALE_WEIGHTS to N turns off automatic weight and variance rescaling based on
+the actual noise level measured in the image (thanks to J.Mohr and C.Mancone
+for the suggestion).
+Fixed (once again) the automatic centering and framing algorithm (thanks to
+D.Murphy for reporting).
+Updated links in README, ChangeLog and man page.
+Increased default values for the MEM_MAX and COMBINE_BUFSIZE memory parameters
+to 256MB.
+Pushed version number to 2.19.0.
+
+------------------------------------------------------------------------
+r93 | bertin | 2010-07-20 13:23:20 +0200 (Tue, 20 Jul 2010) | 2 lines
+
+Fixed TFORM error message in fitshead.c (thanks to S.Guieu).
+
+------------------------------------------------------------------------
+r92 | bertin | 2010-07-02 14:34:23 +0200 (Fri, 02 Jul 2010) | 2 lines
+
+Removed redundant update_tab() calls.
+
+------------------------------------------------------------------------
+r91 | bertin | 2010-07-02 11:54:17 +0200 (Fri, 02 Jul 2010) | 2 lines
+
+Fixed comment copy issue for slashes within strings (thanks to F.Schuller).
+
+------------------------------------------------------------------------
+r90 | bertin | 2010-05-21 16:23:28 +0200 (Fri, 21 May 2010) | 2 lines
+
+Fixed syntax message (thanks to J.-B. Marquette).
+
+------------------------------------------------------------------------
+r89 | bertin | 2010-04-20 17:39:38 +0200 (Tue, 20 Apr 2010) | 2 lines
+
+Added LICENSE to the .spec.in file, too.
+
+------------------------------------------------------------------------
+r88 | bertin | 2010-04-20 17:37:35 +0200 (Tue, 20 Apr 2010) | 2 lines
+
+Added LICENSE to the list of EXTRA_DIST files.
+
+------------------------------------------------------------------------
+r87 | bertin | 2010-04-20 17:34:48 +0200 (Tue, 20 Apr 2010) | 2 lines
+
+Added CeCILL version 2 license text and update COPYRIGHT information.
+
+------------------------------------------------------------------------
+r86 | bertin | 2010-02-22 14:54:59 +0100 (Mon, 22 Feb 2010) | 2 lines
+
+Deactivated subtraction of the median background from saturation level if the
+result is negative.
+
+------------------------------------------------------------------------
+r85 | bertin | 2009-09-10 19:32:33 +0200 (Thu, 10 Sep 2009) | 6 lines
+
+Added --enable-auto-flags.
+Added --enable-best-link configure option.
+Added rpm-best option in Makefile.am.
+Cleaned up configure file.
+Pushed version number to 2.18.0.
+
+------------------------------------------------------------------------
+r84 | bertin | 2009-05-22 14:31:31 +0200 (Fri, 22 May 2009) | 3 lines
+
+Added filtering of non-numerical characters for floating-point FITS keywords
+(thanks to D.G. Bonfield for the suggestion).
+Included Chiara's MissFITS fix in fitspick().
+
+------------------------------------------------------------------------
+r83 | bertin | 2009-04-28 19:27:03 +0200 (Tue, 28 Apr 2009) | 2 lines
+
+Fixed bug in make_kernel() test bug (thanks to R.Owen).
+
+------------------------------------------------------------------------
+r81 | bertin | 2009-04-09 15:55:32 +0200 (Thu, 09 Apr 2009) | 3 lines
+
+Fixed references to COPYRIGHT file.
+Pushed version number to 2.17.6.
+
+------------------------------------------------------------------------
+r80 | bertin | 2009-04-01 18:48:34 +0200 (Wed, 01 Apr 2009) | 4 lines
+
+Fixed icc 11 compilations options on x86-64 architecture.
+Cleaned up obsolete references.
+Added favicon to XSLT filter.
+
+------------------------------------------------------------------------
+r79 | bertin | 2009-04-01 14:42:31 +0200 (Wed, 01 Apr 2009) | 2 lines
+
+Updated XSLT filter (AstrOmatic theme).
+
+------------------------------------------------------------------------
+r77 | bertin | 2009-03-23 18:20:20 +0100 (Mon, 23 Mar 2009) | 7 lines
+
+Cleaned up Makefile.am RPM options.
+Fixed rpm build issue on Fedora Core 10.
+Fixed display of max thread number in configure help.
+Updated icc compilation flags to 11.0 syntax.
+Set the license string to CeCILL in the .spec file.
+Pushed version number to 2.17.5.
+
+------------------------------------------------------------------------
+r76 | bertin | 2009-02-20 18:22:43 +0100 (Fri, 20 Feb 2009) | 3 lines
+
+Fixed bug which would cause the mapping to depend on the ordering of PVs.
+Pushed version number to 2.17.4
+
+------------------------------------------------------------------------
+r75 | bertin | 2009-01-12 17:55:07 +0100 (Mon, 12 Jan 2009) | 2 lines
+
+Set doc to correct mime-type.
+
+------------------------------------------------------------------------
+r73 | root | 2009-01-09 17:25:25 +0100 (Fri, 09 Jan 2009) | 1 line
+
+Changed trunk directory name
+------------------------------------------------------------------------
+r72 | bertin | 2008-12-16 19:23:32 +0100 (Tue, 16 Dec 2008) | 2 lines
+
+Fixed version numbering issue.
+
+------------------------------------------------------------------------
+r71 | bertin | 2008-12-16 19:19:30 +0100 (Tue, 16 Dec 2008) | 2 lines
+
+Added versioning of resampled filenames for duplicated input filenames (reported
+by J.Mohr).
+
+------------------------------------------------------------------------
+r70 | bertin | 2008-12-05 10:30:36 +0100 (Fri, 05 Dec 2008) | 4 lines
+
+Increased MAXINFIELD (max.number of input images) to 200,000 (was 100,000)
+Increased MAXLIST (number arguments per option) to MAXINFIELD (was 256!)
+Increased MAXLISTSIZE to (100*MAXLIST).
+
+------------------------------------------------------------------------
+r69 | bertin | 2008-12-02 12:16:19 +0100 (Tue, 02 Dec 2008) | 3 lines
+
+Fixed image framing and flux scaling problem when mixing different lng and lat
+axes (thanks to David G. Bonfield).
+Pushed version number to 2.17.3.
+
+------------------------------------------------------------------------
+r68 | bertin | 2008-10-27 13:29:07 +0100 (Mon, 27 Oct 2008) | 2 lines
+
+Fixed asymmetry of background filtering at image boundaries (thanks to P.Astier
+and D.Hardin).
+
+------------------------------------------------------------------------
+r67 | bertin | 2008-10-01 19:09:35 +0200 (Wed, 01 Oct 2008) | 2 lines
+
+Updated FITS library to the latest version.
+
+------------------------------------------------------------------------
+r66 | bertin | 2008-10-01 18:04:59 +0200 (Wed, 01 Oct 2008) | 3 lines
+
+Fixed superfluous -static-intel LDFLAGS in new compiler optimization script.
+Removed swarp-mp spec file (merged now with swarp.spec).
+
+------------------------------------------------------------------------
+r65 | bertin | 2008-10-01 16:45:42 +0200 (Wed, 01 Oct 2008) | 5 lines
+
+Updated compiler autoconfiguration script.
+Updated .spec RPM script.
+Added rpm-icc target.
+Version is now 2.17.2.
+
+------------------------------------------------------------------------
+r64 | bertin | 2008-02-06 15:20:53 +0100 (Wed, 06 Feb 2008) | 2 lines
+
+Fixed issue with missing "@"lists (reported by H.J. McCracken).
+
+------------------------------------------------------------------------
+r63 | bertin | 2008-01-10 17:33:04 +0100 (Thu, 10 Jan 2008) | 2 lines
+
+Fixed error in the y^2.x^4 PV monomial (found by R.Haigron & J.Guibert). 
+
+------------------------------------------------------------------------
+r62 | bertin | 2008-01-08 12:20:00 +0100 (Tue, 08 Jan 2008) | 3 lines
 
 Fixed issue with multiple input files (only one would be considered).
 Version number pushed to 2.17.1.
 
 ------------------------------------------------------------------------
-r685 | bertin | 2008-01-07 15:46:53 +0100 (Mon, 07 Jan 2008) | 3 lines
+r61 | bertin | 2008-01-07 15:46:53 +0100 (Mon, 07 Jan 2008) | 3 lines
 
 Added description of FSCALASTRO_TYPE and @ syntax to doc.
-Added sincos() support in interpolate_pix() (much faster with gcc,slightly  slower with icc).
+Added sincos() support in interpolate_pix() (much faster with gcc, slightly
+slower with icc).
 
 ------------------------------------------------------------------------
-r684 | bertin | 2008-01-04 19:16:46 +0100 (Fri, 04 Jan 2008) | 4 lines
+r60 | bertin | 2008-01-04 19:16:46 +0100 (Fri, 04 Jan 2008) | 4 lines
 
 Fixed weighting in FSCALASTRO_TYPE VARIABLE mode.
 Fixed CD transformation matrix in precessions.
-Optimized the computation of interpolation kernels for Lanczos3 (speed +30%) and Lanczos3 (speed +40%) using trigonometric polynomials.
+Optimized the computation of interpolation kernels for Lanczos3 (speed +30%)
+and Lanczos3 (speed +40%) using trigonometric polynomials.
 
 ------------------------------------------------------------------------
-r683 | bertin | 2008-01-03 20:00:04 +0100 (Thu, 03 Jan 2008) | 4 lines
+r59 | bertin | 2008-01-03 20:00:04 +0100 (Thu, 03 Jan 2008) | 4 lines
 
-Added FSCALASTRO_TYPE VARIABLE mode to compensate for variable pixel scale on exposures corrected for illumination.
+Added FSCALASTRO_TYPE VARIABLE mode to compensate for variable pixel scale on
+exposures corrected for illumination.
 Cleaned up code in FITSWCS library.
 Version number pushed to 2.17.0.
 
 ------------------------------------------------------------------------
-r667 | bertin | 2007-11-18 15:26:51 +0100 (Sun, 18 Nov 2007) | 5 lines
+r58 | bertin | 2007-11-18 15:26:51 +0100 (Sun, 18 Nov 2007) | 5 lines
 
-Added support for reading selected FITS extensions for all input images/maps (e.g. image.fits[3] a la CFITSIO).
+Added support for reading selected FITS extensions for all input images/maps
+(e.g. image.fits[3] a la CFITSIO).
 Added @lists support in all config-file and command-line arguments.
 Removed .svn directories from source archive.
 Pushed version number to 2.16.6.
 
 ------------------------------------------------------------------------
-r584 | marmo | 2007-08-09 17:35:41 +0200 (Thu, 09 Aug 2007) | 1 line
+r57 | marmo | 2007-08-09 17:35:41 +0200 (Thu, 09 Aug 2007) | 1 line
 
 headflag inherited by the output field.
-
 ------------------------------------------------------------------------
-r583 | marmo | 2007-08-08 20:22:51 +0200 (Wed, 08 Aug 2007) | 1 line
+r56 | marmo | 2007-08-08 20:22:51 +0200 (Wed, 08 Aug 2007) | 1 line
 
 XSLT style-sheet updated.
-
 ------------------------------------------------------------------------
-r546 | bertin | 2007-07-17 12:39:40 +0200 (Tue, 17 Jul 2007) | 3 lines
+r55 | bertin | 2007-07-17 12:39:40 +0200 (Tue, 17 Jul 2007) | 3 lines
 
 Upgraded to the latest version of the FITS library.
 Updated the THANKS.
 
 ------------------------------------------------------------------------
-r545 | bertin | 2007-07-16 19:44:31 +0200 (Mon, 16 Jul 2007) | 3 lines
+r54 | bertin | 2007-07-16 19:44:31 +0200 (Mon, 16 Jul 2007) | 3 lines
 
-FITS cleanup bug ( http://astromatic.net/forum/showthread.php?tid=236 ) fixed.
-Effective gain is now computed properly when FSCALEASTRO_TYPE is FIXED ( http://astromatic.net/forum/showthread.php?tid=129 ).
+FITS cleanup bug (http://astromatic.net/forum/showthread.php?tid=236) fixed.
+Effective gain is now computed properly when FSCALEASTRO_TYPE is FIXED
+(http://astromatic.net/forum/showthread.php?tid=129).
 
 ------------------------------------------------------------------------
-r543 | bertin | 2007-07-13 22:00:26 +0200 (Fri, 13 Jul 2007) | 5 lines
+r53 | bertin | 2007-07-13 22:00:26 +0200 (Fri, 13 Jul 2007) | 5 lines
 
 Temptative fix of the FITS cleanup bug
-(see http://astromatic.net/forum/showthread.php?tid=236 ).
+(see http://astromatic.net/forum/showthread.php?tid=236).
 Updated doc.
 Updated THANKS.
 Hid GAIN and SATLEVEL config parameters.
 
 ------------------------------------------------------------------------
-r542 | bertin | 2007-07-13 20:32:00 +0200 (Fri, 13 Jul 2007) | 5 lines
+r52 | bertin | 2007-07-13 20:32:00 +0200 (Fri, 13 Jul 2007) | 5 lines
 
 Fixed update date and a few details.
 Included missing acx_urbi_resolve_dir.m4.
@@ -88,77 +280,75 @@ Removed acx_mpi.m4.
 Updated to the last FITS library version.
 
 ------------------------------------------------------------------------
-r523 | marmo | 2007-06-25 19:04:46 +0200 (Mon, 25 Jun 2007) | 1 line
+r51 | marmo | 2007-06-25 19:04:46 +0200 (Mon, 25 Jun 2007) | 1 line
 
 computation of saturation level added.
 ------------------------------------------------------------------------
-r505 | marmo | 2007-06-19 20:31:34 +0200 (Tue, 19 Jun 2007) | 1 line
+r50 | marmo | 2007-06-19 20:31:34 +0200 (Tue, 19 Jun 2007) | 1 line
 
 rpm building generalised.
 ------------------------------------------------------------------------
-r500 | marmo | 2007-06-19 19:19:15 +0200 (Tue, 19 Jun 2007) | 1 line
+r49 | marmo | 2007-06-19 19:19:15 +0200 (Tue, 19 Jun 2007) | 1 line
 
 Akim Demaille macro for solving the  issue added
 ------------------------------------------------------------------------
-r490 | bertin | 2007-06-08 16:12:01 +0200 (Fri, 08 Jun 2007) | 2 lines
+r48 | bertin | 2007-06-08 16:12:01 +0200 (Fri, 08 Jun 2007) | 2 lines
 
 Updated the documentation (about XML now written by default and image list
 support).
 
 ------------------------------------------------------------------------
-r489 | bertin | 2007-06-08 15:53:25 +0200 (Fri, 08 Jun 2007) | 2 lines
+r47 | bertin | 2007-06-08 15:53:25 +0200 (Fri, 08 Jun 2007) | 2 lines
 
 Added Akim Demaille's fix for absolute paths.
 
 ------------------------------------------------------------------------
-r488 | marmo | 2007-06-08 15:34:19 +0200 (Fri, 08 Jun 2007) | 1 line
+r46 | marmo | 2007-06-08 15:34:19 +0200 (Fri, 08 Jun 2007) | 1 line
 
 Error notification added
-
 ------------------------------------------------------------------------
-r487 | bertin | 2007-06-08 15:05:30 +0200 (Fri, 08 Jun 2007) | 4 lines
+r45 | bertin | 2007-06-08 15:05:30 +0200 (Fri, 08 Jun 2007) | 4 lines
 
 Updated fits library modules to the latest version.
 Updated release info files.
 Pushed version number to 2.16.3 (release version).
 
 ------------------------------------------------------------------------
-r486 | bertin | 2007-06-08 14:54:44 +0200 (Fri, 08 Jun 2007) | 3 lines
+r44 | bertin | 2007-06-08 14:54:44 +0200 (Fri, 08 Jun 2007) | 3 lines
 
 Added support for pseudo-3D image cubes (e.g. ISSA maps).
 Added internal functions for future astrometric improvements.
 
 ------------------------------------------------------------------------
-r473 | marmo | 2007-05-30 14:44:35 +0200 (Wed, 30 May 2007) | 1 line
+r43 | marmo | 2007-05-30 14:44:35 +0200 (Wed, 30 May 2007) | 1 line
 
 all tables in xml file are now displayed.
 ------------------------------------------------------------------------
-r467 | bertin | 2007-05-17 18:00:30 +0200 (Thu, 17 May 2007) | 2 lines
+r42 | bertin | 2007-05-17 18:00:30 +0200 (Thu, 17 May 2007) | 2 lines
 
 Fixed issue with ZPN and other projections by using the right latitude axis.
 
 ------------------------------------------------------------------------
-r425 | bertin | 2007-04-03 17:59:05 +0200 (Tue, 03 Apr 2007) | 2 lines
+r41 | bertin | 2007-04-03 17:59:05 +0200 (Tue, 03 Apr 2007) | 2 lines
 
 Fixed swapping of CTYPEs for mixed longitude and latitude indices.
 
 ------------------------------------------------------------------------
-r424 | bertin | 2007-04-03 14:31:36 +0200 (Tue, 03 Apr 2007) | 2 lines
+r40 | bertin | 2007-04-03 14:31:36 +0200 (Tue, 03 Apr 2007) | 2 lines
 
 Dirty-fixed ${datarootdir} issue in configure.
 
 ------------------------------------------------------------------------
-r423 | bertin | 2007-04-02 19:00:00 +0200 (Mon, 02 Apr 2007) | 2 lines
+r39 | bertin | 2007-04-02 19:00:00 +0200 (Mon, 02 Apr 2007) | 2 lines
 
 Fixed issue occurring when longitude and latitude axes are mixed.
 
 ------------------------------------------------------------------------
-r421 | marmo | 2007-03-28 15:09:03 +0200 (Wed, 28 Mar 2007) | 1 line
+r38 | marmo | 2007-03-28 15:09:03 +0200 (Wed, 28 Mar 2007) | 1 line
 
 basic xslt stylesheet imported
-
 ------------------------------------------------------------------------
-r419 | bertin | 2007-03-26 14:41:33 +0200 (Mon, 26 Mar 2007) | 6 lines
+r37 | bertin | 2007-03-26 14:41:33 +0200 (Mon, 26 Mar 2007) | 6 lines
 
 Added XSLT filter file (currently copied from the SCAMP XSLT filter).
 Fixed XSLT filter path problem with RPM versions.
@@ -167,63 +357,62 @@ Improved configure summary display.
 Pushed version number to 2.16.1.
 
 ------------------------------------------------------------------------
-r405 | bertin | 2007-03-08 09:58:16 +0100 (Thu, 08 Mar 2007) | 2 lines
+r36 | bertin | 2007-03-08 09:58:16 +0100 (Thu, 08 Mar 2007) | 2 lines
 
 Removed forgotten debug display,
 
 ------------------------------------------------------------------------
-r389 | bertin | 2007-02-18 09:24:48 +0100 (Sun, 18 Feb 2007) | 2 lines
+r35 | bertin | 2007-02-18 09:24:48 +0100 (Sun, 18 Feb 2007) | 2 lines
 
 Fixed bug occuring while picking up integers in headers.
 
 ------------------------------------------------------------------------
-r385 | bertin | 2007-02-08 21:04:16 +0100 (Thu, 08 Feb 2007) | 3 lines
+r34 | bertin | 2007-02-08 21:04:16 +0100 (Thu, 08 Feb 2007) | 3 lines
 
 Added new celsys_to_eq() and eq_to_celsys() functions to fitswcs library.
 Fixed issue with automatic centering with galactic (or anything else) inputs and
- equatorial outputs. 
+equatorial outputs. 
 
 ------------------------------------------------------------------------
-r381 | bertin | 2007-01-17 18:03:46 +0100 (Wed, 17 Jan 2007) | 2 lines
+r33 | bertin | 2007-01-17 18:03:46 +0100 (Wed, 17 Jan 2007) | 2 lines
 
 Added options for compiling with icc (Intel compiler).
 
 ------------------------------------------------------------------------
-r359 | bertin | 2006-10-29 21:07:01 +0100 (Sun, 29 Oct 2006) | 3 lines
+r32 | bertin | 2006-10-29 21:07:01 +0100 (Sun, 29 Oct 2006) | 3 lines
 
 Applied patch by Sergio Pascual for configuring the path to the XSL file.
 Updated the TODO section.
 
 ------------------------------------------------------------------------
-r353 | bertin | 2006-10-26 18:08:24 +0200 (Thu, 26 Oct 2006) | 4 lines
+r31 | bertin | 2006-10-26 18:08:24 +0200 (Thu, 26 Oct 2006) | 4 lines
 
 Updated FITS library to the latest version.
 Fixed UCDs in XML output.
 Finalized support for file lists.
 
 ------------------------------------------------------------------------
-r351 | marmo | 2006-10-25 18:59:54 +0200 (Wed, 25 Oct 2006) | 1 line
+r30 | marmo | 2006-10-25 18:59:54 +0200 (Wed, 25 Oct 2006) | 1 line
 
 input as image list enabled
-
 ------------------------------------------------------------------------
-r338 | bertin | 2006-09-19 15:29:39 +0200 (Tue, 19 Sep 2006) | 2 lines
+r29 | bertin | 2006-09-19 15:29:39 +0200 (Tue, 19 Sep 2006) | 2 lines
 
 Removed residual debugging info.
 
 ------------------------------------------------------------------------
-r337 | bertin | 2006-09-19 15:27:21 +0200 (Tue, 19 Sep 2006) | 2 lines
+r28 | bertin | 2006-09-19 15:27:21 +0200 (Tue, 19 Sep 2006) | 2 lines
 
 Fixed bug with COPY_KEYWORDS option on some specific headers.
 
 ------------------------------------------------------------------------
-r324 | bertin | 2006-08-10 18:40:17 +0200 (Thu, 10 Aug 2006) | 3 lines
+r27 | bertin | 2006-08-10 18:40:17 +0200 (Thu, 10 Aug 2006) | 3 lines
 
 Typo in preference list fixed.
 This is the 2.16 release.
 
 ------------------------------------------------------------------------
-r323 | bertin | 2006-08-09 20:12:58 +0200 (Wed, 09 Aug 2006) | 5 lines
+r26 | bertin | 2006-08-09 20:12:58 +0200 (Wed, 09 Aug 2006) | 5 lines
 
 Added Equinox and COOSYS FIELDs to VOTable output.
 Fixed various issues in the propagation of astrometric and photometric metadata.
@@ -231,74 +420,80 @@ Updated the documentation.
 Changed the version number to 2.16: we are go for the release!
 
 ------------------------------------------------------------------------
-r321 | bertin | 2006-08-08 20:17:11 +0200 (Tue, 08 Aug 2006) | 4 lines
+r25 | bertin | 2006-08-08 20:17:11 +0200 (Tue, 08 Aug 2006) | 4 lines
 
 Fixed graph matrix overflow in image combine routine.
-Removed counting of more than one extension per file in the displayed number of overlaps.
-Added estimate of maximum exposure time and maximum effective gain in FITS and XML meta-data outputs.
+Removed counting of more than one extension per file in the displayed number of
+overlaps.
+Added estimate of maximum exposure time and maximum effective gain in FITS and
+XML meta-data outputs.
 
 ------------------------------------------------------------------------
-r320 | bertin | 2006-08-05 20:06:24 +0200 (Sat, 05 Aug 2006) | 2 lines
+r24 | bertin | 2006-08-05 20:06:24 +0200 (Sat, 05 Aug 2006) | 2 lines
 
-Optimized the COMBINE buffer allocation by finding the real maximal clique by using the recursive algorithm of Bron & Kerbosch (1971): typical gain ~ 50%.
+Optimized the COMBINE buffer allocation by finding the real maximal clique by
+using the recursive algorithm of Bron & Kerbosch (1971): typical gain ~ 50%.
 
 ------------------------------------------------------------------------
-r319 | bertin | 2006-08-02 22:04:55 +0200 (Wed, 02 Aug 2006) | 3 lines
+r23 | bertin | 2006-08-02 22:04:55 +0200 (Wed, 02 Aug 2006) | 3 lines
 
 Fixed serious co-addition bug for framed output FOVs.
 Removed useless access to images outside the output frame during co-addition.
 
 ------------------------------------------------------------------------
-r318 | bertin | 2006-08-01 23:00:44 +0200 (Tue, 01 Aug 2006) | 3 lines
+r22 | bertin | 2006-08-01 23:00:44 +0200 (Tue, 01 Aug 2006) | 3 lines
 
 Fixed issues with image combining with RESAMPLE N.
 Fixed (invisible) floating exception occuring during image combining.
 
 ------------------------------------------------------------------------
-r317 | bertin | 2006-07-27 21:29:03 +0200 (Thu, 27 Jul 2006) | 6 lines
+r21 | bertin | 2006-07-27 21:29:03 +0200 (Thu, 27 Jul 2006) | 6 lines
 
 Added/Fixed several elements in XML output.
 Added BLANK_BADPIXELS option to blank output pixels with a weight of zero.
 Added "naive" total exposure time calculation.
 Increased background buffer size to 8MB.
-Doc: added BLANK_BADPIXELS keyword description and fixed typos in gain computation.
+Doc: added BLANK_BADPIXELS keyword description and fixed typos in gain
+computation.
 
 ------------------------------------------------------------------------
-r316 | bertin | 2006-07-26 20:29:05 +0200 (Wed, 26 Jul 2006) | 5 lines
+r20 | bertin | 2006-07-26 20:29:05 +0200 (Wed, 26 Jul 2006) | 5 lines
 
-XML VOTable output implementation now complete (checked validity and compliance).
+XML VOTable output implementation now complete (checked validity and
+compliance).
 Added stdout output of XML using XML_NAME STDOUT option.
 Pushed the limit for keyword length to 32 chars.
 Doc: Updated to 2.16, with info about XML output options.
 
 ------------------------------------------------------------------------
-r315 | bertin | 2006-07-26 11:47:29 +0200 (Wed, 26 Jul 2006) | 2 lines
+r19 | bertin | 2006-07-26 11:47:29 +0200 (Wed, 26 Jul 2006) | 2 lines
 
 Corrected a typo that would prevent the code to compile on Macs.
 
 ------------------------------------------------------------------------
-r314 | bertin | 2006-07-25 22:52:52 +0200 (Tue, 25 Jul 2006) | 2 lines
+r18 | bertin | 2006-07-25 22:52:52 +0200 (Tue, 25 Jul 2006) | 2 lines
 
-Further progress with the XML-Votable output (note: "ct" units replaced with "adu" units).
+Further progress with the XML-Votable output (note: "ct" units replaced with
+"adu" units).
 
 ------------------------------------------------------------------------
-r312 | bertin | 2006-07-25 16:00:31 +0200 (Tue, 25 Jul 2006) | 2 lines
+r17 | bertin | 2006-07-25 16:00:31 +0200 (Tue, 25 Jul 2006) | 2 lines
 
 Added automatic detection of the number of CPUs on BSD, HP/UX and IRIX systems.
 
 ------------------------------------------------------------------------
-r311 | bertin | 2006-07-24 20:47:56 +0200 (Mon, 24 Jul 2006) | 2 lines
+r16 | bertin | 2006-07-24 20:47:56 +0200 (Mon, 24 Jul 2006) | 2 lines
 
 Further progress on the XML metadata config dump.
 
 ------------------------------------------------------------------------
-r310 | bertin | 2006-07-21 21:09:26 +0200 (Fri, 21 Jul 2006) | 3 lines
+r15 | bertin | 2006-07-21 21:09:26 +0200 (Fri, 21 Jul 2006) | 3 lines
 
 Further progress on the XML output.
 Added a follow-up of celestial types through field structures.
 
 ------------------------------------------------------------------------
-r308 | bertin | 2006-07-20 22:01:53 +0200 (Thu, 20 Jul 2006) | 5 lines
+r14 | bertin | 2006-07-20 22:01:53 +0200 (Thu, 20 Jul 2006) | 5 lines
 
 Cleaned up configure.ac (removed obsolete options).
 Added XML VOTable output support files.
@@ -306,13 +501,13 @@ Added error catching routines.
 Added XML VOTable support (not finished, deactivated for now).
 
 ------------------------------------------------------------------------
-r307 | bertin | 2006-07-19 19:41:42 +0200 (Wed, 19 Jul 2006) | 3 lines
+r13 | bertin | 2006-07-19 19:41:42 +0200 (Wed, 19 Jul 2006) | 3 lines
 
 Added CELESTIAL_TYPE SUPERGALACTIC option.
 Cleaned up default configuration file dump.
 
 ------------------------------------------------------------------------
-r306 | bertin | 2006-07-19 18:14:38 +0200 (Wed, 19 Jul 2006) | 5 lines
+r12 | bertin | 2006-07-19 18:14:38 +0200 (Wed, 19 Jul 2006) | 5 lines
 
 Updated ChangeLog.
 Relaxed binary table identification checks.
@@ -320,26 +515,58 @@ Fixed coordinate system transformation bug (detected on Gal<->Eq).
 Added support for supergalactic coordinate system.
 
 ------------------------------------------------------------------------
-r291 | bertin | 2006-07-17 20:02:20 +0200 (Mon, 17 Jul 2006) | 4 lines
+r11 | baillard | 2006-07-18 13:55:53 +0200 (Tue, 18 Jul 2006) | 2 lines
+
+Move swarp to public repository
+
+------------------------------------------------------------------------
+r10 | bertin | 2006-07-17 20:02:20 +0200 (Mon, 17 Jul 2006) | 4 lines
 
 Added ICRS support (but no conversion to older systems yet).
-Updated the FITS library to the latest version (adds warning history, error catching and fixes pointer aliasing compilation warnings). 
-Updated WCS routines to the latest version (TNX multithreading and polynomial bugfixes).
+Updated the FITS library to the latest version (adds warning history, error
+catching and fixes pointer aliasing compilation warnings). 
+Updated WCS routines to the latest version (TNX multithreading and polynomial
+bugfixes).
 
 ------------------------------------------------------------------------
-r261 | bertin | 2006-06-08 17:32:31 +0200 (Thu, 08 Jun 2006) | 2 lines
+r9 | bertin | 2006-06-08 17:32:31 +0200 (Thu, 08 Jun 2006) | 2 lines
 
-Fixed a bug that would make config arguments limited to 496 chars (see http://astromatic.net/forum/showthread.php?tid=14 ).
+Fixed a bug that would make config arguments limited to 496 chars
+(see http://astromatic.net/forum/showthread.php?tid=14).
 
 ------------------------------------------------------------------------
-r193 | bertin | 2006-03-12 18:56:52 +0100 (Sun, 12 Mar 2006) | 2 lines
+r8 | bertin | 2006-03-12 18:56:52 +0100 (Sun, 12 Mar 2006) | 2 lines
 
 Updated ChangeLog and HISTORY files.
 
 ------------------------------------------------------------------------
-r192 | bertin | 2006-03-12 18:36:29 +0100 (Sun, 12 Mar 2006) | 2 lines
+r7 | bertin | 2006-03-12 18:36:29 +0100 (Sun, 12 Mar 2006) | 2 lines
 
 Replaced make with make -j to speed up the RPM building process.
+
+------------------------------------------------------------------------
+r6 | bertin | 2006-03-11 22:41:55 +0100 (Sat, 11 Mar 2006) | 3 lines
+
+Fixed segfault with too long arguments.
+Version number pushed to 2.15.7.
+
+------------------------------------------------------------------------
+r5 | bertin | 2006-01-31 17:13:07 +0100 (Tue, 31 Jan 2006) | 2 lines
+
+Removed a forgotten 'printf("coucou\n")' in fitscleanup.c ...
+
+------------------------------------------------------------------------
+r4 | bertin | 2006-01-31 17:10:52 +0100 (Tue, 31 Jan 2006) | 2 lines
+
+Added additional checks to resampling boundaries to prevent crash in case of
+buggy astrometric solutions.
+
+------------------------------------------------------------------------
+r3 | marmo | 2005-11-12 19:11:47 +0100 (Sat, 12 Nov 2005) | 1 line
+
+fixed the bug on single weight image mode
+------------------------------------------------------------------------
+r2 | bertin | 2005-10-17 16:53:55 +0200 (Mon, 17 Oct 2005) | 1 line
 
 -------------------------------- old ChangeLog --------------------------------
 Who     When            Where(mostly)   What
