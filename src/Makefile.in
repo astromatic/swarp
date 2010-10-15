@@ -51,8 +51,9 @@ PROGRAMS = $(bin_PROGRAMS)
 am_swarp_OBJECTS = back.$(OBJEXT) coadd.$(OBJEXT) data.$(OBJEXT) \
 	field.$(OBJEXT) fitswcs.$(OBJEXT) header.$(OBJEXT) \
 	interpolate.$(OBJEXT) main.$(OBJEXT) makeit.$(OBJEXT) \
-	prefs.$(OBJEXT) projapprox.$(OBJEXT) resample.$(OBJEXT) \
-	threads.$(OBJEXT) weight.$(OBJEXT) xml.$(OBJEXT)
+	misc.$(OBJEXT) prefs.$(OBJEXT) projapprox.$(OBJEXT) \
+	resample.$(OBJEXT) threads.$(OBJEXT) weight.$(OBJEXT) \
+	xml.$(OBJEXT)
 swarp_OBJECTS = $(am_swarp_OBJECTS)
 swarp_DEPENDENCIES = $(top_builddir)/src/fits/libfits.a \
 	$(top_builddir)/src/wcs/libwcs_c.a
@@ -183,15 +184,15 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
 # Program Makefile for SWarp
-# Copyright (C) 2002-2006 Emmanuel Bertin.
+# Copyright (C) 2002-2010 Emmanuel Bertin.
 SUBDIRS = fits wcs
 swarp_SOURCES = back.c coadd.c data.c field.c fitswcs.c header.c \
-			  interpolate.c main.c makeit.c prefs.c projapprox.c \
-			  resample.c threads.c weight.c xml.c \
+			  interpolate.c main.c makeit.c misc.c prefs.c \
+			  projapprox.c resample.c threads.c weight.c xml.c \
 			  back.h coadd.h data.h define.h field.h fitswcs.h \
-			  globals.h header.h interpolate.h key.h preflist.h \
-			  prefs.h projapprox.h resample.h threads.h types.h \
-			  wcscelsys.h weight.h xml.h
+			  globals.h header.h interpolate.h key.h misc.h \
+			  preflist.h prefs.h projapprox.h resample.h threads.h \
+			  types.h wcscelsys.h weight.h xml.h
 
 swarp_LDADD = $(top_builddir)/src/fits/libfits.a $(top_builddir)/src/wcs/libwcs_c.a
 DATE = `date +"%Y-%m-%d"`
@@ -270,6 +271,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/interpolate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/makeit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/misc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/prefs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/projapprox.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resample.Po@am__quote@

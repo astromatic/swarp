@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	01/09/2010
+*	Last modify:	15/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -37,6 +37,7 @@
 #include "field.h"
 #include "header.h"
 #include "key.h"
+#include "misc.h"
 #include "prefs.h"
 #include "wcs/wcs.h"
 
@@ -179,7 +180,7 @@ INPUT	Reference field pointer.
 OUTPUT	The new field pointer if OK, NULL otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	10/08/2001
+VERSION	05/10/2010
  ***/
 fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
 				int flags)
@@ -206,7 +207,7 @@ fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
   field->wcs = NULL;
   field->rawmin = NULL;
   field->rawmax = NULL;
-  field->reffield = NULL;
+  field->reffield =reffield;
 
   strcpy(field->filename, filename);
   strcpy(field->cat->filename, filename);
@@ -346,7 +347,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 01/09/2010
+VERSION 15/10/2010
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -594,7 +595,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
         case PIXSCALE_MEDIAN:
           for (i=0; i<ninput; i++)
             scale[i] = (float)infield[i]->wcs->wcsscale[axis[i*naxis+n]];
-          pixscale[n] = (double)hmedian(scale, ninput);
+          pixscale[n] = (double)fqmedian(scale, ninput);
           break;
         case PIXSCALE_FIT:
           if (prefs.center_type[n] == CENTER_MANUAL)
@@ -885,9 +886,9 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 /* Insert additional header informations from the "header" file */
   if (read_aschead(field->hfilename, 0, tab))
     {
+/*-- No external header: update WCS internal structures only */
     if (!wcs->wcsprm)
       QCALLOC(wcs->wcsprm, struct wcsprm, 1);
-/*--- No external header: update WCS internal structures only */
 /*-- Test if the WCS is recognized and a celestial pair is found */
     wcsset(wcs->naxis,(const char(*)[9])wcs->ctype, wcs->wcsprm);
 

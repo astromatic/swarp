@@ -194,7 +194,7 @@
 	  " min ", format-number(floor($duration mod 60.0), "00")," s")'/>
         </xsl:when>
         <xsl:otherwise>
-         <xsl:value-of select='concat(string($duration), " s")'/>
+         <xsl:value-of select='concat(format-number($duration,"##0.0"), " s")'/>
         </xsl:otherwise>
        </xsl:choose>
       </xsl:otherwise>
@@ -230,8 +230,8 @@
    <xsl:variable name="backfsize" select="count(FIELD[@name='Back_FilterSize']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="backdef" select="count(FIELD[@name='Back_Default']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="weighttype" select="count(FIELD[@name='Weight_Type']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="weighttres" select="count(FIELD[@name='Weight_Thresh']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="weightscale" select="count(FIELD[@name='Weight_Scaling']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="weighttres" select="count(FIELD[@name='Weight_Thresh']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="interp" select="count(FIELD[@name='Interpolate']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="gain" select="count(FIELD[@name='Gain']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="saturation" select="count(FIELD[@name='Saturation']/preceding-sibling::FIELD)+1"/>
@@ -240,8 +240,8 @@
    <xsl:variable name="astrfscale" select="count(FIELD[@name='Astrometric_Flux_Scaling']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="fieldcoord" select="count(FIELD[@name='Field_Coordinates']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="pixscale" select="count(FIELD[@name='Pixel_Scale']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="obsdate" select="count(FIELD[@name='ObsDate']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="equinox" select="count(FIELD[@name='Equinox']/preceding-sibling::FIELD)+1"/>
-   <xsl:variable name="epoch" select="count(FIELD[@name='Epoch']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="coosys" select="count(FIELD[@name='COOSYS']/preceding-sibling::FIELD)+1"/>
    <p>
     <BUTTON type="button" title="click to expand" onclick="showhideTable('SWarp')">
@@ -266,8 +266,8 @@
       <TH>BACK_FILTERSIZE</TH>
       <TH>Background Default</TH>
       <TH>Weight Type</TH>
-      <TH>Weight Threshold</TH>
       <TH>Weight Scaling</TH>
+      <TH>Weight Threshold</TH>
       <TH>Interpolate</TH>
       <TH>Gain</TH>
       <TH>Saturation</TH>
@@ -276,8 +276,8 @@
       <TH>Astro Flux Scale</TH>
       <TH>Field Coordinates</TH>
       <TH>Pixel Scale</TH>
+      <TH>Observation Date</TH>
       <TH>Equinox</TH>
-      <TH>Epoch</TH>
       <TH>Coordinate System</TH>
      </TR>
      <xsl:for-each select="DATA/TABLEDATA">
@@ -327,7 +327,7 @@
 	      " min ", format-number(floor(TD[$duration] mod 60.0),"##00")," s")'/></el>
             </xsl:when>
             <xsl:otherwise>
-             <el><xsl:value-of select='concat(format-number(TD[$duration],"##00"), " s")'/></el>
+             <el><xsl:value-of select='concat(format-number(TD[$duration],"##0.0"), " s")'/></el>
             </xsl:otherwise>
            </xsl:choose>
           </xsl:otherwise>
@@ -365,10 +365,10 @@
          <el><xsl:value-of select="TD[$weighttype]"/></el>
         </td>
         <td align="right">
-         <el><xsl:value-of select="TD[$weighttres]"/></el>
+         <el><xsl:value-of select="TD[$weightscale]"/></el>
         </td>
         <td align="right">
-         <el><xsl:value-of select="TD[$weightscale]"/></el>
+         <el><xsl:value-of select="TD[$weighttres]"/></el>
         </td>
         <td align="center">
          <xsl:choose>
@@ -402,10 +402,10 @@
          <el><xsl:value-of select="format-number(TD[$pixscale],'##0.000')"/></el>
         </td>
         <td align="center">
-         <el><xsl:value-of select="TD[$equinox]"/></el>
+         <el><xsl:value-of select="TD[$obsdate]"/></el>
         </td>
         <td align="center">
-         <el><xsl:value-of select="TD[$epoch]"/></el>
+         <el><xsl:value-of select="TD[$equinox]"/></el>
         </td>
         <td align="center">
          <el><xsl:value-of select="TD[$coosys]"/></el>

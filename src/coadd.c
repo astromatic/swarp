@@ -1014,10 +1014,10 @@ int coadd_line(int l)
 
 /******* fast_median **********************************************************
 PROTO	PIXTYPE fast_median(PIXTYPE *arr, int n)
-PURPOSE	Fast median from an input array, optimized version based on the
-	select() routine (Numerical Recipes, 2nd ed. Section 8.5 and
-	http://www.eso.org/~ndevilla/median/). If n is even, then the result
-	is the average of the 2 "central" values.
+PURPOSE	Fast median from an input array, based on the quick-select algorithm
+        described by N. Devillard at
+        http://ansi.c.sources.free.fr/median/median/index.html. If n is even,
+	then the result is the average of the 2 "central" values.
 INPUT	Input pixel array ptr,
 	number of input pixels,
 OUTPUT	Value of the median.
@@ -1116,55 +1116,6 @@ PIXTYPE fast_median(PIXTYPE *arr, int n)
   }
 
 #undef MEDIAN_SWAP
-
-
-/******************************** hmedian ***********************************/
-/*
-Median using Heapsort algorithm (for float arrays) (based on Num.Rec algo.).
-Warning: changes the order of data!
-*/
-PIXTYPE   hmedian(PIXTYPE *ra, int n)
-
-  {
-   int          l, j, ir, i;
-   float        rra;
-
-
-  if (n<2)
-    return *ra;
-  ra--;
-  for (l = ((ir=n)>>1)+1;;)
-    {
-    if (l>1)
-      rra = ra[--l];
-    else
-      {
-      rra = ra[ir];
-      ra[ir] = ra[1];
-      if (--ir == 1)
-        {
-        ra[1] = rra;
-        return n&1? ra[n/2+1] : (ra[n/2]+ra[n/2+1])/2.0;
-        }
-      }
-    for (j = (i=l)<<1; j <= ir;)
-      {
-      if (j < ir && ra[j] < ra[j+1])
-        ++j;
-      if (rra < ra[j])
-        {
-        ra[i] = ra[j];
-        j += (i=j);
-        }
-      else
-        j = ir + 1;
-      }
-    ra[i] = rra;
-    }
-
-/* (the 'return' is inside the loop!!) */
-  }
-
 
 /******* coadd_load **********************************************************
 PROTO	int coadd_load(fieldstruct *field, fieldstruct *wfield,

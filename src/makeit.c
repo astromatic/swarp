@@ -9,7 +9,7 @@
 *
 *       Contents:       Main loop
 *
-*       Last modify:    25/08/2010
+*       Last modify:    15/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -36,6 +36,7 @@
 #include "data.h"
 #include "field.h"
 #include "header.h"
+#include "misc.h"
 #include "prefs.h"
 #include "resample.h"
 #include "xml.h"
@@ -51,8 +52,8 @@ void	makeit(void)
    fieldstruct		**infield,**inwfield, *outfield,*outwfield;
    catstruct		*cat, *wcat;
    tabstruct		*tab;
-   time_t		thetimef; 
    struct tm		*tm;
+   double		dtime, dtimef;
    char			*rfilename;
    int		       	*next;
    int			i,j,k,l, ninfield, ntinfield,ntinfield2, lng,lat,
@@ -64,6 +65,7 @@ void	makeit(void)
 /* Processing start date and time */
   thetime = time(NULL);
   tm = localtime(&thetime);
+  dtime = counter_seconds();
   sprintf(prefs.sdate_start,"%04d-%02d-%02d",
         tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
   sprintf(prefs.stime_start,"%02d:%02d:%02d",
@@ -141,8 +143,8 @@ void	makeit(void)
           lng = infield[l]->wcs->lat;
           lat = infield[l]->wcs->lng;
           }
-      inwfield[k] = wcat? load_weight(wcat, infield[k], jweight<0? j:jweight, i,
-				prefs.weight_type[i]) : NULL;
+      inwfield[k] = load_weight(wcat, infield[k], jweight<0? j:jweight, i,
+				prefs.weight_type[i]);
       next[i]++;
       k++;
       }
@@ -219,7 +221,7 @@ void	makeit(void)
 /*-- Processing start date and time */
     for (j=0; j<next[i]; j++, k++)
       {
-      thetimef = time(NULL);
+      dtimef = counter_seconds();
 /*---- Display some info */
       if (!j)
         {
@@ -281,7 +283,7 @@ void	makeit(void)
 		tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
       sprintf(infield[k]->stime_end,"%02d:%02d:%02d",
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
-      infield[k]->time_diff = difftime(thetime2, thetimef);
+      infield[k]->time_diff = counter_seconds() - dtimef;
       if (prefs.xml_flag)
         update_xml(infield[k], inwfield[k]);
       }
@@ -334,7 +336,7 @@ the_end:
         tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
   sprintf(prefs.stime_end,"%02d:%02d:%02d",
         tm->tm_hour, tm->tm_min, tm->tm_sec);
-  prefs.time_diff = difftime(thetime2, thetime);
+  prefs.time_diff = counter_seconds() - dtime;
 
 /* Write XML */
   if (prefs.xml_flag)

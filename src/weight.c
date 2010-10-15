@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of weight maps.
 *
-*	Last modify:	21/11/2003
+*	Last modify:	05/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -51,7 +51,7 @@ INPUT	Cat structurep pointer,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 21/11/2003
+VERSION 05/10/2010
  ***/
 fieldstruct	*load_weight(catstruct *cat, fieldstruct *reffield,
 			int frameno, int fieldno, weightenum wtype)
@@ -64,6 +64,8 @@ fieldstruct	*load_weight(catstruct *cat, fieldstruct *reffield,
   wflags = 0;	/* to avoid gcc -Wall warnings */
   switch(wtype)
     {
+    case WEIGHT_NONE:
+      return NULL;
     case WEIGHT_FROMBACK:
       wflags = BACKRMS_FIELD;
       break;
@@ -86,7 +88,7 @@ fieldstruct	*load_weight(catstruct *cat, fieldstruct *reffield,
 
   if (wtype == WEIGHT_FROMBACK)
 /*-- In this special case, one needs to CREATE a new weight-map FITS file */
-    wfield = inherit_field(cat->filename, reffield, FIELD_READ | wflags);
+    wfield = inherit_field(reffield->filename, reffield, FIELD_READ | wflags);
   else
     {
 /*-- First allocate memory for the new field (and nullify pointers) */
@@ -158,7 +160,8 @@ fieldstruct	*load_weight(catstruct *cat, fieldstruct *reffield,
   wfield->sigfac = 1.0;
   set_weightconv(wfield);
   wfield->weight_thresh = prefs.weight_thresh[fieldno];
-  weight_to_var(&wfield->weight_thresh, 1);
+  wfield->var_thresh = wfield->weight_thresh;
+  weight_to_var(&wfield->var_thresh, 1);
 
   return wfield;
   }
@@ -174,7 +177,7 @@ INPUT	Weight-map filename
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 22/05/2000
+VERSION 05/10/2010
  ***/
 fieldstruct	*init_weight(char *filename, fieldstruct *reffield)
 
@@ -186,7 +189,7 @@ fieldstruct	*init_weight(char *filename, fieldstruct *reffield)
 /* Default normalization factor */
   wfield->sigfac = 1.0;
   set_weightconv(wfield);
-  wfield->weight_thresh = BIG;
+  wfield->var_thresh = BIG;
 
   return wfield;
   }
@@ -240,7 +243,7 @@ INPUT	Input data ptr,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 12/02/2000
+VERSION 05/10/2010
  ***/
 void	weight_to_var(PIXTYPE *data, int npix)
 
@@ -252,6 +255,11 @@ void	weight_to_var(PIXTYPE *data, int npix)
     {
     case BACKRMS_FIELD:
       n = weight_pixcount;
+      if (npix==1)
+        {
+        *data *= *data;
+        break;
+        }
       for (i=npix; i--;)
         {
 /*------ New line */
@@ -274,11 +282,11 @@ void	weight_to_var(PIXTYPE *data, int npix)
         *(data++) *= weight_fac;
       break;
     case WEIGHT_FIELD:
-     for (i=npix; i--; data++)
-      if (*data > 0.0)
-        *data = weight_fac/(*data);
-      else
-        *data = BIG;
+      for (i=npix; i--; data++)
+        if (*data > 0.0)
+          *data = weight_fac/(*data);
+        else
+          *data = BIG;
       break;
     default:
       error(EXIT_FAILURE,
@@ -298,7 +306,7 @@ INPUT	Input data ptr,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 25/05/2000
+VERSION 05/10/2010
  ***/
 void	var_to_weight(PIXTYPE *data, int npix)
 
@@ -323,7 +331,7 @@ void	var_to_weight(PIXTYPE *data, int npix)
       break;
     default:
       error(EXIT_FAILURE,
-	"*Internal Error*: Unknown weight-map type in ", "weight_to_var()");
+	"*Internal Error*: Unknown weight-map type in ", "var_to_weight()");
       break;
     }
 

@@ -9,7 +9,7 @@
 *
 *	Contents:	functions dealing with background computation.
 *
-*	Last modify:	25/08/2010
+*	Last modify:	15/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -33,6 +33,7 @@
 #include	"back.h"
 #include	"coadd.h"
 #include	"field.h"
+#include	"misc.h"
 #include	"prefs.h"
 #include	"weight.h"
 
@@ -150,7 +151,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
         }
 /*---- Build the histograms */
       backstat(backmesh, wbackmesh, buf, wbuf, bufsize,nx, w, bw,
-	wfield?wfield->weight_thresh:0.0);
+	wfield?wfield->var_thresh:0.0);
       bm = backmesh;
       for (m=nx; m--; bm++)
         if (bm->mean <= -BIG)
@@ -167,7 +168,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
             QCALLOC(wbm->histo, int, wbm->nlevels);
         }
       backhisto(backmesh, wbackmesh, buf, wbuf, bufsize,nx, w, bw,
-	wfield?wfield->weight_thresh:0.0);
+	wfield?wfield->var_thresh:0.0);
       }
     else
       {
@@ -219,7 +220,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
           }
         }
       backstat(backmesh, wbackmesh, buf, wbuf, bufsize, nx, w, bw,
-	wfield?wfield->weight_thresh:0.0);
+	wfield?wfield->var_thresh:0.0);
       QFSEEK(tab->cat->file, fcurpos2, SEEK_SET, field->filename);
       bm = backmesh;
       for (m=nx; m--; bm++)
@@ -249,7 +250,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
           weight_to_var(wbuf, bufsize2);
           }
         backhisto(backmesh, wbackmesh, buf, wbuf, bufsize2, nx, w, bw,
-		wfield?wfield->weight_thresh:0.0);
+		wfield?wfield->var_thresh:0.0);
         }
       }
 
@@ -308,18 +309,18 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
         *(ratiop++) = sratio;
         nr++;
         }
-    wfield->sigfac = (double)hmedian(ratio, nr);
+    wfield->sigfac = (double)fqmedian(ratio, nr);
     for (i=0; i<nr && ratio[i]<=0.0; i++);
     if (i<nr)
-      wfield->sigfac = (double)hmedian(ratio+i, nr-i);
+      wfield->sigfac = (double)fqmedian(ratio+i, nr-i);
     else
       {
       warning("Null or negative global weighting factor:","defaulted to 1");
       wfield->sigfac = 1.0;
       } 
 
-/*-- Update weight threshold */
-    wfield->weight_thresh *= (PIXTYPE)(wfield->sigfac*wfield->sigfac);
+/*-- Update variance threshold */
+    wfield->var_thresh *= (PIXTYPE)(wfield->sigfac*wfield->sigfac);
 
     free(ratio);
     }
@@ -734,10 +735,10 @@ void	filter_back(fieldstruct *field)
           smask[i++] = sigma[x+y];
           }
         }
-      if (fabs((med=hmedian(bmask, i))-back[px+py])>=fthresh)
+      if (fabs((med=fqmedian(bmask, i))-back[px+py])>=fthresh)
         {
         back2[px+py] = med;
-        sigma2[px+py] = hmedian(smask, i);
+        sigma2[px+py] = fqmedian(smask, i);
         }
       else
         {
@@ -750,17 +751,17 @@ void	filter_back(fieldstruct *field)
   free(bmask);
   free(smask);
   memcpy(back, back2, np*sizeof(float));
-  field->backmean = (double)hmedian(back2, np);
+  field->backmean = (double)fqmedian(back2, np);
   free(back2);
   memcpy(sigma, sigma2, np*sizeof(float));
-  field->backsig = (double)hmedian(sigma2, np);
+  field->backsig = (double)fqmedian(sigma2, np);
 
   if (field->backsig<=0.0)
     {
     sigmat = sigma2+np;
     for (i=np; i-- && *(--sigmat)>0.0;);
     if (i>=0 && i<(np-1))
-      field->backsig = hmedian(sigmat+1, np-1-i);
+      field->backsig = fqmedian(sigmat+1, np-1-i);
     else
       {
       if (field->flags&(DETECT_FIELD|MEASURE_FIELD))

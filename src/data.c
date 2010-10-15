@@ -9,7 +9,7 @@
 *
 *	Contents:	Reading and conversion of data.
 *
-*	Last modify:	09/11/2003
+*	Last modify:	05/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -57,7 +57,7 @@ INPUT	Input field ptr,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 14/06/2000
+VERSION 05/10/2010
  ***/
 void	read_data(fieldstruct *field, fieldstruct *wfield)
   {
@@ -73,7 +73,7 @@ void	read_data(fieldstruct *field, fieldstruct *wfield)
     {
     convert_interpflag = 1;
     convert_varpix = wfield->pix;
-    convert_varthresh = wfield->weight_thresh;
+    convert_varthresh = wfield->var_thresh;
     QCALLOC(convert_ytimeoutbuf, int, convert_width);
     QMALLOC(convert_backupbuf, PIXTYPE, convert_width);
     }
