@@ -9,7 +9,7 @@
 *
 *       Contents:       Resampling procedures
 *
-*       Last modify:    25/08/2010
+*       Last modify:    15/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -94,7 +94,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/08/2010
+VERSION	15/10/2010
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -142,6 +142,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   field->fsaturation = infield->fsaturation;
   field->exptime = infield->exptime;
   field->fieldno = infield->fieldno;
+  field->fascale = infield->fascale;
   field->fscale = infield->fscale;
   field->headflag = infield->headflag;
   strcpy(field->ident, infield->ident);
@@ -150,6 +151,8 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 /* We use a small "dirty" trick to frame the output */
   wcsloc = *(outfield->wcs);	/* Copy the CONTENT only */
   wcs = infield->wcs;
+  wcsloc.obsdate = wcs->obsdate;
+  wcsloc.epoch = wcs->epoch;
   naxis = wcsloc.naxis;
   for (d=0; d<naxis;d++)
     {
@@ -214,6 +217,8 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 /* Add relevant information to FITS headers */
   writefitsinfo_field(wfield, inwfield? inwfield : infield);
   wfield->cflags = 0;
+  wfield->sigfac = inwfield->sigfac;
+  wfield->weight_thresh = inwfield->weight_thresh;
 
 /* Write image header */
   if (open_cat(wfield->cat, WRITE_ONLY) != RETURN_OK)

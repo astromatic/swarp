@@ -632,8 +632,8 @@ void	useprefs(void)
     prefs.nweight_thresh = 1;
     }
   else
-  for (i=prefs.nweight_thresh; i<prefs.ninfield; i++)
-    prefs.weight_thresh[i] = prefs.back_default[prefs.nweight_thresh-1];
+    for (i=prefs.nweight_thresh; i<prefs.ninfield; i++)
+      prefs.weight_thresh[i] = prefs.weight_thresh[prefs.nweight_thresh-1];
   prefs.nweight_thresh = prefs.ninfield;
 
 /* Projection approximation error */

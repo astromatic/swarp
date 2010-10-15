@@ -1,18 +1,34 @@
 /*
-                                  threads.c
-
-*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*				threads.c
 *
-*       Part of:        A program that uses POSIX threads
+* Manage POSIX threads.
 *
-*       Author:         E.BERTIN (IAP)
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *
-*       Contents:       Useful thread handling routines
+*	This file part of:	AstrOmatic software
 *
-*       Last modify:    18/08/2003
+*	Copyright:		(C) 2002-2010 IAP/CNRS/UPMC
 *
-*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-*/
+*	Authors:		Emmanuel Bertin (IAP)
+*				Mark Hays (original tutorial)
+*
+*	License:		GNU General Public License
+*
+*	AstrOmatic software is free software: you can redistribute it and/or
+*	modify it under the terms of the GNU General Public License as
+*	published by the Free Software Foundation, either version 3 of the
+*	License, or (at your option) any later version.
+*	AstrOmatic software is distributed in the hope that it will be useful,
+*	but WITHOUT ANY WARRANTY; without even the implied warranty of
+*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*	GNU General Public License for more details.
+*	You should have received a copy of the GNU General Public License
+*	along with AstrOmatic software.
+*	If not, see <http://www.gnu.org/licenses/>.
+*
+*	Last modified:		13/10/2010
+*
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifdef HAVE_CONFIG_H
 #include	"config.h"
@@ -69,7 +85,7 @@ OUTPUT	-.
 NOTES   From Mark Hays' POSIX tutorial.
 	See e.g. http://www.cs.ualberta.ca/~paullu/C681/mark.hays.threads.html.
 AUTHOR  E. Bertin (IAP)
-VERSION 01/07/2003
+VERSION 04/01/2010
  ***/
 void threads_gate_end(threads_gate_t *gate)
 
@@ -79,6 +95,7 @@ void threads_gate_end(threads_gate_t *gate)
   QPTHREAD_MUTEX_DESTROY(&gate->block);
   QPTHREAD_COND_DESTROY(&gate->condvar);
   QPTHREAD_COND_DESTROY(&gate->last);
+  free(gate);
 
   return;
   }

@@ -9,7 +9,7 @@
 *
 *	Contents:	Handling of field structures.
 *
-*	Last modify:	25/08/2010
+*	Last modify:	05/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -87,7 +87,8 @@ typedef struct field
   double	*rawmin;		/* Starting pixel for coaddition */
   double	*rawmax;		/* Ending pixel for coaddition */
 /* ---- image interpolation */
-  PIXTYPE	weight_thresh;		/* interpolation threshold */
+  PIXTYPE	weight_thresh;		/* weight threshold */
+  PIXTYPE	var_thresh;		/* variance threshold */
   struct field	*reffield;	       	/* pointer to a reference field */
 /* ---- time */
   char		sdate_end[12];		/* SWarp end date */

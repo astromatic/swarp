@@ -9,7 +9,7 @@
 *
 *	Contents:	Include file for coadd.c
 *
-*	Last modify:	05/08/2006
+*	Last modify:	15/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -47,7 +47,6 @@ typedef struct coaddact
 
 /*-------------------------------- protos -----------------------------------*/
 
-extern PIXTYPE	hmedian(PIXTYPE *arr, int n);
 extern int	coadd_fields(fieldstruct **infield, fieldstruct **inwfield,
 			int ninput, fieldstruct *outfield,
 			fieldstruct *outwfield,

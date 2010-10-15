@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	13/07/2007
+*	Last modify:	15/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -85,7 +85,7 @@ INPUT	-.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	09/08/2006
+VERSION	05/10/2010
  ***/
 int	update_xml(fieldstruct *field, fieldstruct *wfield)
   {
@@ -106,7 +106,8 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
   x->exptime = field->exptime;
   x->backmean = field->backmean;
   x->backsig = field->backsig;
-  x->sigfac = field->sigfac;
+  x->sigfac = wfield->sigfac;
+  x->weight_thresh = wfield->weight_thresh;
   x->gain = field->gain;
   x->saturation = field->saturation;
   x->fscale = field->fscale;
@@ -114,6 +115,7 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
   x->pixscale = field->wcs->pixscale*DEG/ARCSEC;
   x->equinox = field->wcs->equinox;
   x->epoch = field->wcs->epoch;
+  x->obsdate = field->wcs->obsdate;
   x->naxis = field->wcs->naxis;
   x->celsys = (int)(field->wcs->celsysconvflag? field->wcs->celsys : -1);
   x->headflag = field->headflag;
@@ -235,7 +237,7 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	13/07/2007
+VERSION	15/10/2010
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
@@ -295,7 +297,7 @@ int	write_xml_meta(FILE *file, char *error)
 	" ucd=\"time.event.end;meta.software\" value=\"%s\"/>\n",
 	prefs.stime_end);
   fprintf(file, "  <PARAM name=\"Duration\" datatype=\"float\""
-	" ucd=\"time.event;meta.software\" value=\"%.0f\" unit=\"s\"/>\n",
+	" ucd=\"time.event;meta.software\" value=\"%.2f\" unit=\"s\"/>\n",
 	prefs.time_diff);
 
   fprintf(file, "  <PARAM name=\"User\" datatype=\"char\" arraysize=\"*\""
@@ -414,6 +416,8 @@ int	write_xml_meta(FILE *file, char *error)
 	naxis, nxml? (xmlstack[0].celsys >=0? "deg":"pix") : "deg");
   fprintf(file, "   <FIELD name=\"Pixel_Scale\" datatype=\"float\""
 	" ucd=\"instr.pixel;obs.image;stat.mean\" unit=\"arcsec\"/>\n");
+  fprintf(file, "   <FIELD name=\"ObsDate\" datatype=\"double\""
+	" ucd=\"time.start;obs\" unit=\"yr\"/>\n");
   fprintf(file, "   <FIELD name=\"Equinox\" datatype=\"double\""
 	" ucd=\"time.equinox;obs\" unit=\"yr\"/>\n");
   fprintf(file, "   <FIELD name=\"Epoch\" datatype=\"double\""
@@ -427,7 +431,7 @@ int	write_xml_meta(FILE *file, char *error)
     f = x->fieldno;
     fprintf(file, "    <TR>\n"
 	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%c</TD><TD>%s</TD>\n"
-	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.0f</TD>\n"
+	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.2f</TD>\n"
 	"     <TD>%g</TD><TD>%g</TD><TD>%c</TD><TD>%s</TD>"
 	"<TD>%d</TD><TD>%d</TD><TD>%g</TD>\n"
 	"     <TD>%s</TD><TD>%g</TD><TD>%g</TD><TD>%c</TD>\n"
@@ -453,7 +457,7 @@ int	write_xml_meta(FILE *file, char *error)
         prefs.back_default[f],
     	key[findkeys("WEIGHT_TYPE", keylist,
 		FIND_STRICT)].keylist[prefs.weight_type[f]],
-	prefs.weight_thresh[f],
+	x->weight_thresh,
 	x->sigfac,
         prefs.interp_flag[f]? 'T' : 'F',
 	x->gain,
@@ -485,8 +489,9 @@ int	write_xml_meta(FILE *file, char *error)
     for (d=1; d<naxis; d++)
       fprintf(file, " %.10g", x->centerpos[d]);
     fprintf(file,
-	"</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%s</TD>\n    </TR>\n",
-	x->pixscale, x->equinox, x->epoch, sysname);
+	"</TD><TD>%g</TD><TD>%.10g</TD><TD>%.10g</TD><TD>%.10g</TD>\n"
+	"     <TD>%s</TD>\n    </TR>\n",
+	x->pixscale, x->obsdate, x->equinox, x->epoch, sysname);
     }
   fprintf(file, "   </TABLEDATA></DATA>\n");
   fprintf(file, "  </TABLE>\n");

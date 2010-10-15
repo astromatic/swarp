@@ -9,7 +9,7 @@
 *
 *	Contents:	Parsing of the command line.
 *
-*	Last modify:	25/08/2010
+*	Last modify:	15/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -131,7 +131,7 @@ int	main(int argc, char *argv[])
   free(listbuf);
 
   NFPRINTF(OUTPUT, "");
-  NPRINTF(OUTPUT, "> All done (in %.0f s)\n", prefs.time_diff);
+  NPRINTF(OUTPUT, "> All done (in %.1f s)\n", prefs.time_diff);
 
   exit(EXIT_SUCCESS);
   }

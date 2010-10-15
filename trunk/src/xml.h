@@ -9,7 +9,7 @@
 *
 *	Contents:	XML logging.
 *
-*	Last modify:	01/04/2009
+*	Last modify:	05/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 */
@@ -44,6 +44,7 @@ typedef struct
   float		backmean;				/* mean background */
   float		backsig;				/* mean back stddev */
   float		sigfac;					/* mean weight scaling*/
+  float		weight_thresh;				/* weight threshold */
   float		gain;					/* gain (e-/ADU) */
   float		saturation;				/* saturation (ADU) */
   float		fscale;					/* photometric scaling*/
@@ -54,6 +55,7 @@ typedef struct
   double	centerpos[NAXIS];			/* center coordinates */
   double	equinox;				/* equinox of coords */
   double	epoch;					/* epoch of coords */
+  double	obsdate;				/* observation date */
   }	xmlstruct;
 
 /*------------------------------- functions ---------------------------------*/
