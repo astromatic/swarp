@@ -7,9 +7,7 @@
 *
 *	This file part of:	AstrOmatic WCS library
 *
-*	Copyright:		(C) 1998-2010 IAP/CNRS/UPMC
-*
-*	Author:			Emmanuel Bertin (IAP)
+*	Copyright:		(C) 1998-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -25,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		10/10/2010
+*	Last modified:		26/10/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -437,11 +435,10 @@ INPUT   Pointer to the (pseudo 2D) matrix of coefficients,
 OUTPUT  -.
 NOTES   -.
 AUTHOR  E. Bertin (IAP, Leiden observatory & ESO)
-VERSION 10/10/2010
+VERSION 26/10/2010
  ***/
 void	poly_solve(double *a, double *b, int n)
   {
-   double	*vmat,*wmat;
 
 #ifdef HAVE_ATLAS
   clapack_dposv(CblasRowMajor, CblasUpper, n, 1, a, n, b, n);

@@ -1,18 +1,30 @@
 /*
-                                  resample.c
-
-*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*				resample.c
 *
-*       Part of:        Swarp
+* Manage high-level resampling.
 *
-*       Author:         E.BERTIN (IAP)
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 *
-*       Contents:       Resampling procedures
+*	This file part of:	SWarp
 *
-*       Last modify:    15/10/2010
+*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
-*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-*/
+*	License:		GNU General Public License
+*
+*	SWarp is free software: you can redistribute it and/or modify
+*	it under the terms of the GNU General Public License as published by
+*	the Free Software Foundation, either version 3 of the License, or
+*	(at your option) any later version.
+*	SWarp is distributed in the hope that it will be useful,
+*	but WITHOUT ANY WARRANTY; without even the implied warranty of
+*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*	GNU General Public License for more details.
+*	You should have received a copy of the GNU General Public License
+*	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
+*
+*	Last modified:		26/10/2010
+*
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifdef HAVE_CONFIG_H
 #include	"config.h"
@@ -94,7 +106,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	15/10/2010
+VERSION	26/10/2010
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -217,8 +229,11 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 /* Add relevant information to FITS headers */
   writefitsinfo_field(wfield, inwfield? inwfield : infield);
   wfield->cflags = 0;
-  wfield->sigfac = inwfield->sigfac;
-  wfield->weight_thresh = inwfield->weight_thresh;
+  if (inwfield)
+    {
+    wfield->sigfac = inwfield->sigfac;
+    wfield->weight_thresh = inwfield->weight_thresh;
+    }
 
 /* Write image header */
   if (open_cat(wfield->cat, WRITE_ONLY) != RETURN_OK)

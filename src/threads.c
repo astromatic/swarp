@@ -7,10 +7,8 @@
 *
 *	This file part of:	AstrOmatic software
 *
-*	Copyright:		(C) 2002-2010 IAP/CNRS/UPMC
-*
-*	Authors:		Emmanuel Bertin (IAP)
-*				Mark Hays (original tutorial)
+*	Copyright:		(C) 2002-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*				(C) Mark Hays (original tutorial)
 *
 *	License:		GNU General Public License
 *

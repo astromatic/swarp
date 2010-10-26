@@ -1,15 +1,13 @@
 #
 #				configure.ac
 #
+# Process this file with autoconf to produce a configure script.
+#
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2000-2010 IAP/CNRS/UPMC
-#
-#	Author:			Emmanuel Bertin (IAP)
-#
-#	Last modified:		09/10/2010
+#	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -22,16 +20,16 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
+#	Last modified:		26/10/2010
+#
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-# Process this file with autoconf to produce a configure script.
 
 # First, disable the annoying config.cache
 define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.19.3, [bertin@iap.fr])
+AC_INIT(swarp, 2.20, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AM_CONFIG_HEADER(config.h)
