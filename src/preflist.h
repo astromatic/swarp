@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		17/12/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -121,7 +121,7 @@ pkeystruct key[] =
   {"SUBTRACT_BACK", P_BOOLLIST, prefs.subback_flag, 0,0, 0.0,0.0,
    {""}, 1, MAXINFIELD, &prefs.nsubback_flag},
   {"VERBOSE_TYPE", P_KEY, &prefs.verbose_type, 0,0, 0.0,0.0,
-   {"QUIET","NORMAL","FULL",""}},
+   {"QUIET", "LOG", "NORMAL", "FULL", ""}},
   {"VMEM_DIR", P_STRING, prefs.swapdir_name},
   {"VMEM_MAX", P_INT, &prefs.vmem_max, 1, 1000000000},
   {"WEIGHT_IMAGE", P_STRINGLIST, prefs.inwfield_name, 0,0, 0.0,0.0,
@@ -244,7 +244,7 @@ char *default_prefs[] =
 "XML_NAME               swarp.xml       # Filename for XML output",
 "*XSL_URL                " XSL_URL,
 "*                                       # Filename for XSL style-sheet",
-"VERBOSE_TYPE           NORMAL          # QUIET,NORMAL or FULL",
+"VERBOSE_TYPE           NORMAL          # QUIET,LOG,NORMAL, or FULL",
 "*NNODES                 1               # Number of nodes (for clusters)",
 "*NODE_INDEX             0               # Node index (for clusters)",
 " ",
