@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		17/12/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -113,7 +113,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 22/02/2010
+VERSION 17/12/2010
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -299,8 +299,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
   writefitsinfo_outfield(outwfield, inwfield? *inwfield : *infield);
 
   *gstr = '\0';
-  NPRINTF(OUTPUT, "-------------- Co-adding frames            \n");
-  NPRINTF(OUTPUT, "Maximum overlap density: %d frame%s\n",
+  QPRINTF(OUTPUT, "-------------- Co-adding frames            \n");
+  QPRINTF(OUTPUT, "Maximum overlap density: %d frame%s\n",
 	omax2, omax2>1? "s" : "");
 
   coadd_nomax = omax;

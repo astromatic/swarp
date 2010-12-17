@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		17/12/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -267,7 +267,7 @@ void	makeit(void)
         sprintf(gstr, "   Weight scale: %.7g", inwfield[k]->sigfac);
       else
         *gstr = '\0';
-      NPRINTF(OUTPUT, "    Background: %.7g   RMS: %.7g%s\n",
+      QPRINTF(OUTPUT, "    Background: %.7g   RMS: %.7g%s\n",
 		infield[k]->backmean, infield[k]->backsig, gstr);
 
       if (prefs.resample_flag)
