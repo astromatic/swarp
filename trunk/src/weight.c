@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		17/12/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -115,7 +115,7 @@ fieldstruct	*load_weight(catstruct *cat, fieldstruct *reffield,
     else
       wfield->rfilename++;
 
-    sprintf(gstr, "Looking for %s", wfield->rfilename);
+    sprintf(gstr, "Looking for %s ...", wfield->rfilename);
     NFPRINTF(OUTPUT, gstr);
 
 /*-- Check the image exists and read important info (image size, etc...) */

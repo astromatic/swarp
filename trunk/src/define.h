@@ -139,7 +139,7 @@
 #define	NFPRINTF(w,x)	{if (prefs.verbose_type == NORM) \
 				fprintf(w, "\33[1M> %s\n\33[1A",x); \
 			else if (prefs.verbose_type == FULL) \
-				fprintf(w, "%s.\n", x);}
+				fprintf(w, "%s\n", x);}
 
 #define	FPRINTF		if (prefs.verbose_type == FULL)	fprintf
 

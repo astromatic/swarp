@@ -103,7 +103,7 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
     pstr = field->hfilename+strlen(field->hfilename);
   sprintf(pstr, "%s", prefs.head_suffix);
 
-  sprintf(gstr, "Looking for %s", field->rfilename);
+  sprintf(gstr, "Looking for %s ...", field->rfilename);
   NFPRINTF(OUTPUT, gstr);
 
 /* Insert additional header informations from the "header" file */

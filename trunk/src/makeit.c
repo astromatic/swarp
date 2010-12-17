@@ -107,7 +107,7 @@ void	makeit(void)
   QCALLOC(next, int, ninfield);
   QMALLOC(infield, fieldstruct *, nfield);
   QMALLOC(inwfield, fieldstruct *, nfield);
-  NFPRINTF(OUTPUT, "Examining input data...")
+  NFPRINTF(OUTPUT, "Examining input data ...")
   for (i=0; i<ninfield; i++)
     {
 /*-- Test if the filename contains a bracket indicating a particular extension*/
@@ -193,16 +193,17 @@ void	makeit(void)
 
 /* Create output image (but nothing written to disk yet) */
   outwfield = NULL;
-  NFPRINTF(OUTPUT, "Creating NEW output image...")
+  NFPRINTF(OUTPUT, "Creating NEW output image ...")
   outfield = init_field(infield, ntinfield, prefs.outfield_name);
 /* Check consistency of lng and lat axes */
   lng = outfield->wcs->lng;
   lat = outfield->wcs->lat;
-  NFPRINTF(OUTPUT, "Creating NEW weight-map...")
+  NFPRINTF(OUTPUT, "Creating NEW weight-map ...")
   outwfield = init_weight(prefs.outwfield_name, outfield);
   NFPRINTF(OUTPUT, "")
   QPRINTF(OUTPUT, "------- Output File %s:\n", outfield->rfilename);
   printinfo_field(outfield, outwfield);
+  QPRINTF(OUTPUT, "\n");
 
 /* The first field in the XML stack is the output field */
   if (prefs.xml_flag)
@@ -226,7 +227,7 @@ void	makeit(void)
     }
 
 /* Read and transform the data */
-  NFPRINTF(OUTPUT, "Loading input data...")
+  NFPRINTF(OUTPUT, "Loading input data ...")
   k = 0;
   for (i=0; i<ninfield; i++)
     {
@@ -261,13 +262,15 @@ void	makeit(void)
 			inwfield[k]->filename);
           }
 /*------ Pre-compute the background map */
+        FPRINTF(OUTPUT, "\n");
         make_back(infield[k], inwfield[k], prefs.wscale_flag[i]);
+        FPRINTF(OUTPUT, "\n");
         }
       if (inwfield[k])
         sprintf(gstr, "   Weight scale: %.7g", inwfield[k]->sigfac);
       else
         *gstr = '\0';
-      QPRINTF(OUTPUT, "    Background: %.7g   RMS: %.7g%s\n",
+      QPRINTF(OUTPUT, "    Background: %.7g   RMS: %.7g%s\n\n",
 		infield[k]->backmean, infield[k]->backsig, gstr);
 
       if (prefs.resample_flag)
@@ -275,7 +278,7 @@ void	makeit(void)
 /*------ Read (and convert) the weight data */
         if (inwfield[k])
           {
-          sprintf(gstr, "Reading %s", inwfield[k]->filename);
+          sprintf(gstr, "Reading %s ...", inwfield[k]->filename);
           NFPRINTF(OUTPUT, gstr)
           read_weight(inwfield[k]);
           }
@@ -284,7 +287,7 @@ void	makeit(void)
         NFPRINTF(OUTPUT, gstr)
         read_data(infield[k], inwfield[k]);
 /*------ Resample the data (no need to close catalogs) */
-        sprintf(gstr, "Resampling %s", infield[k]->filename);
+        sprintf(gstr, "Resampling %s ...", infield[k]->filename);
         NFPRINTF(OUTPUT, gstr)
         resample_field(&infield[k], &inwfield[k], outfield, outwfield,
 		prefs.resamp_type);
@@ -326,7 +329,7 @@ the_end:
     update_xml(outfield, outwfield);
 
 /* Close files and free memory */
-  NFPRINTF(OUTPUT, "Closing files...")
+  NFPRINTF(OUTPUT, "Closing files ...")
   for (k=0; k<ntinfield; k++)
     {
     end_field(infield[k]);

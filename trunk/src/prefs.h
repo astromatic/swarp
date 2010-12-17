@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		17/12/2010
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -145,7 +145,7 @@ typedef struct
   int		ncopy_keywords;		/* nb of params */
   int		nnodes;			/* Number of nodes (for clusters) */  
   int		node_index;		/* Node index (for multiprocessing) */ 
-  enum {QUIET, NORM, WARN, FULL}	verbose_type;	/* display type */
+  enum {QUIET, LOG, NORM, FULL}	verbose_type;	/* display type */
   int		xml_flag;		/* Write XML file? */
   char		xml_name[MAXCHAR];	/* XML file name */
   char		xsl_name[MAXCHAR];	/* XSL file name (or URL) */

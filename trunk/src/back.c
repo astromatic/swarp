@@ -84,7 +84,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
   ny = field->nbacky;
   nb = field->nback;
 
-  NFPRINTF(OUTPUT, "Setting up background maps");
+  NFPRINTF(OUTPUT, "Setting up background maps ...");
 
 /* Decide if it is worth displaying progress each 16 lines */
 
@@ -301,7 +301,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
     QFSEEK(wfield->tab->cat->file, wfcurpos, SEEK_SET, wfield->filename);
 
 /* Median-filter and check suitability of the background map */
-  NFPRINTF(OUTPUT, "Filtering background map(s)");
+  NFPRINTF(OUTPUT, "Filtering background map(s) ...");
   filter_back(field);
   if (wfield)
     filter_back(wfield);
@@ -338,10 +338,10 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
     }
 
 /* Compute 2nd derivatives along the y-direction */
-  NFPRINTF(OUTPUT, "Computing backgound d-map");
+  NFPRINTF(OUTPUT, "Computing backgound d-map ...");
   free(field->dback);
   field->dback = make_backspline(field, field->back);
-  NFPRINTF(OUTPUT, "Computing backgound-noise d-map");
+  NFPRINTF(OUTPUT, "Computing backgound-noise d-map ...");
   free(field->dsigma);
   field->dsigma = make_backspline(field, field->sigma);
 /* If asked for, force the backmean parameter to the supplied value */
