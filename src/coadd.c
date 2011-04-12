@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		17/12/2010
+*	Last modified:		11/04/2011
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -61,7 +61,15 @@
 #define	SET_ARRAY_BIT(x,y)	(array[(y/(8*sizeof(unsigned int)))*ninput+x] \
 					|= (1<<(y%(8*sizeof(unsigned int)))))
 
+#ifdef	HAVE_LGAMMA
+#define	LOGGAMMA	lgamma
+#else
+#define	LOGGAMMA	gammln
+static double		gammln();
+#endif
+
  coaddenum	coadd_type;
+ double		*coadd_bias;
  PIXTYPE	*multibuf,*multiwbuf, *outbuf,*outwbuf,
 		coadd_wthresh;
  unsigned int	*multinbuf;
@@ -83,6 +91,7 @@
 /*------------------------------ function -----------------------------------*/
  static int	coadd_line(int l);
 
+ static double	*chi_bias(int n);
  static PIXTYPE	fast_median(PIXTYPE *arr, int n);
  static int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
@@ -256,6 +265,10 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 
   outfield->fieldno = omax2;	/* This is not what is meant for but hey */
   outfield->exptime = exptime;
+
+/* Compute biases for CHI and centered CHI combine types */
+  if (coaddtype == COADD_CHI_MODE || coaddtype == COADD_CHI_MEAN)
+    coadd_bias = chi_bias(omax2);
 
 /* Approximation to the final equivalent gain */
   outfield->fgain = 0.0;
@@ -562,6 +575,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 #endif
 
 /* Free Buffers */
+  free(coadd_bias);
   free(cflag);
   free(ybegbufline);
   free(yendbufline);
@@ -577,6 +591,61 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
     }
 
   return RETURN_OK;
+  }
+
+
+/******* chi_bias ************************************************************
+PROTO	double *chi_bias(int n)
+PURPOSE	Pre-compute the expected bias for the chi distribution as a function of
+	the number of degrees of freedom.
+INPUT	Number of degrees of freedom (starts at 1) 
+OUTPUT	Pointer to the array of biases (output).
+NOTES   -.
+AUTHOR  E. Bertin (IAP)
+VERSION 11/04/2011
+ ***/
+double	*chi_bias(int n)
+  {
+   double	*bias,
+		val;
+   int		i;
+
+  QMALLOC(bias, double, n);
+  for (i=0; i<n; i++)
+    {
+    val = (i+1)*0.5;
+    bias[i] = 1.41421356237*exp(LOGGAMMA(val+0.5)-LOGGAMMA(val));
+    }
+
+  return bias;
+  }
+
+
+/****i* gammln ***************************************************************
+PROTO   double gammln(double xx)
+PURPOSE Returns the log of the Gamma function (based on algorithm described in
+	Numerical Recipes in C, chap 6.1).
+INPUT   A double.
+OUTPUT  Log of the Gamma function.
+NOTES   -.
+AUTHOR  E. Bertin (IAP)
+VERSION 12/10/2010
+*/
+static double	gammln(double xx)
+
+  {
+   double		x,tmp,ser;
+   static double	cof[6]={76.18009173,-86.50532033,24.01409822,
+			-1.231739516,0.120858003e-2,-0.536382e-5};
+   int			j;
+
+  tmp=(x=xx-1.0)+5.5;
+  tmp -= (x+0.5)*log(tmp);
+  ser=1.0;
+  for (j=0;j<6;j++)
+    ser += cof[j]/(x+=1.0);
+
+  return log(2.50662827465*ser)-tmp;
   }
 
 
@@ -779,14 +848,14 @@ INPUT	Current line number.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   Requires many global variables (for multithreading).
 AUTHOR  E. Bertin (IAP)
-VERSION 27/07/2006
+VERSION 11/04/2011
  ***/
 int coadd_line(int l)
 
   {
    PIXTYPE		*inpix,*inwpix,*inpixt,*inwpixt,
 			*pixstack, *pixt, *outpix,*outwpix;
-   double		val, val2, wval,wval2,wval3;
+   double		mu, val,val0,val2, wval,wval0,wval2,wval3;
    unsigned int		*inn;
    int			i,x, ninput2, blankflag;
 
@@ -956,7 +1025,7 @@ int coadd_line(int l)
           }
         }
       break;
-    case COADD_CHI2:
+    case COADD_CHI_OLD:
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
         ninput2 = 0;
@@ -976,6 +1045,74 @@ int coadd_line(int l)
         if (ninput2)
           {
           *(outpix++) = sqrt(val/ninput2);
+          *(outwpix++) = 1.0;
+          }
+        else
+          {
+          *(outpix++) = blankflag? 0.0 : sqrt(val2*val2);
+          *(outwpix++) = BIG;
+          }
+        }
+      break;
+    case COADD_CHI_MODE:
+      for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
+        {
+        ninput2 = 0;
+        wval = val = val2 = 0.0;
+        inpixt = inpix;
+        inwpixt = inwpix;
+        for (i=*(inn++); i--;)
+          {
+          val2 = *(inpixt++);
+          wval2 = *(inwpixt++);
+          if (wval2<coadd_wthresh)
+            {
+            ninput2++;
+            val0 = val2;
+            wval0 = 1.0/wval2;
+            val += val0*val0*wval0;
+            }
+          }
+        if (ninput2>0)
+          {
+          mu = coadd_bias[ninput2-1];
+          *(outpix++) = ninput2>1?
+		  (sqrt(val)-sqrt(ninput2-1.0))/sqrt(ninput2-mu*mu)
+		: val0*sqrt(wval0);
+          *(outwpix++) = 1.0;
+          }
+        else
+          {
+          *(outpix++) = blankflag? 0.0 : sqrt(val2*val2);
+          *(outwpix++) = BIG;
+          }
+        }
+      break;
+    case COADD_CHI_MEAN:
+      for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
+        {
+        ninput2 = 0;
+        wval = val = val2 = 0.0;
+        inpixt = inpix;
+        inwpixt = inwpix;
+        for (i=*(inn++); i--;)
+          {
+          val2 = *(inpixt++);
+          wval2 = *(inwpixt++);
+          if (wval2<coadd_wthresh)
+            {
+            ninput2++;
+            val0 = val2;
+            wval0 = 1.0/wval2;
+            val += val0*val0*wval0;
+            }
+          }
+        if (ninput2>0)
+          {
+          mu = coadd_bias[ninput2-1];
+          *(outpix++) = ninput2>1?
+		  (sqrt(val)-mu)/sqrt(ninput2-mu*mu)
+		: val0*sqrt(wval0);
           *(outwpix++) = 1.0;
           }
         else

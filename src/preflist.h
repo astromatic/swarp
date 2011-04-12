@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		17/12/2010
+*	Last modified:		11/04/2011
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -74,7 +74,8 @@ pkeystruct key[] =
   {"COMBINE", P_BOOL, &prefs.combine_flag},
   {"COMBINE_BUFSIZE", P_INT, &prefs.coaddbuf_size, 1, 2100000000},
   {"COMBINE_TYPE", P_KEY, &prefs.coadd_type, 0,0, 0.0,0.0,
-   {"MEDIAN", "AVERAGE", "MIN", "MAX", "WEIGHTED", "CHI2", "SUM", ""}},
+   {"MEDIAN", "AVERAGE", "MIN", "MAX", "WEIGHTED", "CHI_OLD", "CHI-MODE",
+	"CHI-MEAN", "SUM", ""}},
   {"COPY_KEYWORDS", P_STRINGLIST, prefs.copy_keywords, 0,0, 0.0, 0.0,
    {""}, 0, 1024, &prefs.ncopy_keywords},
   {"DELETE_TMPFILES", P_BOOL, &prefs.removetmp_flag},

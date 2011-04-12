@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		11/04/2011
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -97,7 +97,7 @@ INPUT	-.
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	Global preferences are used.
 AUTHOR	E. Bertin (IAP)
-VERSION	05/10/2010
+VERSION	11/04/2011
  ***/
 int	update_xml(fieldstruct *field, fieldstruct *wfield)
   {
@@ -118,8 +118,8 @@ int	update_xml(fieldstruct *field, fieldstruct *wfield)
   x->exptime = field->exptime;
   x->backmean = field->backmean;
   x->backsig = field->backsig;
-  x->sigfac = wfield->sigfac;
-  x->weight_thresh = wfield->weight_thresh;
+  x->sigfac = wfield? wfield->sigfac : 1.0;
+  x->weight_thresh = wfield? wfield->weight_thresh : 0.0;
   x->gain = field->gain;
   x->saturation = field->saturation;
   x->fscale = field->fscale;
