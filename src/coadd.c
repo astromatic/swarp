@@ -848,7 +848,7 @@ INPUT	Current line number.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   Requires many global variables (for multithreading).
 AUTHOR  E. Bertin (IAP)
-VERSION 11/04/2011
+VERSION	05/05/2011
  ***/
 int coadd_line(int l)
 
@@ -1055,6 +1055,7 @@ int coadd_line(int l)
         }
       break;
     case COADD_CHI_MODE:
+      wval0 = 0.0;
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
         ninput2 = 0;
@@ -1073,7 +1074,7 @@ int coadd_line(int l)
             val += val0*val0*wval0;
             }
           }
-        if (ninput2>0)
+        if (ninput2)
           {
           mu = coadd_bias[ninput2-1];
           *(outpix++) = ninput2>1?
@@ -1083,12 +1084,13 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : sqrt(val2*val2);
+          *(outpix++) = blankflag? 0.0 : val2*sqrt(wval0);
           *(outwpix++) = BIG;
           }
         }
       break;
     case COADD_CHI_MEAN:
+      wval0 = 0.0;
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
         ninput2 = 0;
@@ -1107,7 +1109,7 @@ int coadd_line(int l)
             val += val0*val0*wval0;
             }
           }
-        if (ninput2>0)
+        if (ninput2)
           {
           mu = coadd_bias[ninput2-1];
           *(outpix++) = ninput2>1?
@@ -1117,7 +1119,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : sqrt(val2*val2);
+          *(outpix++) = blankflag? 0.0 : val2*sqrt(wval0);
           *(outwpix++) = BIG;
           }
         }

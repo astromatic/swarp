@@ -16,7 +16,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2005-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+#	Copyright:		(C) 2005-2011 Emmanuel Bertin - IAP/CNRS/UPMC
 #
 #	License:		GNU General Public License
 #
@@ -31,7 +31,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		26/10/2010
+#	Last modified:		07/06/2011
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
 
@@ -254,6 +254,7 @@
    <xsl:variable name="backfsize" select="count(FIELD[@name='Back_FilterSize']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="backdef" select="count(FIELD[@name='Back_Default']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="weighttype" select="count(FIELD[@name='Weight_Type']/preceding-sibling::FIELD)+1"/>
+   <xsl:variable name="rescaleweights" select="count(FIELD[@name='Rescale_Weights']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="weightscale" select="count(FIELD[@name='Weight_Scaling']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="weighttres" select="count(FIELD[@name='Weight_Thresh']/preceding-sibling::FIELD)+1"/>
    <xsl:variable name="interp" select="count(FIELD[@name='Interpolate']/preceding-sibling::FIELD)+1"/>
@@ -290,6 +291,7 @@
       <TH>BACK_FILTERSIZE</TH>
       <TH>Background Default</TH>
       <TH>Weight Type</TH>
+      <TH>Rescale Weights</TH>
       <TH>Weight Scaling</TH>
       <TH>Weight Threshold</TH>
       <TH>Interpolate</TH>
@@ -387,6 +389,16 @@
         </td>
         <td align="center">
          <el><xsl:value-of select="TD[$weighttype]"/></el>
+        </td>
+        <td align="center">
+         <xsl:choose>
+          <xsl:when test="TD[$rescaleweights] = 'T'">
+           <elen>Y</elen>
+          </xsl:when>
+          <xsl:otherwise>
+           <elen>N</elen>
+          </xsl:otherwise>
+         </xsl:choose>
         </td>
         <td align="right">
          <el><xsl:value-of select="TD[$weightscale]"/></el>
