@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		11/04/2011
+*	Last modified:		07/06/2011
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -249,7 +249,7 @@ INPUT	Pointer to the output file (or stream),
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	15/10/2010
+VERSION	07/06/2011
  ***/
 int	write_xml_meta(FILE *file, char *error)
   {
@@ -405,7 +405,9 @@ int	write_xml_meta(FILE *file, char *error)
 	" ucd=\"obs.param\" unit=\"pix\"/>\n");
   fprintf(file, "   <FIELD name=\"Back_Default\" datatype=\"float\""
 	" ucd=\"obs.param\" unit=\"adu\"/>\n");
-  fprintf(file, "   <FIELD name=\"Weight_Type\" datatype=\"char\""
+  fprintf(file, "   <FIELD name=\"Weight_Type\" datatype=\"boolean\""
+	" arraysize=\"*\" ucd=\"stat.weight;meta.code\"/>\n");
+  fprintf(file, "   <FIELD name=\"Rescale_Weights\" datatype=\"char\""
 	" arraysize=\"*\" ucd=\"stat.weight;meta.code\"/>\n");
   fprintf(file, "   <FIELD name=\"Weight_Thresh\" datatype=\"float\""
 	" ucd=\"instr.sensitivity;obs.param\" unit=\"adu\"/>\n");
@@ -446,7 +448,7 @@ int	write_xml_meta(FILE *file, char *error)
 	"     <TD>%d</TD><TD>%s</TD><TD>%s</TD><TD>%.2f</TD>\n"
 	"     <TD>%g</TD><TD>%g</TD><TD>%c</TD><TD>%s</TD>"
 	"<TD>%d</TD><TD>%d</TD><TD>%g</TD>\n"
-	"     <TD>%s</TD><TD>%g</TD><TD>%g</TD><TD>%c</TD>\n"
+	"     <TD>%s</TD><TD>%c</TD><TD>%g</TD><TD>%g</TD><TD>%c</TD>\n"
 	"     <TD>%g</TD><TD>%g</TD><TD>%g</TD><TD>%g</TD>\n"
 	"     <TD>%g</TD><TD>%.10g",
 	n,
@@ -469,6 +471,7 @@ int	write_xml_meta(FILE *file, char *error)
         prefs.back_default[f],
     	key[findkeys("WEIGHT_TYPE", keylist,
 		FIND_STRICT)].keylist[prefs.weight_type[f]],
+        prefs.wscale_flag[f]? 'T' : 'F',
 	x->weight_thresh,
 	x->sigfac,
         prefs.interp_flag[f]? 'T' : 'F',
