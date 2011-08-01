@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		11/04/2011
+*	Last modified:		25/06/2011
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -45,7 +45,7 @@
 /*--------------------------------- typedefs --------------------------------*/
 typedef enum {COADD_MEDIAN, COADD_AVERAGE, COADD_MIN, COADD_MAX,
 		COADD_WEIGHTED, COADD_CHI_OLD, COADD_CHI_MODE, COADD_CHI_MEAN,
-		COADD_SUM}
+		COADD_SUM, COADD_WEIGHTED_WEIGHT, COADD_MEDIAN_WEIGHT}
 			coaddenum;	/* Coaddition type */
 
 /*-------------------------- structure definitions --------------------------*/

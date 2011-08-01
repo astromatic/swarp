@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		11/04/2011
+*	Last modified:		25/06/2011
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -75,7 +75,7 @@ pkeystruct key[] =
   {"COMBINE_BUFSIZE", P_INT, &prefs.coaddbuf_size, 1, 2100000000},
   {"COMBINE_TYPE", P_KEY, &prefs.coadd_type, 0,0, 0.0,0.0,
    {"MEDIAN", "AVERAGE", "MIN", "MAX", "WEIGHTED", "CHI_OLD", "CHI-MODE",
-	"CHI-MEAN", "SUM", ""}},
+	"CHI-MEAN", "SUM", "WEIGHTED_WEIGHT", "MEDIAN_WEIGHT", ""}},
   {"COPY_KEYWORDS", P_STRINGLIST, prefs.copy_keywords, 0,0, 0.0, 0.0,
    {""}, 0, 1024, &prefs.ncopy_keywords},
   {"DELETE_TMPFILES", P_BOOL, &prefs.removetmp_flag},
