@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		17/12/2010
+*	Last modified:		01/08/2011
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -310,13 +310,25 @@ void	makeit(void)
 /* Apply flux scaling to input images */
   for (k=0; k<ntinfield; k++)
     {
-    infield[k]->cat->tab->bscale *= infield[k]->fscale;
+    if (prefs.coadd_type==COADD_WEIGHTED_WEIGHT
+	|| prefs.coadd_type==COADD_MEDIAN_WEIGHT)
+      {
+      infield[k]->cat->tab->bscale /= (infield[k]->fscale*infield[k]->fscale);
+      infield[k]->fbackmean /= (infield[k]->fscale*infield[k]->fscale);
+      infield[k]->fbacksig /= (infield[k]->fscale*infield[k]->fscale);
+      infield[k]->fgain *= (infield[k]->fscale*infield[k]->fscale);
+      infield[k]->fsaturation /= (infield[k]->fscale*infield[k]->fscale);
+      }
+    else
+      {
+      infield[k]->cat->tab->bscale *= infield[k]->fscale;
+      infield[k]->fbackmean *= infield[k]->fscale;
+      infield[k]->fbacksig *= infield[k]->fscale;
+      infield[k]->fgain /= infield[k]->fscale;
+      infield[k]->fsaturation *= infield[k]->fscale;
+      }
     if (inwfield[k])
       inwfield[k]->cat->tab->bscale /= (infield[k]->fscale*infield[k]->fscale);
-    infield[k]->fbackmean *= infield[k]->fscale;
-    infield[k]->fbacksig *= infield[k]->fscale;
-    infield[k]->fgain /= infield[k]->fscale;
-    infield[k]->fsaturation *= infield[k]->fscale;
     }
 
 /* Go! */

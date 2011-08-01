@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		11/04/2011
+*	Last modified:		25/06/2011
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -69,9 +69,9 @@ static double		gammln();
 #endif
 
  coaddenum	coadd_type;
- double		*coadd_bias;
+ double	*coadd_bias;
  PIXTYPE	*multibuf,*multiwbuf, *outbuf,*outwbuf,
-		coadd_wthresh;
+		coadd_wthresh, *coadd_pixstack, *coadd_pixfstack;
  unsigned int	*multinbuf;
  int		coadd_nomax, coadd_width;
  char		padbuf[FBSIZE];
@@ -122,9 +122,9 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 17/12/2010
+VERSION 16/06/2011
  ***/
-int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
+int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
 			coaddenum coaddtype, PIXTYPE wthresh)
 
@@ -167,7 +167,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
       {
       wcs = infield[n]->wcs;
 /*---- Update input frame limits in output frame */
-      wcs->outmin[d] = (int)floor(outfield->wcs->crpix[d] - wcs->crpix[d] + 1.0);
+      wcs->outmin[d] = (int)floor(outfield->wcs->crpix[d]-wcs->crpix[d] + 1.0);
       if (wcs->outmin[d] < min)
         min = (int)wcs->outmin[d];
       wcs->outmax[d] = wcs->outmin[d] + wcs->naxisn[d] - 1;
@@ -207,7 +207,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
   coadd_width = outwidth = outfield->wcs->naxisn[0] - offend - offbeg;
 
 /* Build a graph of overlaps */
-  QCALLOC(array, unsigned int, ninput*(1+(ninput-1)/(8*sizeof(unsigned int))));
+  QCALLOC(array, unsigned int,
+	ninput*(1+(ninput-1)/(8*sizeof(unsigned int))));
   for (n1=0; n1<ninput; n1++)
     {
     SET_ARRAY_BIT(n1,n1);
@@ -341,6 +342,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 /* internal format (PIXTYPE) */
   QMALLOC(outbuf, PIXTYPE, nbuflinesmax*outwidth);
   QMALLOC(outwbuf, PIXTYPE, nbuflinesmax*outwidth);
+  QMALLOC(coadd_pixstack, PIXTYPE, nbuflinesmax*coadd_nomax);
+  QMALLOC(coadd_pixfstack, PIXTYPE, nbuflinesmax*coadd_nomax);
   QCALLOC(cflag, unsigned int, ninput);
 
 /* Open output file and save header */
@@ -575,6 +578,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,	int ninput,
 #endif
 
 /* Free Buffers */
+  free(coadd_pixstack);
+  free(coadd_pixfstack);
   free(coadd_bias);
   free(cflag);
   free(ybegbufline);
@@ -848,16 +853,17 @@ INPUT	Current line number.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   Requires many global variables (for multithreading).
 AUTHOR  E. Bertin (IAP)
-VERSION	05/05/2011
+VERSION	25/06/2011
  ***/
 int coadd_line(int l)
 
   {
    PIXTYPE		*inpix,*inwpix,*inpixt,*inwpixt,
-			*pixstack, *pixt, *outpix,*outwpix;
-   double		mu, val,val0,val2, wval,wval0,wval2,wval3;
-   unsigned int		*inn;
-   int			i,x, ninput2, blankflag;
+			*pixstack, *pixfstack, *pixt,*pixft, *outpix,*outwpix,
+			fval2;
+   double		mu, val,val0,val2,val3, wval,wval0,wval2,wval3;
+   unsigned int	*inn;
+   int			i,x, ninput, ninput2, blankflag;
 
   blankflag = prefs.blank_flag;
   inpix = multibuf+l*coadd_width*coadd_nomax;
@@ -865,25 +871,31 @@ int coadd_line(int l)
   inn = multinbuf+l*coadd_width;
   outpix = outbuf+l*coadd_width;
   outwpix = outwbuf+l*coadd_width;
+  pixstack = coadd_pixstack+l*coadd_nomax;
+  pixfstack = coadd_pixfstack+l*coadd_nomax;
   switch(coadd_type)
     {
     case COADD_WEIGHTED:
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
-        wval = val = val2 = 0.0;
+        wval = val = 0.0;
         inpixt = inpix;
         inwpixt = inwpix;
-        for (i=*(inn++); i--;)
+        pixft = pixfstack;
+        for (i=ninput; i--;)
           {
-          val2 = *(inpixt++);
+          fval2 = *(inpixt++);
           wval2 = *(inwpixt++);
           if (wval2<coadd_wthresh)
             {
             ninput2++;
             wval += (wval2=1.0/wval2);
-            val += val2*wval2;
+            val += fval2*wval2;
             }
+          else
+            *(pixft++) = fval2;            
           }
         if (ninput2)
           {
@@ -892,31 +904,35 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : val2;
+          *(outpix++) = (blankflag||!ninput)? 0.0
+					: fast_median(pixfstack, ninput);
           *(outwpix++) = BIG;
           }
         }
       break;
     case COADD_MEDIAN:
-      QMALLOC(pixstack, PIXTYPE, coadd_nomax);
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
         wval = wval3 = val2 = 0.0;
         inpixt = inpix;
         inwpixt = inwpix;
         pixt = pixstack;
-        for (i=*(inn++); i--;)
+        pixft = pixfstack;
+        for (i=ninput; i--;)
           {
-          val2 = *(inpixt++);
+          fval2 = *(inpixt++);
           wval2 = *(inwpixt++);        
           if (wval2 < coadd_wthresh)
             {
-            *(pixt++) = val2;
+            *(pixt++) = fval2;
             wval += 1.0/sqrt(wval2);
             wval3 += wval2;
             ninput2++;
             }      
+          else
+            *(pixft++) = fval2;
           }
         if (ninput2)
           {
@@ -929,29 +945,33 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : val2;
+          *(outpix++) = (blankflag||!ninput)? 0.0
+					: fast_median(pixfstack, ninput);
           *(outwpix++) = BIG;
           }
         }
-      free(pixstack);
       break;
     case COADD_AVERAGE:
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
-        wval = val = val2 = 0.0;
+        wval = val = 0.0;
         inpixt = inpix;
         inwpixt = inwpix;
-        for (i=*(inn++); i--;)
+        pixft = pixfstack;
+        for (i=ninput; i--;)
           {
-          val2 = *(inpixt++);
+          fval2 = *(inpixt++);
           wval2 = *(inwpixt++);
           if (wval2<coadd_wthresh)
             {
             ninput2++;
-            val += val2;
+            val += fval2;
             wval += wval2;
             }
+          else
+            *(pixft++) = fval2;
           }
         if (ninput2)
           {
@@ -960,7 +980,8 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : val2;
+          *(outpix++) = (blankflag||!ninput)? 0.0
+					: fast_median(pixfstack, ninput);
           *(outwpix++) = BIG;
           }
         }
@@ -968,20 +989,23 @@ int coadd_line(int l)
     case COADD_MIN:
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
-        val = BIG;
-        wval = val2 = 0.0;
+        val = val0 = BIG;
         inpixt = inpix;
         inwpixt = inwpix;
-        for (i=*(inn++); i--;)
+        for (i=ninput; i--;)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh && val2<val)
+          if (wval2<coadd_wthresh)
             {
             ninput2++;
-            val = val2;
+            if (val2<val)
+              val = val2;
             }
+          else if (val2<val0)
+            val0 = val2;
           }
         if (ninput2)
           {
@@ -990,7 +1014,7 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : val2;
+          *(outpix++) = (blankflag||!ninput)? 0.0 : val0;
           *(outwpix++) = BIG;
           }
         }
@@ -998,20 +1022,23 @@ int coadd_line(int l)
     case COADD_MAX:
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
-        val = -BIG;
-        wval = val2 = 0.0;
+        val = val0 = -BIG;
         inpixt = inpix;
         inwpixt = inwpix;
-        for (i=*(inn++); i--;)
+        for (i=ninput; i--;)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh && val2>val)
+          if (wval2<coadd_wthresh)
             {
             ninput2++;
-            val = val2;
+            if (val2>val)
+              val = val2;
             }
+          else if (val2>val0)
+            val0 = val2;
           }
         if (ninput2)
           {
@@ -1020,27 +1047,33 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : val2;
+          *(outpix++) = (blankflag||!ninput)? 0.0 : val0;
           *(outwpix++) = BIG;
           }
         }
       break;
     case COADD_CHI_OLD:
+      wval0 = 1.0;
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
-        wval = val = val2 = 0.0;
+        wval = val = 0.0;
         inpixt = inpix;
         inwpixt = inwpix;
-        for (i=*(inn++); i--;)
+        pixft = pixfstack;
+        for (i=ninput; i--;)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
           if (wval2<coadd_wthresh)
             {
             ninput2++;
-            val += val2*val2/wval2;
+            wval0 = 1.0/wval2;
+            val += val2*val2*wval0;
             }
+          else
+            *(pixft++) = val2*val2*wval0;
           }
         if (ninput2)
           {
@@ -1049,20 +1082,23 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : sqrt(val2*val2);
+          *(outpix++) = (blankflag||!ninput)? 0.0
+					: sqrt(fast_median(pixfstack, ninput));
           *(outwpix++) = BIG;
           }
         }
       break;
     case COADD_CHI_MODE:
-      wval0 = 0.0;
+      wval0 = 1.0;
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
-        wval = val = val2 = 0.0;
+        wval = val = 0.0;
         inpixt = inpix;
         inwpixt = inwpix;
-        for (i=*(inn++); i--;)
+        pixft = pixfstack;
+        for (i=ninput; i--;)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
@@ -1073,6 +1109,8 @@ int coadd_line(int l)
             wval0 = 1.0/wval2;
             val += val0*val0*wval0;
             }
+          else
+            *(pixft++) = val2*sqrt(wval0);
           }
         if (ninput2)
           {
@@ -1084,20 +1122,23 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : val2*sqrt(wval0);
+          *(outpix++) = (blankflag||!ninput)? 0.0
+					: fast_median(pixfstack, ninput);
           *(outwpix++) = BIG;
           }
         }
       break;
     case COADD_CHI_MEAN:
-      wval0 = 0.0;
+      wval0 = 1.0;
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
-        wval = val = val2 = 0.0;
+        wval = val = 0.0;
         inpixt = inpix;
         inwpixt = inwpix;
-        for (i=*(inn++); i--;)
+        pixft = pixfstack;
+        for (i=ninput; i--;)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
@@ -1108,6 +1149,8 @@ int coadd_line(int l)
             wval0 = 1.0/wval2;
             val += val0*val0*wval0;
             }
+          else
+            *(pixft++) = val2*sqrt(wval0);
           }
         if (ninput2)
           {
@@ -1119,7 +1162,8 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : val2*sqrt(wval0);
+          *(outpix++) = (blankflag||!ninput)? 0.0
+					: fast_median(pixfstack, ninput);
           *(outwpix++) = BIG;
           }
         }
@@ -1127,11 +1171,12 @@ int coadd_line(int l)
     case COADD_SUM:
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
+        ninput = *(inn++);
         ninput2 = 0;
-        wval = val = val2 = 0.0;
+        wval = val = val0 = 0.0;
         inpixt = inpix;
         inwpixt = inwpix;
-        for (i=*(inn++); i--;)
+        for (i=ninput; i--;)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
@@ -1141,6 +1186,8 @@ int coadd_line(int l)
             val += val2;
             wval += wval2;
             }
+          else
+            val0 += val;
           }
         if (ninput2)
           {
@@ -1149,7 +1196,83 @@ int coadd_line(int l)
           }
         else
           {
-          *(outpix++) = blankflag? 0.0 : val2;
+          *(outpix++) = (blankflag||!ninput)? 0.0 : val0;
+          *(outwpix++) = BIG;
+          }
+        }
+      break;
+    case COADD_WEIGHTED_WEIGHT:
+      for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
+        {
+        ninput = *(inn++);
+        ninput2 = 0;
+        wval = val = 0.0;
+        inpixt = inpix;
+        inwpixt = inwpix;
+        for (i=ninput; i--;)
+          {
+          fval2 = *(inpixt++);
+          fval2 = fval2>(1.0/BIG)? 1.0/fval2 : BIG;
+          wval2 = *(inwpixt++);
+          if (wval2<coadd_wthresh)
+            {
+            ninput2++;
+            wval += (wval2=1.0/wval2);
+            val += fval2*wval2*wval2;
+            }
+          }
+        if (ninput2)
+          {
+          wval = 1.0/wval;
+          *(outwpix++) = wval;
+          val *= wval*wval;
+          *(outpix++) = val<(BIG/1000.0)? 1.0/val : 0.0;
+          }
+        else
+          {
+          *(outpix++) = 0.0;
+          *(outwpix++) = BIG;
+          }
+        }
+      break;
+    case COADD_MEDIAN_WEIGHT:
+      for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
+        {
+        ninput = *(inn++);
+        ninput2 = 0;
+        wval = wval3 = val = val3 = 0.0;
+        inpixt = inpix;
+        inwpixt = inwpix;
+        for (i=ninput; i--;)
+          {
+          fval2 = *(inpixt++);
+          fval2 = fval2>(1.0/BIG)? 1.0/fval2 : BIG;
+          wval2 = *(inwpixt++);        
+          if (wval2 < coadd_wthresh)
+            {
+            val += 1.0/sqrt(fval2);
+            val3 += fval2;
+            wval += 1.0/sqrt(wval2);
+            wval3 += wval2;
+            ninput2++;
+            }      
+          }
+        if (ninput2)
+          {
+          val = ninput2>2?
+		(PI*ninput2*ninput2/(2*val*val*(ninput2+((ninput2&1)?(PI/2-1)
+			:(PI-2)))))
+		  : val3/(ninput2*ninput2);
+          *(outpix++) = val<(BIG/1000.0)? 1.0/val : 0.0;
+/*-------- We assume Gaussian input noise */
+          *(outwpix++) = ninput2>2?
+		(PI*ninput2*ninput2/(2*wval*wval*(ninput2+((ninput2&1)?(PI/2-1)
+			:(PI-2)))))
+		  : wval3/(ninput2*ninput2);
+          }
+        else
+          {
+          *(outpix++) = 0.0;
           *(outwpix++) = BIG;
           }
         }
