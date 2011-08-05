@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2002-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+#	Copyright:		(C) 2002-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -20,14 +20,14 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		26/10/2010
+#	Last modified:		05/08/2011
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 AUTOMAKE_OPTIONS	= foreign no-dependencies
 SUBDIRS			= man src
-dist_pkgdata_DATA	= doc xsl/swarp.xsl
-EXTRA_DIST		= AUTHORS BUGS ChangeLog COPYRIGHT HISTORY INSTALL \
+dist_pkgdata_DATA	= xsl/swarp.xsl
+EXTRA_DIST		= doc AUTHORS BUGS ChangeLog COPYRIGHT HISTORY INSTALL \
 			  LICENSE README THANKS TODO \
 			  acx_pthread.m4 acx_prog_cc_optim.m4 \
 			  acx_urbi_resolve_dir.m4 test/test.fits
