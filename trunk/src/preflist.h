@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		25/06/2011
+*	Last modified:		06/01/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -72,7 +72,7 @@ pkeystruct key[] =
    {"MANUAL", "ALL", "MOST",""},
    1, INTERP_MAXDIM, &prefs.ncenter_type},
   {"COMBINE", P_BOOL, &prefs.combine_flag},
-  {"COMBINE_BUFSIZE", P_INT, &prefs.coaddbuf_size, 1, 2100000000},
+  {"COMBINE_BUFSIZE", P_INT, &prefs.coaddbuf_size, 1, 16384*1024},
   {"COMBINE_TYPE", P_KEY, &prefs.coadd_type, 0,0, 0.0,0.0,
    {"MEDIAN", "AVERAGE", "MIN", "MAX", "WEIGHTED", "CHI_OLD", "CHI-MODE",
 	"CHI-MEAN", "SUM", "WEIGHTED_WEIGHT", "MEDIAN_WEIGHT", ""}},

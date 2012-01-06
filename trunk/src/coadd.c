@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		25/06/2011
+*	Last modified:		06/01/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -122,7 +122,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 16/06/2011
+VERSION 06/01/2012
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -319,10 +319,12 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 
   coadd_nomax = omax;
   multiwidth = outwidth*omax;
-  nbuflinesmax = (prefs.coaddbuf_size*1024*1024)
-	/ (2*(multiwidth+outwidth)*sizeof(PIXTYPE));
+  nbuflinesmax = (int)(((size_t)prefs.coaddbuf_size*1024*1024)
+	/ ((2*multiwidth+3*outwidth+2*coadd_nomax)*sizeof(PIXTYPE)));
   if (nbuflinesmax < 1)
     nbuflinesmax = 1;
+  else if (nbuflinesmax>height)
+    nbuflinesmax = height;
 #ifdef USE_THREADS
 /* Number of active threads */
   nproc = prefs.nthreads;
@@ -330,6 +332,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 /* number of processes */
   nbuflinesmax += (nproc - (nbuflinesmax%nproc))%nproc;
 #endif
+
 /* Allocate memory for the "multi-buffers" storing "packed" pixels from all */
 /* images for the current line(s), prior to co-addition */
   QMALLOC(multibuf, PIXTYPE, nbuflinesmax*multiwidth);
