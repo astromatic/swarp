@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		25/06/2011
+*	Last modified:		03/02/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -45,7 +45,8 @@
 /*--------------------------------- typedefs --------------------------------*/
 typedef enum {COADD_MEDIAN, COADD_AVERAGE, COADD_MIN, COADD_MAX,
 		COADD_WEIGHTED, COADD_CHI_OLD, COADD_CHI_MODE, COADD_CHI_MEAN,
-		COADD_SUM, COADD_WEIGHTED_WEIGHT, COADD_MEDIAN_WEIGHT}
+		COADD_SUM, COADD_WEIGHTED_WEIGHT, COADD_MEDIAN_WEIGHT,
+		COADD_AND, COADD_NAND, COADD_OR, COADD_NOR}
 			coaddenum;	/* Coaddition type */
 
 /*-------------------------- structure definitions --------------------------*/
@@ -67,6 +68,10 @@ extern int	coadd_fields(fieldstruct **infield, fieldstruct **inwfield,
 		max_clique(unsigned int *array, int nnode, int **max);
 extern void	coadd_movedata(PIXTYPE *linebuf, PIXTYPE *multibuf,
 			unsigned int *multinbuf, int npix, int step),
+		coadd_moveidata(FLAGTYPE *lineibuf, FLAGTYPE *multiibuf,
+			unsigned int *multinbuf, int npix, int step),
 		coadd_movewdata(PIXTYPE *linebuf, PIXTYPE *multiwbuf,
+			unsigned int *multinbuf, int npix, int step),
+		coadd_movewidata(FLAGTYPE *lineibuf, FLAGTYPE *multiwibuf,
 			unsigned int *multinbuf, int npix, int step);
 #endif

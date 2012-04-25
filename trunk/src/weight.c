@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		17/12/2010
+*	Last modified:		03/02/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -214,12 +214,15 @@ INPUT	Input weight field ptr,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 12/02/2000
+VERSION 03/02/2012
  ***/
 void	read_weight(fieldstruct *wfield)
   {
   set_weightconv(wfield);
-  wfield->pix = alloc_body(wfield->tab, weight_to_var);
+  if (wfield->bitpix>0)
+    wfield->ipix = alloc_ibody(wfield->tab, NULL);
+  else
+    wfield->pix = alloc_body(wfield->tab, weight_to_var);
 
   return;
   }

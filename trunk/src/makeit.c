@@ -262,9 +262,12 @@ void	makeit(void)
 			inwfield[k]->filename);
           }
 /*------ Pre-compute the background map */
-        FPRINTF(OUTPUT, "\n");
-        make_back(infield[k], inwfield[k], prefs.wscale_flag[i]);
-        FPRINTF(OUTPUT, "\n");
+        if (prefs.outfield_bitpix<0)
+          {
+          FPRINTF(OUTPUT, "\n");
+          make_back(infield[k], inwfield[k], prefs.wscale_flag[i]);
+          FPRINTF(OUTPUT, "\n");
+          }
         }
       if (inwfield[k])
         sprintf(gstr, "   Weight scale: %.7g", inwfield[k]->sigfac);
@@ -285,7 +288,7 @@ void	makeit(void)
 /*------ Read (and convert) the data */
         sprintf(gstr, "Reading %s", infield[k]->filename);
         NFPRINTF(OUTPUT, gstr)
-        read_data(infield[k], inwfield[k]);
+        read_data(infield[k], inwfield[k], prefs.outfield_bitpix);
 /*------ Resample the data (no need to close catalogs) */
         sprintf(gstr, "Resampling %s ...", infield[k]->filename);
         NFPRINTF(OUTPUT, gstr)

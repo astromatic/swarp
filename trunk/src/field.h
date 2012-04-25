@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		30/01/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -65,6 +65,7 @@ typedef struct field
   int		version;		/* filename version */
   int		width, height;		/* x,y size of the field */
   size_t	npix;			/* total number of pixels */
+  int		bitpix;			/* Bits per pixel */
   double	gain;			/* conversion factor e-/ADU */
   double	fgain;			/* flux-scaled gain */
   double	saturation;		/* saturation limit in ADU */
@@ -90,6 +91,7 @@ typedef struct field
   double       	fbacksig;		/* flux-scaled bkgnd rms */
   double	sigfac;			/* scaling RMS factor (for WEIGHTs) */
   PIXTYPE	*pix;			/* pixel data */
+  FLAGTYPE	*ipix;			/* flag data */
   PIXTYPE	*backline;		/* current interpolated bkgnd line */
   backenum     	back_type;		/* background type */
 /* ---- astrometric parameters */

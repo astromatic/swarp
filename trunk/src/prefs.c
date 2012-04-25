@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		05/02/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -523,6 +523,38 @@ void	useprefs(void)
 	"this build of " BANNER " is single-threaded");
     }
 #endif
+
+/* Trigger integer mode if RESAMPLE is Y and RESAMPLING_TYPE is set to FLAGS */
+  prefs.outfield_bitpix = BP_FLOAT;
+  for (i=0; i<prefs.nresamp_type; i++)
+    if ((prefs.resample_flag) && prefs.resamp_type[i] == INTERP_FLAGS)
+      {
+      prefs.outfield_bitpix = BP_LONG;
+      for (j=0; j<prefs.nresamp_type; j++)
+        prefs.resamp_type[j] = INTERP_FLAGS;
+      break;
+      }
+
+/* Trigger integer mode if COMBINE is Y and boolean arithmetics are selected */
+  if (prefs.combine_flag)
+    {
+    if (prefs.coadd_type == COADD_AND
+	|| prefs.coadd_type == COADD_NAND
+	|| prefs.coadd_type == COADD_OR
+	|| prefs.coadd_type == COADD_NOR)
+      {
+      prefs.outfield_bitpix = BP_LONG;
+      for (j=0; j<prefs.nresamp_type; j++)
+        prefs.resamp_type[j] = INTERP_FLAGS;
+      }
+    else if (prefs.outfield_bitpix == BP_LONG)
+      {
+      for (j=0; j<prefs.nresamp_type; j++)
+        prefs.coadd_type = COADD_OR;
+      warning("COMBINE_TYPE incompatible with RESAMPLING_TYPE FLAGS: ",
+	"Forcing to OR");
+      }
+    }   
 
 /* Force weight flag */
   weight_flag = 0;

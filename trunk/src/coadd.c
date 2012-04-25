@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		06/01/2012
+*	Last modified:		25/04/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -70,10 +70,11 @@ static double		gammln();
 
  coaddenum	coadd_type;
  double	*coadd_bias;
+ FLAGTYPE	*multiibuf,*multiwibuf, *outibuf,*outwibuf; 
  PIXTYPE	*multibuf,*multiwbuf, *outbuf,*outwbuf,
 		coadd_wthresh, *coadd_pixstack, *coadd_pixfstack;
  unsigned int	*multinbuf;
- int		coadd_nomax, coadd_width;
+ int		coadd_nomax, coadd_width, iflag;
  char		padbuf[FBSIZE];
 
 #ifdef USE_THREADS
@@ -82,6 +83,7 @@ static double		gammln();
  pthread_mutex_t	coaddmutex;
  threads_gate_t		*pthread_startgate, *pthread_stopgate,
 			*pthread_startgate2, *pthread_stopgate2;
+ FLAGTYPE		*pthread_lineibuf, *pthread_multiibuf;
  PIXTYPE		*pthread_linebuf, *pthread_multibuf;
  unsigned int		*pthread_multinbuf;
  int			pthread_bufline, pthread_nbuflines, pthread_npix,
@@ -89,11 +91,17 @@ static double		gammln();
 #endif
 
 /*------------------------------ function -----------------------------------*/
- static int	coadd_line(int l);
+ static int	coadd_iline(int l),
+		coadd_line(int l);
 
  static double	*chi_bias(int n);
  static PIXTYPE	fast_median(PIXTYPE *arr, int n);
- static int	coadd_load(fieldstruct *field, fieldstruct *wfield,
+ static int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
+			FLAGTYPE *multibuf, FLAGTYPE *multiwibuf,
+			unsigned int *multinbuf,
+			int *rawpos, int *rawmin, int *rawmax,
+			int nlines, int outwidth, int multinmax),
+		coadd_load(fieldstruct *field, fieldstruct *wfield,
 			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
 			unsigned int *multinbuf,
 			int *rawpos, int *rawmin, int *rawmax,
@@ -122,7 +130,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 06/01/2012
+VERSION 25/04/2012
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -135,9 +143,10 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 				p;
 #endif
    wcsstruct		*wcs;
-   PIXTYPE		*emptybuf,*outline,
-			*pix,*wpix;
+   FLAGTYPE		*emptyibuf,*outiline, *ipix,*wipix;
+   PIXTYPE		*emptybuf,*outline, *pix,*wpix;
    double		exptime, w,w1,w2, mw, satlev;
+   size_t		multiwidth;
    unsigned int		*cflag,*array,
 			d, n, n1,n2, flag;
    int			bufmin[NAXIS], bufmax[NAXIS], bufpos[NAXIS],
@@ -145,7 +154,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			min1[NAXIS],max1[NAXIS],
 			*ybegbufline,*yendbufline, *maxclique,
 			y, y2,dy, ybuf,ybufmax,
-			outwidth,multiwidth, width, height,min,max,
+			outwidth, width, height,min,max,
 			naxis, nlines, nlinesmax,
 			nbuflines,nbuflines2,nbuflinesmax, size, omax,omax2,
 			offbeg, offend, fieldno;
@@ -153,6 +162,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
   coadd_type = coaddtype;
   coadd_wthresh = wthresh;
   naxis = outfield->tab->naxis;
+  iflag = outfield->bitpix>0;
+
 /* The output width is the useful length of the NAXIS1 axis */
   width = outfield->width;
 /* The output ``height'' is the product of all other axis lengths */
@@ -318,7 +329,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 	omax2, omax2>1? "s" : "");
 
   coadd_nomax = omax;
-  multiwidth = outwidth*omax;
+  multiwidth = (size_t)outwidth*omax;
   nbuflinesmax = (int)(((size_t)prefs.coaddbuf_size*1024*1024)
 	/ ((2*multiwidth+3*outwidth+2*coadd_nomax)*sizeof(PIXTYPE)));
   if (nbuflinesmax < 1)
@@ -335,18 +346,42 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 
 /* Allocate memory for the "multi-buffers" storing "packed" pixels from all */
 /* images for the current line(s), prior to co-addition */
-  QMALLOC(multibuf, PIXTYPE, nbuflinesmax*multiwidth);
-  QMALLOC(multiwbuf, PIXTYPE, nbuflinesmax*multiwidth);
+  if (iflag)
+    {
+    QMALLOC(multiibuf, FLAGTYPE, nbuflinesmax*multiwidth);
+    QMALLOC(multiwibuf, FLAGTYPE, nbuflinesmax*multiwidth);
+    }
+  else
+    {
+    QMALLOC(multibuf, PIXTYPE, nbuflinesmax*multiwidth);
+    QMALLOC(multiwbuf, PIXTYPE, nbuflinesmax*multiwidth);
+    }
   QMALLOC(multinbuf, unsigned int, nbuflinesmax*outwidth);
 /* Allocate memory for the output buffers that contain "empty data" */
-  QCALLOC(emptybuf, PIXTYPE, width);
-  QCALLOC(outline, PIXTYPE, width);
+  if (iflag)
+    {
+    QCALLOC(emptyibuf, FLAGTYPE, width);
+    QCALLOC(outiline, FLAGTYPE, width);
+    }
+  else
+    {
+    QCALLOC(emptybuf, PIXTYPE, width);
+    QCALLOC(outline, PIXTYPE, width);
+    }
 /* Allocate memory for the output buffers that contain the final data in */
-/* internal format (PIXTYPE) */
-  QMALLOC(outbuf, PIXTYPE, nbuflinesmax*outwidth);
-  QMALLOC(outwbuf, PIXTYPE, nbuflinesmax*outwidth);
-  QMALLOC(coadd_pixstack, PIXTYPE, nbuflinesmax*coadd_nomax);
-  QMALLOC(coadd_pixfstack, PIXTYPE, nbuflinesmax*coadd_nomax);
+/* internal format (PIXTYPE or FLAGTYPE) */
+  if (iflag)
+    {
+    QMALLOC(outibuf, FLAGTYPE, nbuflinesmax*(size_t)outwidth);
+    QMALLOC(outwibuf, FLAGTYPE, nbuflinesmax*(size_t)outwidth);
+    }
+  else
+    {
+    QMALLOC(outbuf, PIXTYPE, nbuflinesmax*(size_t)outwidth);
+    QMALLOC(outwbuf, PIXTYPE, nbuflinesmax*(size_t)outwidth);
+    QMALLOC(coadd_pixstack, PIXTYPE, nbuflinesmax*coadd_nomax);
+    QMALLOC(coadd_pixfstack, PIXTYPE, nbuflinesmax*coadd_nomax);
+    }
   QCALLOC(cflag, unsigned int, ninput);
 
 /* Open output file and save header */
@@ -419,7 +454,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
     ybufmax = ybuf+nbuflines;
     if (multiwidth)
 /*---- Initialize output data line */
-      memset(multinbuf, 0, outwidth*nbuflines*sizeof(unsigned int));
+      memset(multinbuf, 0, (size_t)outwidth*nbuflines*sizeof(unsigned int));
 /*-- Examine the batch of input images for the current output image section */
     NPRINTF(OUTPUT, "\33[1M> Reading   line:%7d / %-7d\n\33[1A", y+1,height);
     for (n=0; n<ninput; n++)
@@ -459,11 +494,16 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
             nbuflines2 = nbuflines;
           nbuflines2 -= dy;
 /*-------- Refill the buffers with new data */
-          if (coadd_load(infield[n], inwfield[n],
-			multibuf+dy*multiwidth, multiwbuf+dy*multiwidth,
-			multinbuf+dy*outwidth,
+          if ((iflag && coadd_iload(infield[n], inwfield[n],
+			multiibuf+dy*multiwidth, multiwibuf+dy*multiwidth,
+			multinbuf+dy*(size_t)outwidth,
 			bufpos, bufmin, bufmax, nbuflines2, outwidth, omax)
 		!= RETURN_OK)
+		|| ((!iflag)&&coadd_load(infield[n], inwfield[n],
+			multibuf+dy*multiwidth, multiwbuf+dy*multiwidth,
+			multinbuf+dy*(size_t)outwidth,
+			bufpos, bufmin, bufmax, nbuflines2, outwidth, omax)
+		!= RETURN_OK))
 /*-------- End of the image, we can close the file */
             {
             close_cat(infield[n]->cat);
@@ -486,12 +526,19 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 /* ( Slave threads process the current buffer data here ) */
     threads_gate_sync(pthread_stopgate);
 #else
-    for (y2=0; y2<nbuflines; y2++)
-      coadd_line(y2);
+    if (iflag)
+      for (y2=0; y2<nbuflines; y2++)
+        coadd_iline(y2);
+    else
+      for (y2=0; y2<nbuflines; y2++)
+        coadd_line(y2);
 #endif
     NPRINTF(OUTPUT, "\33[1M> Writing   line:%7d / %-7d\n\33[1A", y+1,height);
 /*-- Write the image buffer lines */
-    pix = outbuf;
+    if (iflag)
+      ipix = outibuf;
+    else
+      pix = outbuf;
     for (d=naxis; --d;)
       rawpos2[d] = rawpos[d];
     for (y2=nlines; y2--;)
@@ -500,13 +547,27 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
       for (d=naxis; --d;)
         if (rawpos2[d]<bufmin[d] || rawpos2[d]>bufmax[d])
           break;
-      if (d>0)
-        write_body(outfield->tab, emptybuf, width);
+      if (iflag)
+        {
+        if (d>0)
+          write_ibody(outfield->tab, emptyibuf, width);
+        else
+          {
+          memcpy(outiline+offbeg, ipix, outwidth*sizeof(FLAGTYPE));
+          write_ibody(outfield->tab, outiline, width);
+          ipix += outwidth;
+          }
+        }
       else
         {
-        memcpy(outline+offbeg, pix, outwidth*sizeof(PIXTYPE));
-        write_body(outfield->tab, outline, width);
-        pix += outwidth;
+        if (d>0)
+          write_body(outfield->tab, emptybuf, width);
+        else
+          {
+          memcpy(outline+offbeg, pix, outwidth*sizeof(PIXTYPE));
+          write_body(outfield->tab, outline, width);
+          pix += outwidth;
+          }
 	}
 /*---- Update coordinate vector */
       for (d=1; d<naxis; d++)
@@ -516,7 +577,10 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
           rawpos2[d] = 1;
       }
 
-    wpix = outwbuf;
+    if (iflag)
+      wipix = outwibuf;
+    else
+      wpix = outwbuf;
 /*-- The weight buffer lines */
     for (y2=nlines; y2--;)
       {
@@ -524,15 +588,29 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
       for (d=naxis; --d;)
         if (rawpos[d]<bufmin[d] || rawpos[d]>bufmax[d])
           break;
-      if (d>0)
-        write_body(outwfield->tab, emptybuf, width);
+      if (iflag)
+        {
+        if (d>0)
+          write_ibody(outwfield->tab, emptyibuf, width);
+        else
+          {
+          memcpy(outiline+offbeg, wipix, outwidth*sizeof(PIXTYPE));
+          write_ibody(outwfield->tab, outiline, width);
+          wipix += outwidth;
+          }
+        }
       else
         {
-        var_to_weight(wpix, outwidth);
-        memcpy(outline+offbeg, wpix, outwidth*sizeof(PIXTYPE));
-        write_body(outwfield->tab, outline, width);
-        wpix += outwidth;
-	}
+        if (d>0)
+          write_body(outwfield->tab, emptybuf, width);
+        else
+          {
+          var_to_weight(wpix, outwidth);
+          memcpy(outline+offbeg, wpix, outwidth*sizeof(PIXTYPE));
+          write_body(outwfield->tab, outline, width);
+          wpix += outwidth;
+          }
+        }
 /*---- Update coordinate vector */
       for (d=1; d<naxis; d++)
         if ((++rawpos[d])<=rawmax[d])
@@ -581,21 +659,39 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 #endif
 
 /* Free Buffers */
-  free(coadd_pixstack);
-  free(coadd_pixfstack);
+  if (iflag)
+    {
+    free(emptyibuf);
+    free(outiline);
+    }
+  else
+    {
+    free(emptybuf);
+    free(outline);
+    free(coadd_pixstack);
+    free(coadd_pixfstack);
+    }
   free(coadd_bias);
   free(cflag);
   free(ybegbufline);
   free(yendbufline);
-  free(emptybuf);
-  free(outline);
   if (outwidth)
     {
-    free(multibuf);
-    free(multiwbuf);
+    if (iflag)
+      {
+      free(multiibuf);
+      free(multiwibuf);
+      free(outibuf);
+      free(outwibuf);
+      }
+    else
+      {
+      free(multibuf);
+      free(multiwbuf);
+      free(outbuf);
+      free(outwbuf);
+      }
     free(multinbuf);
-    free(outbuf);
-    free(outwbuf);
     }
 
   return RETURN_OK;
@@ -814,7 +910,7 @@ INPUT	Pointer to the thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	30/07/2006
+VERSION	01/02/2012
  ***/
 void	*pthread_coadd_lines(void *arg)
   {
@@ -830,7 +926,10 @@ void	*pthread_coadd_lines(void *arg)
       {
       bufline = pthread_bufline++;
       QPTHREAD_MUTEX_UNLOCK(&coaddmutex);
-      coadd_line(bufline);
+      if (iflag)
+        coadd_iline(bufline);
+      else
+        coadd_line(bufline);
       }
     else
       {
@@ -848,6 +947,88 @@ void	*pthread_coadd_lines(void *arg)
   }
 
 #endif
+
+
+/******* coadd_iline **********************************************************
+PROTO	int coadd_iline(int l)
+PURPOSE	Coadd a line of integer pixels.
+INPUT	Current line number.
+OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
+NOTES   Requires many global variables (for multithreading).
+AUTHOR  E. Bertin (IAP)
+VERSION	03/02/2012
+ ***/
+int coadd_iline(int l)
+
+  {
+   FLAGTYPE		*inipix,*inipixt,*outipix, *inwipix,*inwipixt,*outwipix,
+			ival;
+   unsigned int		*inn;
+   int			i,x, ninput,ninput2;
+
+  inipix = multiibuf+l*coadd_width*coadd_nomax;
+  inwipix = multiwibuf+l*coadd_width*coadd_nomax;
+  inn = multinbuf+l*coadd_width;
+  outipix = outibuf+l*coadd_width;
+  outwipix = outwibuf+l*coadd_width;
+  switch(coadd_type)
+    {
+    case COADD_AND:
+    case COADD_NAND:
+      for (x=coadd_width; x--; inipix+=coadd_nomax, inwipix+=coadd_nomax)
+        {
+        ninput = *(inn++);
+        ninput2 = 0;
+        ival = 0xFFFFFFFF;
+        inipixt = inipix;
+        inwipixt = inwipix;
+        for (i=ninput; i--;)
+          {
+          ival &= *(inipixt++);
+          ninput2 += *(inwipixt++);
+          }
+        ival = ninput2? ival : 0;
+        *(outipix++) = (coadd_type==COADD_NAND)? ~ival : ival;
+        *(outwipix++) = ninput2;
+        }
+      break;
+    case COADD_OR:
+    case COADD_NOR:
+      for (x=coadd_width; x--; inipix+=coadd_nomax, inwipix+=coadd_nomax)
+        {
+        ninput = *(inn++);
+        ninput2 = 0;
+        ival = 0x0;
+        inipixt = inipix;
+        inwipixt = inwipix;
+        for (i=ninput; i--;)
+          {
+          ival |= *(inipixt++);
+          ninput2 += *(inwipixt++);
+          }
+        *(outipix++) = (coadd_type==COADD_NOR)? ~ival : ival;
+        *(outwipix++) = ninput2;
+        }
+      break;
+    case COADD_WEIGHTED:
+    case COADD_MEDIAN:
+    case COADD_AVERAGE:
+    case COADD_MIN:
+    case COADD_MAX:
+    case COADD_CHI_OLD:
+    case COADD_CHI_MODE:
+    case COADD_CHI_MEAN:
+    case COADD_SUM:
+    case COADD_WEIGHTED_WEIGHT:
+    case COADD_MEDIAN_WEIGHT:
+    default:
+      error(EXIT_FAILURE, "*Internal Error*: Unknown Combine option in ",
+			"coadd_iline()");
+    }
+
+  return RETURN_OK;
+  }
+
 
 /******* coadd_line **********************************************************
 PROTO	int coadd_line(int l)
@@ -1280,6 +1461,10 @@ int coadd_line(int l)
           }
         }
       break;
+    case COADD_AND:
+    case COADD_NAND:
+    case COADD_OR:
+    case COADD_NOR:
     default:
       error(EXIT_FAILURE, "*Internal Error*: Unknown Combine option in ",
 			"coadd_line()");
@@ -1394,6 +1579,215 @@ PIXTYPE fast_median(PIXTYPE *arr, int n)
 
 #undef MEDIAN_SWAP
 
+/******* coadd_iload *********************************************************
+PROTO	int coadd_iload(fieldstruct *field, fieldstruct *wfield,
+			FLAGTYPE *multibuf, FLAGTYPE *multiwibuf,
+			unsigned int *multinbuf,
+			int *rawpos, int *bufmin, int *bufmax,
+			int nlines, int outwidth, int multinmax)
+PURPOSE	Load integer images and weights to coadd in the current buffer.
+INPUT	Input field ptr array,
+	Input weight field ptr array,
+	Flag image buffer,
+	Weight image buffer,
+	Number-of-pixels buffer,
+	Array of current coordinates in output frame,
+	Array of minimum coordinates in output frame,
+	Array of maximum coordinates in output frame,
+	Total number of lines (can be higher than the number of buffers lines),
+	Pixel buffer line width,
+	Number of overlapping images.
+OUTPUT	RETURN_ERROR in case no more data are worth reading,
+	RETURN_OK otherwise.
+NOTES   -.
+AUTHOR  E. Bertin (IAP)
+VERSION 25/04/2012
+ ***/
+int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
+			FLAGTYPE *multiibuf, FLAGTYPE *multiwibuf,
+			unsigned int *multinbuf,
+			int *rawpos, int *bufmin, int *bufmax,
+			int nbuflines, int outwidth, int multinmax)
+  {
+    wcsstruct		*wcs;
+    OFF_T		offset, pixcount;
+    FLAGTYPE		*lineibuf, *linei;
+    unsigned int	*multinbuf2,
+			d, y, nflag, naxis;
+    int			rawpos2[NAXIS],
+			ival, inoffset, inbeg, muloffset, width;
+#ifdef USE_THREADS
+    unsigned int	threadstep;
+#endif
+
+  wcs = field->wcs;
+  naxis = wcs->naxis;
+  inoffset = 0;
+  inbeg = wcs->outmin[0] - bufmin[0];
+  if (inbeg<0)
+    {
+    inoffset = -inbeg;
+    inbeg = 0;
+    }
+  muloffset = inbeg*multinmax;
+  width = wcs->outmax[0] - bufmin[0] + 1;
+  if (width > (outwidth - inbeg))
+    width = outwidth - inbeg;
+  if (width<=0)
+    return RETURN_ERROR;	/* the image is not included in the output */
+  else if (width > field->width)
+    width = field->width;
+
+/* First, the data themselves */
+#ifdef USE_THREADS
+  pthread_wdataflag = 0;
+  pthread_npix = width;
+  pthread_step = multinmax;
+  threadstep = 0;
+  QMALLOC(lineibuf, FLAGTYPE, 2*field->width);
+#else
+  QMALLOC(lineibuf, FLAGTYPE, field->width);
+  linei = lineibuf;
+#endif
+  for (d=naxis; --d;)
+    rawpos2[d] = rawpos[d];
+  multinbuf2 = multinbuf;
+  nflag = 1;
+  for (y=nbuflines; y;)
+    {
+/*-- Check that the present line is contained in the field */
+    for (d=naxis; --d;)
+      if (rawpos2[d]<wcs->outmin[d] || rawpos2[d]>wcs->outmax[d])
+        break;
+    if (d>0)
+      nflag = 1;
+    else
+      {
+      if (nflag)
+/*------ well now we are back within the frame; we might need to fseek() */
+        {
+        nflag = 0;
+        offset = 0;
+        pixcount = 1;
+        for (d=1; d<naxis; d++)
+          {
+          pixcount *= wcs->naxisn[d-1];
+          ival = rawpos2[d] - wcs->outmin[d];
+          if (ival > 0)
+            offset += (OFF_T)ival*pixcount;
+          }
+        QFSEEK(field->cat->file,
+		field->tab->bodypos+offset*field->tab->bytepix,
+		SEEK_SET, field->filename);
+        }
+#ifdef USE_THREADS
+      linei = lineibuf + (threadstep&1)*field->width;
+      read_ibody(field->tab, linei, field->width);
+      if (threadstep++)
+        threads_gate_sync(pthread_stopgate2);
+      pthread_lineibuf = linei+inoffset;
+      pthread_multiibuf = multiibuf+muloffset;
+      pthread_multinbuf = multinbuf2+inbeg;
+      threads_gate_sync(pthread_startgate2);
+#else
+      read_ibody(field->tab, linei, field->width);
+      coadd_moveidata(linei+inoffset,
+		multiibuf+muloffset, multinbuf2+inbeg, width, multinmax);
+#endif
+      multiibuf += (size_t)outwidth*multinmax;
+      multinbuf2 += outwidth;
+      y--;
+      }
+
+/*---- Update coordinate vector */
+    for (d=1; d<naxis; d++)
+      if ((++rawpos2[d])<=bufmax[d])
+        break;
+      else
+        rawpos2[d] = bufmin[d];
+    }
+
+/* Now the weights */
+  for (d=naxis; --d;)
+    rawpos2[d] = rawpos[d];
+  multinbuf2 = multinbuf;
+  nflag = 1;
+  for (y=nbuflines; y;)
+    {
+/*-- Check that the present line is contained in the field */
+    for (d=naxis; --d;)
+      if (rawpos2[d]<wcs->outmin[d] || rawpos2[d]>wcs->outmax[d])
+        break;
+    if (d>0)
+      nflag = 1;
+    else
+      {
+#ifdef USE_THREADS
+      linei = lineibuf + (threadstep&1)*field->width;
+#endif
+      if (wfield)
+        {
+        if (nflag)
+/*-------- well now we are back withing the frame; we might need to fseek() */
+          {
+          nflag = 0;
+          offset = 0;
+          pixcount = 1;
+          for (d=1; d<naxis; d++)
+            {
+            pixcount *= wcs->naxisn[d-1];
+            ival = rawpos2[d] - wcs->outmin[d];
+            if (ival > 0)
+              offset += ival*pixcount;
+            }
+          QFSEEK(wfield->cat->file,
+		wfield->tab->bodypos+offset*wfield->tab->bytepix,
+		SEEK_SET, wfield->filename);
+          }
+        read_ibody(wfield->tab, linei, field->width);
+        }
+#ifdef USE_THREADS
+      if (threadstep++)
+        threads_gate_sync(pthread_stopgate2);
+      pthread_wdataflag = 1;
+      pthread_lineibuf = wfield? (linei+inoffset) : NULL;
+      pthread_multiibuf = multiwibuf+muloffset;
+      pthread_multinbuf = multinbuf2+inbeg;
+      threads_gate_sync(pthread_startgate2);
+#else
+      coadd_movewidata(wfield? (linei+inoffset) : NULL,
+		multiwibuf+muloffset, multinbuf2+inbeg, width, multinmax);
+#endif
+      multiwibuf += (size_t)outwidth*multinmax;
+      multinbuf2 += outwidth;
+      y--;
+      }
+/*-- Update coordinate vector */
+    for (d=1; d<naxis; d++)
+      if ((++rawpos2[d])<=bufmax[d])
+        break;
+      else
+        rawpos2[d] = bufmin[d];
+    }
+
+#ifdef USE_THREADS
+  if (threadstep++)
+    threads_gate_sync(pthread_stopgate2);
+#endif
+
+  free(lineibuf);
+
+/*  Check whether some data remain to be read; return RETURN_ERROR otherwise */
+  for (d=naxis; --d;)
+    if (rawpos2[d]>wcs->outmax[d])
+      return RETURN_ERROR;
+    else if (rawpos2[d]<wcs->outmax[d])
+      break;
+
+  return RETURN_OK;
+  }
+
+
 /******* coadd_load **********************************************************
 PROTO	int coadd_load(fieldstruct *field, fieldstruct *wfield,
 			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
@@ -1416,7 +1810,7 @@ OUTPUT	RETURN_ERROR in case no more data are worth reading,
 	RETURN_OK otherwise.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 02/08/2006
+VERSION 25/04/2012
  ***/
 int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
@@ -1509,7 +1903,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
       coadd_movedata(line+inoffset,
 		multibuf+muloffset, multinbuf2+inbeg, width, multinmax);
 #endif
-      multibuf += outwidth*multinmax;
+      multibuf += (size_t)outwidth*multinmax;
       multinbuf2 += outwidth;
       y--;
       }
@@ -1573,7 +1967,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
       coadd_movewdata(wfield? (line+inoffset) : NULL,
 		multiwbuf+muloffset, multinbuf2+inbeg, width, multinmax);
 #endif
-      multiwbuf += outwidth*multinmax;
+      multiwbuf += (size_t)outwidth*multinmax;
       multinbuf2 += outwidth;
       y--;
       }
@@ -1627,8 +2021,14 @@ void	*pthread_move_lines(void *arg)
       coadd_movewdata(pthread_linebuf, pthread_multibuf, pthread_multinbuf,
 		pthread_npix, pthread_step);
     else
-      coadd_movedata(pthread_linebuf, pthread_multibuf, pthread_multinbuf,
+      {
+      if (iflag)
+        coadd_moveidata(pthread_lineibuf, pthread_multiibuf, pthread_multinbuf,
 		pthread_npix, pthread_step);
+      else
+        coadd_movedata(pthread_linebuf, pthread_multibuf, pthread_multinbuf,
+		pthread_npix, pthread_step);
+      }
     threads_gate_sync(pthread_stopgate2);
 /*-- ( Master thread loads new data here ) */
     threads_gate_sync(pthread_startgate2);
@@ -1667,6 +2067,37 @@ void	coadd_movedata(PIXTYPE *linebuf, PIXTYPE *multibuf,
   multin = multinbuf;
   for (x=npix; x--;  multi += step)
     *(multi+*(multin++)) = *(pix++);
+
+  return;
+  }
+
+
+/******* coadd_moveidata ******************************************************
+PROTO	void coadd_moveidata(FLAGTYPE *linebuf, FLAGTYPE *multiibuf,
+			int *multinbuf, int npix, int step)
+PURPOSE	Move integer data from the input load buffer to the co-addition buffer.
+INPUT	Input Buffer,
+	co-addition buffer,
+	number-of-inputs buffer,
+	number of pixels to process,
+	step in pixels of the co-addition buffer.
+OUTPUT	-.
+NOTES   -.
+AUTHOR  E. Bertin (IAP)
+VERSION 01/02/2012
+ ***/
+void	coadd_moveidata(FLAGTYPE *lineibuf, FLAGTYPE *multiibuf,
+			unsigned int *multinbuf, int npix, int step)
+  {
+   FLAGTYPE	*ipix, *multii;
+   unsigned int	*multin,
+		x;
+
+  ipix = lineibuf;
+  multii = multiibuf;
+  multin = multinbuf;
+  for (x=npix; x--;  multii += step)
+    *(multii+*(multin++)) = *(ipix++);
 
   return;
   }
@@ -1726,4 +2157,52 @@ void	coadd_movewdata(PIXTYPE *linebuf, PIXTYPE *multiwbuf,
       }
   return;
   }
+
+
+/******* coadd_movewidata ****************************************************
+PROTO	void coadd_movewidata(FLAGTYPE *lineibuf, FLAGTYPE *multiwibuf,
+			int *multinbuf, int npix, int step)
+PURPOSE	Move integer weight data from the input load buffer to the co-addition
+	buffer.
+INPUT	Input Buffer,
+	co-addition weight buffer,
+	number-of-inputs buffer,
+	number of pixels to process,
+	step in pixels of the co-addition buffer.
+OUTPUT	-.
+NOTES   -.
+AUTHOR  E. Bertin (IAP)
+VERSION 03/02/2012
+ ***/
+void	coadd_movewidata(FLAGTYPE *lineibuf, FLAGTYPE *multiwibuf,
+			unsigned int *multinbuf, int npix, int step)
+  {
+   FLAGTYPE	*wipix, *multiwi,
+		ival;
+   unsigned int	*multin,
+		x, n;
+
+  multiwi = multiwibuf;
+  multin = multinbuf;
+  if (lineibuf)
+    {
+/*-- Resampled weight-map present (always the case when RESAMPLE is Y) */
+     wipix = lineibuf;
+     for (x=npix; x--;  multiwi += step)
+       {
+       *(multiwi+*multin) = *(wipix++);
+       (*(multin++))++;
+       }
+     }
+  else
+/*-- Resampled weight-map not present: weight is 1 within frame limits */
+    for (x=npix; x--; multiwi += step)
+      {
+      *(multiwi+*multin) = 1;
+      (*(multin++))++;
+      }
+  return;
+  }
+
+
 

@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		03/02/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -47,7 +47,7 @@
 
 static void	make_kernel(double pos, double *kernel, interpenum interptype);
 
-int		interp_kernwidth[5]={1,2,4,6,8};
+int		interp_kernwidth[6]={1,1,2,4,6,8};
 
 /****** interpolate_pix *******************************************************
 PROTO	int interpolate_pix(fieldstruct *field, fieldstruct *wfield,
@@ -64,7 +64,7 @@ OUTPUT	RETURN_OK if pixel falls within the input frame, RETURN_ERROR
 	otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	31/01/2006
+VERSION	30/01/2012
  ***/
 int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
 		ikernelstruct *ikernel, double *pos, PIXTYPE *outpix,
@@ -111,7 +111,7 @@ int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
     start += ival*fac;
 /*-- Update step between interpolated regions */
     step[n] = fac*(width-kwidth);
-    linecount[n] = 0.0;
+    linecount[n] = 0;
     fac *= width;
     }
 
@@ -204,6 +204,62 @@ int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
     *woutpix = wfield? ikernel->wbuffer[0]
 			: (badpixflag? BIG :
 				(PIXTYPE)(field->backsig*field->backsig));
+
+  return RETURN_OK;
+  }
+
+
+/****** interpolate_ipix ******************************************************
+PROTO	int interpolate_ipix(fieldstruct *field, fieldstruct *wfield,
+		double *pos, FLAGTYPE *outipix, PIXTYPE *woutpix)
+PURPOSE	"Interpolate" flag data.
+INPUT	Field structure pointer,
+	Weight field structure pointer,
+	Position vector,
+	Pointer to the output pixel,
+	Pointer to the output weight.
+OUTPUT	RETURN_OK if pixel falls within the input frame, RETURN_ERROR
+	otherwise.
+NOTES	-.
+AUTHOR	E. Bertin (IAP)
+VERSION	03/02/2012
+ ***/
+int	interpolate_ipix(fieldstruct *field, fieldstruct *wfield,
+		double *pos, FLAGTYPE *outipix, FLAGTYPE *woutpix)
+
+  {
+   long			start, fac;
+   int			*naxisn,
+			n, ival, naxis, width;
+
+  naxis = field->tab->naxis;
+  naxisn = field->tab->naxisn;
+  width = field->width;
+  start = 0;
+  fac = 1;
+  for (n=0; n<naxis; n++)
+    {
+    width = *(naxisn++);
+/*-- Get the integer part of the current coordinate or nearest neighbour */
+    ival = (int)(*(pos++)-0.50001);
+/*-- Check if interpolation start/end exceed image boundary... */
+    if (ival<0 || ival>=width)
+      {
+      *outipix = 0;
+      if (woutpix)
+        *woutpix = 0;
+      return RETURN_ERROR;
+      }
+/*-- Update starting pointer */
+    start += ival*fac;
+/*-- Update step between interpolated regions */
+    fac *= width;
+    }
+
+/* Finally, fill the output pointer(s) */
+  *outipix = *(field->ipix+start);
+  if (woutpix)
+    *woutpix = 1;
 
   return RETURN_OK;
   }

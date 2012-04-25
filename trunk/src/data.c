@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		30/01/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -61,17 +61,18 @@ int		*convert_ytimeoutbuf, *convert_ytimeout,
 		convert_interpflag, convert_backsubflag;
 
 /******* read_data **********************************************************
-PROTO	void read_data(fieldstruct *field, fieldstruct *wfield)
+PROTO	void read_data(fieldstruct *field, fieldstruct *wfield, int bitpix)
 PURPOSE	Read data and store them in internal format (interpolated,
 	background-subtracted, and dynamic-compressed).
 INPUT	Input field ptr,
-	Input weight field ptr.
+	Input weight field ptr,
+	Number of bits per pixel.
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 05/10/2010
+VERSION 30/01/2012
  ***/
-void	read_data(fieldstruct *field, fieldstruct *wfield)
+void	read_data(fieldstruct *field, fieldstruct *wfield, int bitpix)
   {
 
 /* Prepare static (global) variables */
@@ -81,7 +82,7 @@ void	read_data(fieldstruct *field, fieldstruct *wfield)
   convert_field = field;
 
 /* Prepare interpolation */
-  if (wfield && (field->cflags & CONVERT_INTERP))
+  if (wfield && (field->cflags & CONVERT_INTERP) && bitpix<0)
     {
     convert_interpflag = 1;
     convert_varpix = wfield->pix;
@@ -93,16 +94,23 @@ void	read_data(fieldstruct *field, fieldstruct *wfield)
     convert_interpflag = 0;
 
 /* Prepare background subtraction */
-  if (field->cflags & CONVERT_BACKSUB)
+  if ((field->cflags & CONVERT_BACKSUB) && bitpix<0)
     convert_backsubflag = 1;
   else
     convert_backsubflag = 0;
 
-  field->pix = alloc_body(field->tab, convert_data);
-  if (!field->pix)
-    error(EXIT_FAILURE, "*Error*: Not enough memory ",
-	  "(either in RAM or mapped to disk)");
-
+  if (bitpix>0)
+    {
+    if (!(field->ipix = alloc_ibody(field->tab, NULL)))
+      error(EXIT_FAILURE, "*Error*: Not enough memory "
+		"(either in RAM or mapped to disk) to store ",field->rfilename);
+    }
+  else
+    {
+    if (!(field->pix = alloc_body(field->tab, convert_data)))
+      error(EXIT_FAILURE, "*Error*: Not enough memory "
+		"(either in RAM or mapped to disk) to store ",field->rfilename);
+    }
 /* Free allocated buffers */
   if (convert_interpflag)
     {
