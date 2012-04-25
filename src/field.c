@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		29/02/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -192,7 +192,7 @@ INPUT	Reference field pointer.
 OUTPUT	The new field pointer if OK, NULL otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	05/10/2010
+VERSION	24/01/2012
  ***/
 fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
 				int flags)
@@ -214,6 +214,7 @@ fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
   field->dback = NULL;
   field->sigma = NULL;
   field->dsigma = NULL;
+  field->ipix = NULL;
   field->pix = NULL;
   field->backline = NULL;
   field->wcs = NULL;
@@ -256,6 +257,7 @@ void	end_field(fieldstruct *field)
 
   end_back(field);
   field->pix = NULL;
+  field->ipix = NULL;
   free(field);
 
   return;
@@ -357,9 +359,9 @@ INPUT	Input field ptr array,
 	number of input fields,
 	Filename.
 OUTPUT	Pointer to the new output field.
-NOTES   -.
+NOTES   Global preferences are used.
 AUTHOR  E. Bertin (IAP)
-VERSION 15/10/2010
+VERSION 29/02/2012
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -442,7 +444,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   QMALLOC(scale, float, ninput);
   QMALLOC(tab->naxisn, int, naxis);
 /* Produce a floating point output */
-  tab->bitpix = BP_FLOAT;
+  field->bitpix = tab->bitpix = prefs.outfield_bitpix;
 
   if (prefs.resample_flag)
     {
@@ -678,7 +680,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 		wcsmax[n] - wcs->crval[n];
           if ((n==lng || n==lat) && lat!=lng)
             {
-            if (val<0.0)
+            if (val<-180.0)
               val += 360.0;
             wcs->crpix[n] = (int)(fmod(val, 180.0)/pixscale[n]) + 1.0;
 /*-------- Add a 5% margin in field size */

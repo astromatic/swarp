@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		06/01/2012
+*	Last modified:		30/01/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -75,7 +75,8 @@ pkeystruct key[] =
   {"COMBINE_BUFSIZE", P_INT, &prefs.coaddbuf_size, 1, 16384*1024},
   {"COMBINE_TYPE", P_KEY, &prefs.coadd_type, 0,0, 0.0,0.0,
    {"MEDIAN", "AVERAGE", "MIN", "MAX", "WEIGHTED", "CHI_OLD", "CHI-MODE",
-	"CHI-MEAN", "SUM", "WEIGHTED_WEIGHT", "MEDIAN_WEIGHT", ""}},
+	"CHI-MEAN", "SUM", "WEIGHTED_WEIGHT", "MEDIAN_WEIGHT",
+	"AND", "NAND", "OR", "NOR", ""}},
   {"COPY_KEYWORDS", P_STRINGLIST, prefs.copy_keywords, 0,0, 0.0, 0.0,
    {""}, 0, 1024, &prefs.ncopy_keywords},
   {"DELETE_TMPFILES", P_BOOL, &prefs.removetmp_flag},
@@ -113,7 +114,7 @@ pkeystruct key[] =
   {"RESAMPLE_DIR", P_STRING, prefs.resampdir_name},
   {"RESAMPLE_SUFFIX", P_STRING, prefs.resamp_suffix},
   {"RESAMPLING_TYPE", P_KEYLIST, prefs.resamp_type, 0,0, 0.0,0.0,
-   {"NEAREST", "BILINEAR", "LANCZOS2", "LANCZOS3", "LANCZOS4", ""},
+   {"FLAGS", "NEAREST", "BILINEAR", "LANCZOS2", "LANCZOS3", "LANCZOS4", ""},
    1, INTERP_MAXDIM, &prefs.nresamp_type},
   {"RESCALE_WEIGHTS", P_BOOLLIST, prefs.wscale_flag, 0,0, 0.0,0.0,
    {""}, 1, MAXINFIELD, &prefs.nwscale_flag},
@@ -169,8 +170,10 @@ char *default_prefs[] =
 "#------------------------------- Co-addition ----------------------------------",
 " ",
 "COMBINE                Y               # Combine resampled images (Y/N)?",
-"COMBINE_TYPE           MEDIAN          # MEDIAN,AVERAGE,MIN,MAX,WEIGHTED,CHI2",
-"                                       # or SUM",
+"COMBINE_TYPE           MEDIAN          # MEDIAN,AVERAGE,MIN,MAX,WEIGHTED,",
+"                                       # CHI-OLD,CHI-MODE,CHI-MEAN,SUM,",
+"                                       # WEIGHTED_WEIGHT,MEDIAN_WEIGHT,",
+"                                       # AND,NAND,OR or NOR",
 "*BLANK_BADPIXELS        N              # Set to 0 pixels having a weight of 0",
 " ",
 "#-------------------------------- Astrometry ----------------------------------",
@@ -193,7 +196,7 @@ char *default_prefs[] =
 "RESAMPLE_SUFFIX        .resamp.fits    # filename extension for resampled images",
 " ",
 "RESAMPLING_TYPE        LANCZOS3        # NEAREST,BILINEAR,LANCZOS2,LANCZOS3",
-"                                       # or LANCZOS4 (1 per axis)",
+"                                       # LANCZOS4 (1 per axis) or FLAGS",
 "OVERSAMPLING           0               # Oversampling in each dimension",
 "                                       # (0 = automatic)",
 "INTERPOLATE            N               # Interpolate bad input pixels (Y/N)?",

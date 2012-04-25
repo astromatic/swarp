@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 1995-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		02/12/2010
+*	Last modified:		30/01/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -319,6 +319,9 @@ extern int	about_cat(catstruct *cat, FILE *stream),
 		verify_checksum(tabstruct *tab),
 		write_obj(tabstruct *tab, char *buf),
 		wstrncmp(char *, char *, int);
+
+extern FLAGTYPE	*alloc_ibody(tabstruct *tab,
+			void (*func)(FLAGTYPE *ptr, int npix));
 
 extern PIXTYPE	*alloc_body(tabstruct *tab,
 			void (*func)(PIXTYPE *ptr, int npix));

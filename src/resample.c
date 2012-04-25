@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		05/02/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -78,9 +78,10 @@
 			**rawbufarea,
 			ascale;
  PIXTYPE		**outbuf,**outwbuf;
+ FLAGTYPE		**outibuf,**outwibuf, **oversampibuf,**oversampwibuf;
  int			**oversampnbuf, *oversamp,
 			noversamp, oversampflag, width, height, naxis, nlines,
-			approxflag, dispstep;
+			approxflag, dispstep, iflag;
  char			padbuf[FBSIZE];
 
 /*------------------------------ function -----------------------------------*/
@@ -106,7 +107,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/10/2010
+VERSION	03/02/2012
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -158,6 +159,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   field->fscale = infield->fscale;
   field->headflag = infield->headflag;
   strcpy(field->ident, infield->ident);
+  iflag = (outfield->bitpix>0);
 
 /* Now modify some characteristics of the output file */
 /* We use a small "dirty" trick to frame the output */
@@ -294,8 +296,16 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 
 /*-- Allocate memory for buffer pointers */
   QMALLOC(rawposp, double *, nlines);
-  QMALLOC(outbuf, PIXTYPE *, nlines);
-  QMALLOC(outwbuf, PIXTYPE *, nlines);
+  if (iflag)
+    {
+    QMALLOC(outibuf, FLAGTYPE *, nlines);
+    QMALLOC(outwibuf, FLAGTYPE *, nlines);
+    }
+  else
+    {
+    QMALLOC(outbuf, PIXTYPE *, nlines)
+    QMALLOC(outwbuf, PIXTYPE *, nlines);
+    }
   QMALLOC(rawbuf, double *, nlines);
   QCALLOC(rawbufarea, double *, nlines);
   QMALLOC(ikernel, ikernelstruct *, nlines);
@@ -303,8 +313,16 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   QMALLOC(wcsoutp, wcsstruct *, nlines);
   if (oversampflag)
     {
-    QMALLOC(oversampbuf, double *, nlines);
-    QMALLOC(oversampwbuf, double *, nlines);
+    if (iflag)
+      {
+      QMALLOC(oversampibuf, FLAGTYPE *, nlines)
+      QMALLOC(oversampwibuf, FLAGTYPE *, nlines);
+      }
+    else
+      {
+      QMALLOC(oversampbuf, double *, nlines)
+      QMALLOC(oversampwbuf, double *, nlines);
+      }
     QMALLOC(oversampnbuf, int *, nlines);
     }
 
@@ -312,19 +330,35 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
     {
 /*-- Allocate memory for the output buffers that contain the final data in */
 /*-- internal format (PIXTYPE) */
-    QMALLOC(outbuf[l], PIXTYPE, width);
-    QMALLOC(outwbuf[l], PIXTYPE, width);
+    if (iflag)
+      {
+      QMALLOC(outibuf[l], FLAGTYPE, width)
+      QMALLOC(outwibuf[l], FLAGTYPE, width);
+      }
+    else
+      {
+      QMALLOC(outbuf[l], PIXTYPE, width)
+      QMALLOC(outwbuf[l], PIXTYPE, width);
+      }
     if (oversampflag)
 /*---- Provide memory space for integrating the content of oversampled pixels*/
       {
-      QMALLOC(oversampbuf[l], double, width);
-      QMALLOC(oversampwbuf[l], double, width);
+      if (iflag)
+        {
+        QMALLOC(oversampibuf[l], FLAGTYPE, width)
+        QMALLOC(oversampwibuf[l], FLAGTYPE, width);
+        }
+      else
+        {
+        QMALLOC(oversampbuf[l], double, width)
+        QMALLOC(oversampwbuf[l], double, width);
+        }
       QMALLOC(oversampnbuf[l], int, width);
       }
 /*-- Provide memory space for the current astrometric line */
     QMALLOC(rawbuf[l], double, naxis*width);
     if (prefs.fscalastro_type==FSCALASTRO_VARIABLE)
-      QMALLOC(rawbufarea[l], double, width);
+      QMALLOC(rawbufarea[l], double, width)
     QMALLOC(rawposp[l], double, naxis);
 /*-- Initialize interpolation kernel */
     ikernel[l] = init_ikernel(interptype, naxis);
@@ -368,8 +402,16 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
       NPRINTF(OUTPUT, "\33[1M> Resampling line:%7d / %-7d\n\33[1A",
 	y, height);
     warp_line(0);
-    write_body(field->tab, outbuf[0], width);
-    write_body(wfield->tab, outwbuf[0], width);
+    if (iflag)
+      {
+      write_ibody(field->tab, outibuf[0], width);
+      write_ibody(wfield->tab, outwibuf[0], width);
+      }
+    else
+      {
+      write_body(field->tab, outbuf[0], width);
+      write_body(wfield->tab, outwbuf[0], width);
+      }
     }
 #endif
 
@@ -409,12 +451,12 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   for (l=0; l<nlines; l++)
     {
     free(rawposp[l]);
-    free(outbuf[l]);
-    free(outwbuf[l]);
+    free(iflag? (void *)outibuf[l] : (void *)outbuf[l]);
+    free(iflag? (void *)outwibuf[l]: (void *)outwbuf[l]);
     if (oversampflag)
       {
-      free(oversampbuf[l]);
-      free(oversampwbuf[l]);
+      free(iflag? (void *)oversampibuf[l] : (void *)oversampbuf[l]);
+      free(iflag? (void *)oversampwibuf[l]: (void *)oversampwbuf[l]);
       free(oversampnbuf[l]);
       }
     free(rawbuf[l]);
@@ -425,12 +467,12 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
     end_wcs(wcsoutp[l]);
     }
   free(rawposp);
-  free(outbuf);
-  free(outwbuf);
+  free(iflag? (void *)outibuf : (void *)outbuf);
+  free(iflag? (void *)outwibuf: (void *)outwbuf);
   if (oversampflag)
     {
-    free(oversampbuf);
-    free(oversampwbuf);
+    free(iflag? (void *)oversampibuf : (void *)oversampbuf);
+    free(iflag? (void *)oversampwibuf: (void *)oversampwbuf);
     free(oversampnbuf);
     }
   free(rawbuf);
@@ -482,7 +524,7 @@ INPUT	-.
 OUTPUT	Next available line index.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	15/09/2005
+VERSION	03/02/2012
  ***/
 int	pthread_nextline(int l)
   {
@@ -498,8 +540,16 @@ int	pthread_nextline(int l)
     {
     while (writeflag[writeline]==2)
       {
-      write_body(ftab, outbuf[writeline], width);
-      write_body(wtab, outwbuf[writeline], width);
+      if (iflag)
+        {
+        write_ibody(ftab, outibuf[writeline], width);
+        write_ibody(wtab, outwibuf[writeline], width);
+        }
+      else
+        {
+        write_body(ftab, outbuf[writeline], width);
+        write_body(wtab, outwbuf[writeline], width);
+        }
       writeflag[writeline] = 0;
       QPTHREAD_COND_BROADCAST(&linecond[writeline]);
       writeline = (writeline+1)%nlines;
@@ -568,7 +618,7 @@ INPUT	Thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/08/2010
+VERSION	05/02/2012
  ***/
 void	warp_line(int p)
   {
@@ -578,12 +628,22 @@ void	warp_line(int p)
 			area, worldc;
    PIXTYPE		*out, *outw,
 			pix,pixw;
+   FLAGTYPE		*outi,*outwi, *oversampit,*oversampwit,
+			ipix,ipixw;
    int			nstepover[NAXIS],stepcount[NAXIS],
 			*oversampnt,
 			d, o, x, ninput, swapflag;
 
-  out = outbuf[p];
-  outw = outwbuf[p];
+  if (iflag)
+    {
+    outi = outibuf[p];
+    outwi = outwibuf[p];
+    }
+  else
+    {
+    out = outbuf[p];
+    outw = outwbuf[p];
+    }
   rawpos = rawposp[p];
   wcsin = wcsinp[p];
   wcsout = wcsoutp[p];
@@ -602,8 +662,16 @@ void	warp_line(int p)
       stepcount[d] = nstepover[d] = 0;
       rawposover[d] = rawpos[d];
       }
-    memset(oversampbuf[p], 0, sizeof(double)*width);
-    memset(oversampwbuf[p], 0, sizeof(double)*width);
+    if (iflag)
+      {
+      memset(oversampibuf[p], 0, sizeof(FLAGTYPE)*width);
+      memset(oversampwibuf[p], 0, sizeof(FLAGTYPE)*width);
+      }
+    else
+      {
+      memset(oversampbuf[p], 0, sizeof(double)*width);
+      memset(oversampwbuf[p], 0, sizeof(double)*width);
+      }
     memset(oversampnbuf[p], 0, sizeof(int)*width);
     for (o=noversamp; o--; )
       {
@@ -638,28 +706,58 @@ void	warp_line(int p)
           }
 	}
 /*---- Resample the current line */
-      oversampt = oversampbuf[p];
-      oversampwt = oversampwbuf[p];
-      oversampnt = oversampnbuf[p];
-      rawbufc = rawbuf[p];
-      rawbufareac = rawbufarea[p];
-      for (x=width; x--; rawbufc+=naxis)
+      if (iflag)
         {
-        if (rawbufareac)
-          area = *(rawbufareac++);
-        if (*rawbufc != WCS_NOCOORD
+        oversampit = oversampibuf[p];
+        oversampwit = oversampwibuf[p];
+        oversampnt = oversampnbuf[p];
+        rawbufc = rawbuf[p];
+        rawbufareac = rawbufarea[p];
+        for (x=width; x--; rawbufc+=naxis)
+          {
+          if (rawbufareac)
+            area = *(rawbufareac++);
+          if (*rawbufc != WCS_NOCOORD
+		&& interpolate_ipix(infield, inwfield, rawbufc,&ipix,&ipixw)
+			== RETURN_OK)
+            {
+            *(oversampit++) |= ipix;
+            *(oversampwit++) |= 1;
+            (*(oversampnt++))++;
+            }
+          else
+            {
+            oversampit++;
+            oversampwit++;
+            oversampnt++;
+            }
+          }
+        }
+      else
+        {
+        oversampt = oversampbuf[p];
+        oversampwt = oversampwbuf[p];
+        oversampnt = oversampnbuf[p];
+        rawbufc = rawbuf[p];
+        rawbufareac = rawbufarea[p];
+        for (x=width; x--; rawbufc+=naxis)
+          {
+          if (rawbufareac)
+            area = *(rawbufareac++);
+          if (*rawbufc != WCS_NOCOORD
 		&& (interpolate_pix(infield, inwfield, ikernel[p],rawbufc,
 			&pix,&pixw),pixw<BIG))
-          {
-          *(oversampt++) += area * (double)pix;
-          *(oversampwt++) += (double)pixw * area*area;
-          (*(oversampnt++))++;
-          }
-        else
-          {
-          oversampt++;
-          oversampwt++;
-          oversampnt++;
+            {
+            *(oversampt++) += area * (double)pix;
+            *(oversampwt++) += (double)pixw * area*area;
+            (*(oversampnt++))++;
+            }
+          else
+            {
+            oversampt++;
+            oversampwt++;
+            oversampnt++;
+            }
           }
         }
 /*---- Update coordinate vector */
@@ -676,19 +774,39 @@ void	warp_line(int p)
         }
       }
 /*-- Now transfer to the output line */
-    oversampt = oversampbuf[p];
-    oversampwt = oversampwbuf[p];
-    oversampnt = oversampnbuf[p];
-    for (x=width; x--; oversampt++, oversampwt++)
+    if (iflag)
       {
-      if ((ninput = *(oversampnt++)))
+      oversampit = oversampibuf[p];
+      oversampwit = oversampwibuf[p];
+      oversampnt = oversampnbuf[p];
+      for (x=width; x--; oversampit++, oversampwit++)
         {
-        *(out++) = (PIXTYPE)(*oversampt/ninput);
-/*------- Convert variances to weight */
-        *(outw++) = (PIXTYPE)((ninput / *oversampwt)*ascale);
+        if ((ninput = *(oversampnt++)))
+          {
+          *(outi++) = *oversampit;
+/*--------- Convert variances to weight */
+          *(outwi++) = *oversampwit;
+          }
+        else
+          *(outwi++) = *(outi++) = 0;
         }
-      else
-        *(out++) = *(outw++) = 0.0;
+      }
+    else
+      {
+      oversampt = oversampbuf[p];
+      oversampwt = oversampwbuf[p];
+      oversampnt = oversampnbuf[p];
+      for (x=width; x--; oversampt++, oversampwt++)
+        {
+        if ((ninput = *(oversampnt++)))
+          {
+          *(out++) = (PIXTYPE)(*oversampt/ninput);
+/*--------- Convert variances to weight */
+          *(outw++) = (PIXTYPE)((ninput / *oversampwt)*ascale);
+          }
+        else
+          *(out++) = *(outw++) = 0.0;
+        }
       }
     }
   else
@@ -725,21 +843,32 @@ void	warp_line(int p)
 /*-- Resample the line */
     rawbufc = rawbuf[p];
     rawbufareac = rawbufarea[p];
-    for (x=width; x--; rawbufc+=naxis)
-      {
-      if (rawbufareac)
-        area = *(rawbufareac++);
-      if (*rawbufc != WCS_NOCOORD)
+    if (iflag)
+      for (x=width; x--; rawbufc+=naxis)
         {
-        interpolate_pix(infield, inwfield, ikernel[p], rawbufc,out,outw);
-        *(out++) *= area;
-/*----- Convert variance to weight */
-        *outw = (*outw < BIG) ? 1.0/(*outw*area*area) : 0.0;
-        outw++;
+        if (rawbufareac)
+          area = *(rawbufareac++);
+        if (*rawbufc != WCS_NOCOORD)
+          interpolate_ipix(infield, inwfield, rawbufc,outi++,outwi++);
+        else
+          *(outwi++) = *(outi++) = 0;
         }
-      else
-        *(out++) = *(outw++) = 0.0;
-      }
+    else
+      for (x=width; x--; rawbufc+=naxis)
+        {
+        if (rawbufareac)
+          area = *(rawbufareac++);
+        if (*rawbufc != WCS_NOCOORD)
+          {
+          interpolate_pix(infield, inwfield, ikernel[p], rawbufc,out,outw);
+          *(out++) *= area;
+/*------- Convert variance to weight */
+          *outw = (*outw < BIG) ? 1.0/(*outw*area*area) : 0.0;
+          outw++;
+          }
+        else
+          *(out++) = *(outw++) = 0.0;
+        }
     }
 
   return;

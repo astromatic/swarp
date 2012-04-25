@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		17/12/2010
+*	Last modified:		24/01/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -71,6 +71,7 @@ typedef struct
   char		weight_suffix[MAXCHAR];	/* Generic suffix for input weights */
   char		outfield_name[MAXCHAR];	/* Output image filename */
   char		outwfield_name[MAXCHAR];/* Output weight-map filename */
+  int		outfield_bitpix;	/* Output image pixel type */
   weightenum	weight_type[MAXINFIELD];/* Weight type */
   int		nweight_type;		/* nb of params */
   double	weight_thresh[MAXINFIELD];/* Weight threshold */
