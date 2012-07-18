@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		01/02/2012
+*	Last modified:		16/06/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -304,7 +304,7 @@ INPUT	A pointer to the tab structure,
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	24/08/2010
+VERSION	13/06/2012
  ***/
 void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
   {
@@ -317,7 +317,7 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
   short			val16, sval, sblank;
 #ifdef HAVE_LONG_LONG_INT
   ULONGLONG		lluval, llublank;
-  LONGLONG		llval, llblank;
+  SLONGLONG		llval, llblank;
 #endif
   unsigned int		iuval, iublank;
   int			curval, dval, blankflag, ival, iblank;
@@ -446,9 +446,9 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
 	      {
               if (tab->bitsgn)
                 {
-                llblank = (LONGLONG)tab->blank;
-                for (i=spoonful; i--; bufdata += sizeof(LONGLONG))
-                  *(ptr++) = ((llval = *((LONGLONG *)bufdata)) == llblank)?
+                llblank = (SLONGLONG)tab->blank;
+                for (i=spoonful; i--; bufdata += sizeof(SLONGLONG))
+                  *(ptr++) = ((llval = *((SLONGLONG *)bufdata)) == llblank)?
 			-BIG : llval*bs + bz;
                 }
               else
@@ -462,8 +462,8 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
             else
 	      {
               if (tab->bitsgn)
-                for (i=spoonful; i--; bufdata += sizeof(LONGLONG))
-                  *(ptr++) = *((LONGLONG *)bufdata)*bs + bz;
+                for (i=spoonful; i--; bufdata += sizeof(SLONGLONG))
+                  *(ptr++) = *((SLONGLONG *)bufdata)*bs + bz;
               else
                 for (i=spoonful; i--; bufdata += sizeof(ULONGLONG))
                   *(ptr++) = *((ULONGLONG *)bufdata)*bs + bz;
@@ -787,15 +787,15 @@ INPUT	A pointer to the tab structure,
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	02/11/2009
+VERSION	13/06/2012
  ***/
 void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
   {
-   static double	bufdata0[DATA_BUFSIZE/sizeof(double)];
-   catstruct		*cat;
-   char			*cbufdata0;
-   size_t		i, bowl, spoonful;
-   PIXTYPE		bs,bz;
+  static double	bufdata0[DATA_BUFSIZE/sizeof(double)];
+  catstruct	*cat;
+  char		*cbufdata0;
+  size_t	i, bowl, spoonful;
+  PIXTYPE	bs,bz;
 
   bs = (PIXTYPE)tab->bscale;
   bz = (PIXTYPE)tab->bzero;
@@ -829,7 +829,7 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
               {
                unsigned char	*bufdata = (unsigned char *)cbufdata0;
               for (i=spoonful; i--;)
-                *(bufdata++) = (unsigned char)((*(ptr++)-bz)/bs+0.49999);
+                *(bufdata++) = (unsigned char)((*(ptr++)-bz)/bs+0.49999);;
               }
             break;
 
@@ -871,9 +871,9 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
           case BP_LONGLONG:
            if (tab->bitsgn)
               {
-               LONGLONG	*bufdata = (LONGLONG *)cbufdata0;
+               SLONGLONG	*bufdata = (SLONGLONG *)cbufdata0;
               for (i=spoonful; i--;)
-                *(bufdata++) = (LONGLONG)((*(ptr++)-bz)/bs+0.49999);
+                *(bufdata++) = (SLONGLONG)((*(ptr++)-bz)/bs+0.49999);
               }
             else
               {
@@ -1023,9 +1023,9 @@ void	write_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
           case BP_LONGLONG:
            if (tab->bitsgn)
               {
-               LONGLONG	*bufdata = (LONGLONG *)cbufdata0;
+               SLONGLONG	*bufdata = (SLONGLONG *)cbufdata0;
               for (i=spoonful; i--;)
-                *(bufdata++) = (LONGLONG)*(ptr++);
+                *(bufdata++) = (SLONGLONG)*(ptr++);
               }
             else
               {
