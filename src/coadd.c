@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		25/04/2012
+*	Last modified:		18/07/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -910,14 +910,13 @@ INPUT	Pointer to the thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	01/02/2012
+VERSION	18/07/2012
  ***/
 void	*pthread_coadd_lines(void *arg)
   {
-   int	bufline, proc;
+   int	bufline;
 
   bufline = -1;
-  proc = *((int *)arg);
   threads_gate_sync(pthread_startgate);
   while (!pthread_endflag)
     {
@@ -2003,23 +2002,26 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 PROTO	void *pthread_move_lines(void *arg)
 PURPOSE	thread that takes care of moving image "lines" from the input to the
 	co-addition buffer
-INPUT	Pointer to the thread number.
+INPUT	Pointer to the thread number (unused).
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	21/10/2003
+VERSION	18/07/2012
  ***/
 void	*pthread_move_lines(void *arg)
   {
-   int	proc;
-
-  proc = *((int *)arg);
   threads_gate_sync(pthread_startgate2);
   while (!pthread_endflag)
     {
     if (pthread_wdataflag)
-      coadd_movewdata(pthread_linebuf, pthread_multibuf, pthread_multinbuf,
+      {
+      if (iflag)
+        coadd_movewidata(pthread_lineibuf, pthread_multiibuf, pthread_multinbuf,
 		pthread_npix, pthread_step);
+      else
+        coadd_movewdata(pthread_linebuf, pthread_multibuf, pthread_multinbuf,
+		pthread_npix, pthread_step);
+      }
     else
       {
       if (iflag)
@@ -2172,15 +2174,14 @@ INPUT	Input Buffer,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 03/02/2012
+VERSION 18/07/2012
  ***/
 void	coadd_movewidata(FLAGTYPE *lineibuf, FLAGTYPE *multiwibuf,
 			unsigned int *multinbuf, int npix, int step)
   {
-   FLAGTYPE	*wipix, *multiwi,
-		ival;
+   FLAGTYPE	*wipix, *multiwi;
    unsigned int	*multin,
-		x, n;
+		x;
 
   multiwi = multiwibuf;
   multin = multinbuf;

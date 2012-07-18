@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		25/04/2012
+#	Last modified:		18/07/2012
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,10 +29,10 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.32.1, [bertin@iap.fr])
+AC_INIT(swarp, 2.34.0, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
 date=`date +%Y-%m-%d`
 date2=`date +"%a %b %d %Y"`
@@ -50,41 +50,30 @@ sinclude(acx_urbi_resolve_dir.m4)
 # Display pakage and version number
 AC_MSG_RESULT([*********** Configuring:  $PACKAGE $VERSION ($date) **********])
 
-# Initialize the list of compilers to consider
-cclist="cc gcc"
-
 # Provide special option for choosing automatically the compilation flags.
 AC_MSG_CHECKING([if compilation flags are set automatically])
 AC_ARG_ENABLE(auto-flags,
-	[AC_HELP_STRING([--enable-auto-flags],
+	[AS_HELP_STRING([--enable-auto-flags],
 	[Let the configure script choose the compilation flags \
 (off by default)])],
-	use_autoflag="yes"
 	AC_MSG_RESULT([yes]),
-	use_autoflag="no"
 	AC_MSG_RESULT([no]))
 
 # Provide special option for the Linux Intel C compiler
-AC_MSG_CHECKING([for Linux Intel C compiler mode])
+AC_MSG_CHECKING([whether we should use the INTEL compiler])
 AC_ARG_ENABLE(icc,
-	[AC_HELP_STRING([--enable-icc],
+	[AS_HELP_STRING([--enable-icc],
 	[Enable special mode for compilation with the Intel compiler \
 (off by default)])],
-        use_icc="yes"
-        cclist="icc $cclist"
+        CC="icc"
 	AC_MSG_RESULT([yes]),
-        use_icc="no"
 	AC_MSG_RESULT([no]))
 
 # Checks for programs.
-# GCC is chosen last because it is likely to yield less optimized code
-AC_PROG_CC([$cclist])
-# C Compiler: Check that it is ANSI C
-AM_PROG_CC_STDC
-# C Compiler: Check that it is POSIX-compliant
-AC_ISC_POSIX
-# Override automatic CFLAGS and LDFLAGS with those of user
-if test "$use_autoflag" = "yes"; then
+AC_LANG(C)
+
+AC_SEARCH_LIBS([strerror],[cposix])
+if test "$enable_auto_flags" = "yes"; then
   CFLAGS=""
   LDFLAGS=""
   ACX_PROG_CC_OPTIM
@@ -98,7 +87,7 @@ AC_CHECK_LIB(m, sin)
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(malloc.h unistd.h sys/mman.h)
-if test $use_icc = "yes" -a $CC = "icc"; then
+if test "$enable_icc" = "yes"; then
   AC_CHECK_HEADERS(mathimf.h)
 fi
 
@@ -108,39 +97,37 @@ AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
 AC_TYPE_LONG_LONG_INT
 AC_TYPE_UNSIGNED_LONG_LONG_INT
-AC_TYPE_SIGNAL
 AC_TYPE_UID_T
-AC_CHECK_TYPES([unsigned long long, long long])
 AC_STRUCT_TM
 
 # Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MMAP
+AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([atexit getenv gethostname memcpy memmove memset mmap strstr])
 AC_CHECK_FUNCS([cosd sind tand acosd asind atand atan2d sincos])
+AC_CHECK_FUNC([isnan], AC_DEFINE_UNQUOTED([HAVE_ISNAN2], 1,
+		[Second isnan check]))
 
 # Check support for large files
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
-# Set the data directory to a true absolute path
-datadir2=$(URBI_RESOLVE_DIR([$datadir]))
-
 # Provide a special option for the default XSLT URL
+# Provide a special option for the default XSLT URL
+with_xsl_url="file://"$(URBI_RESOLVE_DIR([$datadir]))"/$PACKAGE_NAME/$PACKAGE_NAME.xsl"
 AC_ARG_WITH(xsl_url,
-        [AC_HELP_STRING([--with-xsl_url=<default URL for XSLT filter>],
-        [Provide an alternative default URL of the XSLT filter])],
-    [xsl_url=$withval],
-    [xsl_url="file://$datadir2/$PACKAGE_NAME/$PACKAGE_NAME.xsl"]
-    )
+	[AS_HELP_STRING([--with-xsl_url=<default URL for XSLT filter>],
+	[Provide an alternative default URL of the XSLT filter])])
 
-AC_DEFINE_UNQUOTED([XSL_URL], "$xsl_url",[Default URL of the XSLT filter])
+AC_DEFINE_UNQUOTED([XSL_URL], "$with_xsl_url",[Default URL of the XSLT filter])
 
 # Set flags for multithreading
 n_pthreads=1024
 AC_ARG_ENABLE(threads,
-        [AC_HELP_STRING([--enable-threads@<:@=<max_number_of_threads>@:>@],
-	[Enable multhreading (on with up to 16 threads by default)])],
+        [AS_HELP_STRING([--enable-threads@<:@=<max_number_of_threads>@:>@],
+	[Enable multhreading (on with up to 1024 threads by default)])],
     if test "$enableval" = "no"; then
       use_pthreads="no"
     else
@@ -152,26 +139,21 @@ AC_ARG_ENABLE(threads,
     use_pthreads=yes
     )
 
-# Provide special option for gprof profiling
-AC_MSG_CHECKING([for gprof profiler mode])
-AC_ARG_ENABLE(gprof,
-	[AC_HELP_STRING([--enable-gprof],
-	[Enable special mode for compilation with the gprof profiler \
-(off by default)])],
-        use_gprof="yes"
+# Provide special option for profiling
+AC_MSG_CHECKING([for profiler mode])
+AC_ARG_ENABLE(profiling,
+	[AS_HELP_STRING([--enable-profiling],
+	[Enable special mode for profiling (off by default)])],
 	AC_MSG_RESULT([yes]),
-        use_gprof="no"
 	AC_MSG_RESULT([no]))
 
 # Enable linking options for making the executable as portable as possible.
 AC_MSG_CHECKING([best linking option])
 AC_ARG_ENABLE(best-link,
-	[AC_HELP_STRING([--enable-best-link],
+	[AS_HELP_STRING([--enable-best-link],
 	[Choose the right combination of static and dynamic linking to make \
 the executable as portable as possible (off by default)])],
-	use_best="yes"
 	AC_MSG_RESULT([yes]),
-	use_best="no"
 	AC_MSG_RESULT([no]))
 
 ################# Actions to complete in case of multhreading ################
@@ -188,19 +170,23 @@ if test "$use_pthreads" = "yes"; then
 fi
 AM_CONDITIONAL(USE_THREADS, test $use_pthreads = "yes")
 
-# Link with gprof option
-if test "$use_gprof" = "yes"; then
-  if test "$use_icc" = "yes"; then
+# Compile with profiling option
+if test "$enable_profiling" = "yes"; then
+  if test "$enable_icc" = "yes"; then
     AM_CFLAGS="$AM_CFLAGS -pq"
   else
     AM_CFLAGS="$AM_CFLAGS -pg"
   fi
-  use_best="no"
+  enable_best_link="no"
 fi
 
 # "Best" linking option
-if test "$use_best" = "yes"; then
-  AM_LDFLAGS="-shared-libgcc -static-libtool-libs $AM_LDFLAGS"
+if test "$enable_best_link" = "yes"; then
+  if test "$enable_icc" = "yes"; then
+    AM_LDFLAGS="-static-intel -openmp-link static -shared-libgcc $AM_LDFLAGS"
+  else
+    AM_LDFLAGS="-static -shared-libgcc $AM_LDFLAGS"
+  fi
 fi
 
 AC_SUBST(AM_CFLAGS)

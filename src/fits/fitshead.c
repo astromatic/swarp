@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 1995-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		30/08/2011
+*	Last modified:		18/07/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -101,7 +101,7 @@ INPUT	pointer to catstruct.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/09/2004
+VERSION	03/06/2012
  ***/
 void	readbasic_head(tabstruct *tab)
 
@@ -169,7 +169,7 @@ void	readbasic_head(tabstruct *tab)
 	1 : 0;
 
 /* Custom basic FITS parameters */
-  tab->bitsgn = 1;
+  tab->bitsgn = (tab->bitpix==BP_BYTE) ? 0 : 1;
   fitsread(tab->headbuf, "BITSGN  ", &tab->bitsgn, H_INT, T_LONG);
 
   if (fitsread(tab->headbuf, "IMAGECOD", str, H_STRING, T_STRING)==RETURN_OK)
@@ -705,16 +705,17 @@ PURPOSE	Give the ``t_type'' of a binary-table field from its ``TFORM''.
 INPUT	TFORM string (see the FITS documentation).
 OUTPUT	size in bytes, or RETURN_ERROR if the TFORM is unknown.
 NOTES	-.
-AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	28/10/2009
+AUTHOR	E. Bertin (IAP)
+VERSION	18/07/2012
  ***/
 t_type	ttypeof(char *str)
 
   {
    char	*str2;
+   long	dummy;
 
   str2 = str;
-  strtol(str, &str2, 10);
+  dummy = strtol(str, &str2, 10);
   switch ((int)*str2)
     {
     case 'L': case 'B': case 'X':	return	T_BYTE;
