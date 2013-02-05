@@ -1,0 +1,846 @@
+#
+#				ChangeLog
+#
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#
+#	This file part of:	SWarp
+#
+#	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+#
+#	License:		GNU General Public License
+#
+#	SWarp is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+# 	(at your option) any later version.
+#	SWarp is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#	You should have received a copy of the GNU General Public License
+#	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
+#
+#	Last modified:		26/10/2010
+#
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+------------------------------------------------------------------------
+r95 | bertin | 2010-09-01 11:39:26 +0200 (Wed, 01 Sep 2010) | 3 lines
+
+Added MJD-OBS (start of observations) to output FITS headers.
+Pushed version number to 2.19.1.
+
+------------------------------------------------------------------------
+r94 | bertin | 2010-08-26 00:19:37 +0200 (Thu, 26 Aug 2010) | 7 lines
+
+Rewrote astrometric flux rescaling code to solve problem with manual background
+subtraction (thanks to D.G.Bonfield for reporting). Expect slight changes at the
+1e-5 level for background-subtracted resampled pixels. The displayed background
+values are now those of the original image.
+Added RESCALE_WEIGHTS configuration switch (defaulted to Y). Setting
+RESCALE_WEIGHTS to N turns off automatic weight and variance rescaling based on
+the actual noise level measured in the image (thanks to J.Mohr and C.Mancone
+for the suggestion).
+Fixed (once again) the automatic centering and framing algorithm (thanks to
+D.Murphy for reporting).
+Updated links in README, ChangeLog and man page.
+Increased default values for the MEM_MAX and COMBINE_BUFSIZE memory parameters
+to 256MB.
+Pushed version number to 2.19.0.
+
+------------------------------------------------------------------------
+r93 | bertin | 2010-07-20 13:23:20 +0200 (Tue, 20 Jul 2010) | 2 lines
+
+Fixed TFORM error message in fitshead.c (thanks to S.Guieu).
+
+------------------------------------------------------------------------
+r92 | bertin | 2010-07-02 14:34:23 +0200 (Fri, 02 Jul 2010) | 2 lines
+
+Removed redundant update_tab() calls.
+
+------------------------------------------------------------------------
+r91 | bertin | 2010-07-02 11:54:17 +0200 (Fri, 02 Jul 2010) | 2 lines
+
+Fixed comment copy issue for slashes within strings (thanks to F.Schuller).
+
+------------------------------------------------------------------------
+r90 | bertin | 2010-05-21 16:23:28 +0200 (Fri, 21 May 2010) | 2 lines
+
+Fixed syntax message (thanks to J.-B. Marquette).
+
+------------------------------------------------------------------------
+r89 | bertin | 2010-04-20 17:39:38 +0200 (Tue, 20 Apr 2010) | 2 lines
+
+Added LICENSE to the .spec.in file, too.
+
+------------------------------------------------------------------------
+r88 | bertin | 2010-04-20 17:37:35 +0200 (Tue, 20 Apr 2010) | 2 lines
+
+Added LICENSE to the list of EXTRA_DIST files.
+
+------------------------------------------------------------------------
+r87 | bertin | 2010-04-20 17:34:48 +0200 (Tue, 20 Apr 2010) | 2 lines
+
+Added CeCILL version 2 license text and update COPYRIGHT information.
+
+------------------------------------------------------------------------
+r86 | bertin | 2010-02-22 14:54:59 +0100 (Mon, 22 Feb 2010) | 2 lines
+
+Deactivated subtraction of the median background from saturation level if the
+result is negative.
+
+------------------------------------------------------------------------
+r85 | bertin | 2009-09-10 19:32:33 +0200 (Thu, 10 Sep 2009) | 6 lines
+
+Added --enable-auto-flags.
+Added --enable-best-link configure option.
+Added rpm-best option in Makefile.am.
+Cleaned up configure file.
+Pushed version number to 2.18.0.
+
+------------------------------------------------------------------------
+r84 | bertin | 2009-05-22 14:31:31 +0200 (Fri, 22 May 2009) | 3 lines
+
+Added filtering of non-numerical characters for floating-point FITS keywords
+(thanks to D.G. Bonfield for the suggestion).
+Included Chiara's MissFITS fix in fitspick().
+
+------------------------------------------------------------------------
+r83 | bertin | 2009-04-28 19:27:03 +0200 (Tue, 28 Apr 2009) | 2 lines
+
+Fixed bug in make_kernel() test bug (thanks to R.Owen).
+
+------------------------------------------------------------------------
+r81 | bertin | 2009-04-09 15:55:32 +0200 (Thu, 09 Apr 2009) | 3 lines
+
+Fixed references to COPYRIGHT file.
+Pushed version number to 2.17.6.
+
+------------------------------------------------------------------------
+r80 | bertin | 2009-04-01 18:48:34 +0200 (Wed, 01 Apr 2009) | 4 lines
+
+Fixed icc 11 compilations options on x86-64 architecture.
+Cleaned up obsolete references.
+Added favicon to XSLT filter.
+
+------------------------------------------------------------------------
+r79 | bertin | 2009-04-01 14:42:31 +0200 (Wed, 01 Apr 2009) | 2 lines
+
+Updated XSLT filter (AstrOmatic theme).
+
+------------------------------------------------------------------------
+r77 | bertin | 2009-03-23 18:20:20 +0100 (Mon, 23 Mar 2009) | 7 lines
+
+Cleaned up Makefile.am RPM options.
+Fixed rpm build issue on Fedora Core 10.
+Fixed display of max thread number in configure help.
+Updated icc compilation flags to 11.0 syntax.
+Set the license string to CeCILL in the .spec file.
+Pushed version number to 2.17.5.
+
+------------------------------------------------------------------------
+r76 | bertin | 2009-02-20 18:22:43 +0100 (Fri, 20 Feb 2009) | 3 lines
+
+Fixed bug which would cause the mapping to depend on the ordering of PVs.
+Pushed version number to 2.17.4
+
+------------------------------------------------------------------------
+r75 | bertin | 2009-01-12 17:55:07 +0100 (Mon, 12 Jan 2009) | 2 lines
+
+Set doc to correct mime-type.
+
+------------------------------------------------------------------------
+r73 | root | 2009-01-09 17:25:25 +0100 (Fri, 09 Jan 2009) | 1 line
+
+Changed trunk directory name
+------------------------------------------------------------------------
+r72 | bertin | 2008-12-16 19:23:32 +0100 (Tue, 16 Dec 2008) | 2 lines
+
+Fixed version numbering issue.
+
+------------------------------------------------------------------------
+r71 | bertin | 2008-12-16 19:19:30 +0100 (Tue, 16 Dec 2008) | 2 lines
+
+Added versioning of resampled filenames for duplicated input filenames (reported
+by J.Mohr).
+
+------------------------------------------------------------------------
+r70 | bertin | 2008-12-05 10:30:36 +0100 (Fri, 05 Dec 2008) | 4 lines
+
+Increased MAXINFIELD (max.number of input images) to 200,000 (was 100,000)
+Increased MAXLIST (number arguments per option) to MAXINFIELD (was 256!)
+Increased MAXLISTSIZE to (100*MAXLIST).
+
+------------------------------------------------------------------------
+r69 | bertin | 2008-12-02 12:16:19 +0100 (Tue, 02 Dec 2008) | 3 lines
+
+Fixed image framing and flux scaling problem when mixing different lng and lat
+axes (thanks to David G. Bonfield).
+Pushed version number to 2.17.3.
+
+------------------------------------------------------------------------
+r68 | bertin | 2008-10-27 13:29:07 +0100 (Mon, 27 Oct 2008) | 2 lines
+
+Fixed asymmetry of background filtering at image boundaries (thanks to P.Astier
+and D.Hardin).
+
+------------------------------------------------------------------------
+r67 | bertin | 2008-10-01 19:09:35 +0200 (Wed, 01 Oct 2008) | 2 lines
+
+Updated FITS library to the latest version.
+
+------------------------------------------------------------------------
+r66 | bertin | 2008-10-01 18:04:59 +0200 (Wed, 01 Oct 2008) | 3 lines
+
+Fixed superfluous -static-intel LDFLAGS in new compiler optimization script.
+Removed swarp-mp spec file (merged now with swarp.spec).
+
+------------------------------------------------------------------------
+r65 | bertin | 2008-10-01 16:45:42 +0200 (Wed, 01 Oct 2008) | 5 lines
+
+Updated compiler autoconfiguration script.
+Updated .spec RPM script.
+Added rpm-icc target.
+Version is now 2.17.2.
+
+------------------------------------------------------------------------
+r64 | bertin | 2008-02-06 15:20:53 +0100 (Wed, 06 Feb 2008) | 2 lines
+
+Fixed issue with missing "@"lists (reported by H.J. McCracken).
+
+------------------------------------------------------------------------
+r63 | bertin | 2008-01-10 17:33:04 +0100 (Thu, 10 Jan 2008) | 2 lines
+
+Fixed error in the y^2.x^4 PV monomial (found by R.Haigron & J.Guibert). 
+
+------------------------------------------------------------------------
+r62 | bertin | 2008-01-08 12:20:00 +0100 (Tue, 08 Jan 2008) | 3 lines
+
+Fixed issue with multiple input files (only one would be considered).
+Version number pushed to 2.17.1.
+
+------------------------------------------------------------------------
+r61 | bertin | 2008-01-07 15:46:53 +0100 (Mon, 07 Jan 2008) | 3 lines
+
+Added description of FSCALASTRO_TYPE and @ syntax to doc.
+Added sincos() support in interpolate_pix() (much faster with gcc, slightly
+slower with icc).
+
+------------------------------------------------------------------------
+r60 | bertin | 2008-01-04 19:16:46 +0100 (Fri, 04 Jan 2008) | 4 lines
+
+Fixed weighting in FSCALASTRO_TYPE VARIABLE mode.
+Fixed CD transformation matrix in precessions.
+Optimized the computation of interpolation kernels for Lanczos3 (speed +30%)
+and Lanczos3 (speed +40%) using trigonometric polynomials.
+
+------------------------------------------------------------------------
+r59 | bertin | 2008-01-03 20:00:04 +0100 (Thu, 03 Jan 2008) | 4 lines
+
+Added FSCALASTRO_TYPE VARIABLE mode to compensate for variable pixel scale on
+exposures corrected for illumination.
+Cleaned up code in FITSWCS library.
+Version number pushed to 2.17.0.
+
+------------------------------------------------------------------------
+r58 | bertin | 2007-11-18 15:26:51 +0100 (Sun, 18 Nov 2007) | 5 lines
+
+Added support for reading selected FITS extensions for all input images/maps
+(e.g. image.fits[3] a la CFITSIO).
+Added @lists support in all config-file and command-line arguments.
+Removed .svn directories from source archive.
+Pushed version number to 2.16.6.
+
+------------------------------------------------------------------------
+r57 | marmo | 2007-08-09 17:35:41 +0200 (Thu, 09 Aug 2007) | 1 line
+
+headflag inherited by the output field.
+------------------------------------------------------------------------
+r56 | marmo | 2007-08-08 20:22:51 +0200 (Wed, 08 Aug 2007) | 1 line
+
+XSLT style-sheet updated.
+------------------------------------------------------------------------
+r55 | bertin | 2007-07-17 12:39:40 +0200 (Tue, 17 Jul 2007) | 3 lines
+
+Upgraded to the latest version of the FITS library.
+Updated the THANKS.
+
+------------------------------------------------------------------------
+r54 | bertin | 2007-07-16 19:44:31 +0200 (Mon, 16 Jul 2007) | 3 lines
+
+FITS cleanup bug (http://astromatic.net/forum/showthread.php?tid=236) fixed.
+Effective gain is now computed properly when FSCALEASTRO_TYPE is FIXED
+(http://astromatic.net/forum/showthread.php?tid=129).
+
+------------------------------------------------------------------------
+r53 | bertin | 2007-07-13 22:00:26 +0200 (Fri, 13 Jul 2007) | 5 lines
+
+Temptative fix of the FITS cleanup bug
+(see http://astromatic.net/forum/showthread.php?tid=236).
+Updated doc.
+Updated THANKS.
+Hid GAIN and SATLEVEL config parameters.
+
+------------------------------------------------------------------------
+r52 | bertin | 2007-07-13 20:32:00 +0200 (Fri, 13 Jul 2007) | 5 lines
+
+Fixed update date and a few details.
+Included missing acx_urbi_resolve_dir.m4.
+Removed acx_mpi.m4.
+Updated to the last FITS library version.
+
+------------------------------------------------------------------------
+r51 | marmo | 2007-06-25 19:04:46 +0200 (Mon, 25 Jun 2007) | 1 line
+
+computation of saturation level added.
+------------------------------------------------------------------------
+r50 | marmo | 2007-06-19 20:31:34 +0200 (Tue, 19 Jun 2007) | 1 line
+
+rpm building generalised.
+------------------------------------------------------------------------
+r49 | marmo | 2007-06-19 19:19:15 +0200 (Tue, 19 Jun 2007) | 1 line
+
+Akim Demaille macro for solving the  issue added
+------------------------------------------------------------------------
+r48 | bertin | 2007-06-08 16:12:01 +0200 (Fri, 08 Jun 2007) | 2 lines
+
+Updated the documentation (about XML now written by default and image list
+support).
+
+------------------------------------------------------------------------
+r47 | bertin | 2007-06-08 15:53:25 +0200 (Fri, 08 Jun 2007) | 2 lines
+
+Added Akim Demaille's fix for absolute paths.
+
+------------------------------------------------------------------------
+r46 | marmo | 2007-06-08 15:34:19 +0200 (Fri, 08 Jun 2007) | 1 line
+
+Error notification added
+------------------------------------------------------------------------
+r45 | bertin | 2007-06-08 15:05:30 +0200 (Fri, 08 Jun 2007) | 4 lines
+
+Updated fits library modules to the latest version.
+Updated release info files.
+Pushed version number to 2.16.3 (release version).
+
+------------------------------------------------------------------------
+r44 | bertin | 2007-06-08 14:54:44 +0200 (Fri, 08 Jun 2007) | 3 lines
+
+Added support for pseudo-3D image cubes (e.g. ISSA maps).
+Added internal functions for future astrometric improvements.
+
+------------------------------------------------------------------------
+r43 | marmo | 2007-05-30 14:44:35 +0200 (Wed, 30 May 2007) | 1 line
+
+all tables in xml file are now displayed.
+------------------------------------------------------------------------
+r42 | bertin | 2007-05-17 18:00:30 +0200 (Thu, 17 May 2007) | 2 lines
+
+Fixed issue with ZPN and other projections by using the right latitude axis.
+
+------------------------------------------------------------------------
+r41 | bertin | 2007-04-03 17:59:05 +0200 (Tue, 03 Apr 2007) | 2 lines
+
+Fixed swapping of CTYPEs for mixed longitude and latitude indices.
+
+------------------------------------------------------------------------
+r40 | bertin | 2007-04-03 14:31:36 +0200 (Tue, 03 Apr 2007) | 2 lines
+
+Dirty-fixed ${datarootdir} issue in configure.
+
+------------------------------------------------------------------------
+r39 | bertin | 2007-04-02 19:00:00 +0200 (Mon, 02 Apr 2007) | 2 lines
+
+Fixed issue occurring when longitude and latitude axes are mixed.
+
+------------------------------------------------------------------------
+r38 | marmo | 2007-03-28 15:09:03 +0200 (Wed, 28 Mar 2007) | 1 line
+
+basic xslt stylesheet imported
+------------------------------------------------------------------------
+r37 | bertin | 2007-03-26 14:41:33 +0200 (Mon, 26 Mar 2007) | 6 lines
+
+Added XSLT filter file (currently copied from the SCAMP XSLT filter).
+Fixed XSLT filter path problem with RPM versions.
+Added External_Header flag FIELD to XML-VOTable output.
+Improved configure summary display.
+Pushed version number to 2.16.1.
+
+------------------------------------------------------------------------
+r36 | bertin | 2007-03-08 09:58:16 +0100 (Thu, 08 Mar 2007) | 2 lines
+
+Removed forgotten debug display,
+
+------------------------------------------------------------------------
+r35 | bertin | 2007-02-18 09:24:48 +0100 (Sun, 18 Feb 2007) | 2 lines
+
+Fixed bug occuring while picking up integers in headers.
+
+------------------------------------------------------------------------
+r34 | bertin | 2007-02-08 21:04:16 +0100 (Thu, 08 Feb 2007) | 3 lines
+
+Added new celsys_to_eq() and eq_to_celsys() functions to fitswcs library.
+Fixed issue with automatic centering with galactic (or anything else) inputs and
+equatorial outputs. 
+
+------------------------------------------------------------------------
+r33 | bertin | 2007-01-17 18:03:46 +0100 (Wed, 17 Jan 2007) | 2 lines
+
+Added options for compiling with icc (Intel compiler).
+
+------------------------------------------------------------------------
+r32 | bertin | 2006-10-29 21:07:01 +0100 (Sun, 29 Oct 2006) | 3 lines
+
+Applied patch by Sergio Pascual for configuring the path to the XSL file.
+Updated the TODO section.
+
+------------------------------------------------------------------------
+r31 | bertin | 2006-10-26 18:08:24 +0200 (Thu, 26 Oct 2006) | 4 lines
+
+Updated FITS library to the latest version.
+Fixed UCDs in XML output.
+Finalized support for file lists.
+
+------------------------------------------------------------------------
+r30 | marmo | 2006-10-25 18:59:54 +0200 (Wed, 25 Oct 2006) | 1 line
+
+input as image list enabled
+------------------------------------------------------------------------
+r29 | bertin | 2006-09-19 15:29:39 +0200 (Tue, 19 Sep 2006) | 2 lines
+
+Removed residual debugging info.
+
+------------------------------------------------------------------------
+r28 | bertin | 2006-09-19 15:27:21 +0200 (Tue, 19 Sep 2006) | 2 lines
+
+Fixed bug with COPY_KEYWORDS option on some specific headers.
+
+------------------------------------------------------------------------
+r27 | bertin | 2006-08-10 18:40:17 +0200 (Thu, 10 Aug 2006) | 3 lines
+
+Typo in preference list fixed.
+This is the 2.16 release.
+
+------------------------------------------------------------------------
+r26 | bertin | 2006-08-09 20:12:58 +0200 (Wed, 09 Aug 2006) | 5 lines
+
+Added Equinox and COOSYS FIELDs to VOTable output.
+Fixed various issues in the propagation of astrometric and photometric metadata.
+Updated the documentation.
+Changed the version number to 2.16: we are go for the release!
+
+------------------------------------------------------------------------
+r25 | bertin | 2006-08-08 20:17:11 +0200 (Tue, 08 Aug 2006) | 4 lines
+
+Fixed graph matrix overflow in image combine routine.
+Removed counting of more than one extension per file in the displayed number of
+overlaps.
+Added estimate of maximum exposure time and maximum effective gain in FITS and
+XML meta-data outputs.
+
+------------------------------------------------------------------------
+r24 | bertin | 2006-08-05 20:06:24 +0200 (Sat, 05 Aug 2006) | 2 lines
+
+Optimized the COMBINE buffer allocation by finding the real maximal clique by
+using the recursive algorithm of Bron & Kerbosch (1971): typical gain ~ 50%.
+
+------------------------------------------------------------------------
+r23 | bertin | 2006-08-02 22:04:55 +0200 (Wed, 02 Aug 2006) | 3 lines
+
+Fixed serious co-addition bug for framed output FOVs.
+Removed useless access to images outside the output frame during co-addition.
+
+------------------------------------------------------------------------
+r22 | bertin | 2006-08-01 23:00:44 +0200 (Tue, 01 Aug 2006) | 3 lines
+
+Fixed issues with image combining with RESAMPLE N.
+Fixed (invisible) floating exception occuring during image combining.
+
+------------------------------------------------------------------------
+r21 | bertin | 2006-07-27 21:29:03 +0200 (Thu, 27 Jul 2006) | 6 lines
+
+Added/Fixed several elements in XML output.
+Added BLANK_BADPIXELS option to blank output pixels with a weight of zero.
+Added "naive" total exposure time calculation.
+Increased background buffer size to 8MB.
+Doc: added BLANK_BADPIXELS keyword description and fixed typos in gain
+computation.
+
+------------------------------------------------------------------------
+r20 | bertin | 2006-07-26 20:29:05 +0200 (Wed, 26 Jul 2006) | 5 lines
+
+XML VOTable output implementation now complete (checked validity and
+compliance).
+Added stdout output of XML using XML_NAME STDOUT option.
+Pushed the limit for keyword length to 32 chars.
+Doc: Updated to 2.16, with info about XML output options.
+
+------------------------------------------------------------------------
+r19 | bertin | 2006-07-26 11:47:29 +0200 (Wed, 26 Jul 2006) | 2 lines
+
+Corrected a typo that would prevent the code to compile on Macs.
+
+------------------------------------------------------------------------
+r18 | bertin | 2006-07-25 22:52:52 +0200 (Tue, 25 Jul 2006) | 2 lines
+
+Further progress with the XML-Votable output (note: "ct" units replaced with
+"adu" units).
+
+------------------------------------------------------------------------
+r17 | bertin | 2006-07-25 16:00:31 +0200 (Tue, 25 Jul 2006) | 2 lines
+
+Added automatic detection of the number of CPUs on BSD, HP/UX and IRIX systems.
+
+------------------------------------------------------------------------
+r16 | bertin | 2006-07-24 20:47:56 +0200 (Mon, 24 Jul 2006) | 2 lines
+
+Further progress on the XML metadata config dump.
+
+------------------------------------------------------------------------
+r15 | bertin | 2006-07-21 21:09:26 +0200 (Fri, 21 Jul 2006) | 3 lines
+
+Further progress on the XML output.
+Added a follow-up of celestial types through field structures.
+
+------------------------------------------------------------------------
+r14 | bertin | 2006-07-20 22:01:53 +0200 (Thu, 20 Jul 2006) | 5 lines
+
+Cleaned up configure.ac (removed obsolete options).
+Added XML VOTable output support files.
+Added error catching routines.
+Added XML VOTable support (not finished, deactivated for now).
+
+------------------------------------------------------------------------
+r13 | bertin | 2006-07-19 19:41:42 +0200 (Wed, 19 Jul 2006) | 3 lines
+
+Added CELESTIAL_TYPE SUPERGALACTIC option.
+Cleaned up default configuration file dump.
+
+------------------------------------------------------------------------
+r12 | bertin | 2006-07-19 18:14:38 +0200 (Wed, 19 Jul 2006) | 5 lines
+
+Updated ChangeLog.
+Relaxed binary table identification checks.
+Fixed coordinate system transformation bug (detected on Gal<->Eq).
+Added support for supergalactic coordinate system.
+
+------------------------------------------------------------------------
+r11 | baillard | 2006-07-18 13:55:53 +0200 (Tue, 18 Jul 2006) | 2 lines
+
+Move swarp to public repository
+
+------------------------------------------------------------------------
+r10 | bertin | 2006-07-17 20:02:20 +0200 (Mon, 17 Jul 2006) | 4 lines
+
+Added ICRS support (but no conversion to older systems yet).
+Updated the FITS library to the latest version (adds warning history, error
+catching and fixes pointer aliasing compilation warnings). 
+Updated WCS routines to the latest version (TNX multithreading and polynomial
+bugfixes).
+
+------------------------------------------------------------------------
+r9 | bertin | 2006-06-08 17:32:31 +0200 (Thu, 08 Jun 2006) | 2 lines
+
+Fixed a bug that would make config arguments limited to 496 chars
+(see http://astromatic.net/forum/showthread.php?tid=14).
+
+------------------------------------------------------------------------
+r8 | bertin | 2006-03-12 18:56:52 +0100 (Sun, 12 Mar 2006) | 2 lines
+
+Updated ChangeLog and HISTORY files.
+
+------------------------------------------------------------------------
+r7 | bertin | 2006-03-12 18:36:29 +0100 (Sun, 12 Mar 2006) | 2 lines
+
+Replaced make with make -j to speed up the RPM building process.
+
+------------------------------------------------------------------------
+r6 | bertin | 2006-03-11 22:41:55 +0100 (Sat, 11 Mar 2006) | 3 lines
+
+Fixed segfault with too long arguments.
+Version number pushed to 2.15.7.
+
+------------------------------------------------------------------------
+r5 | bertin | 2006-01-31 17:13:07 +0100 (Tue, 31 Jan 2006) | 2 lines
+
+Removed a forgotten 'printf("coucou\n")' in fitscleanup.c ...
+
+------------------------------------------------------------------------
+r4 | bertin | 2006-01-31 17:10:52 +0100 (Tue, 31 Jan 2006) | 2 lines
+
+Added additional checks to resampling boundaries to prevent crash in case of
+buggy astrometric solutions.
+
+------------------------------------------------------------------------
+r3 | marmo | 2005-11-12 19:11:47 +0100 (Sat, 12 Nov 2005) | 1 line
+
+fixed the bug on single weight image mode
+------------------------------------------------------------------------
+r2 | bertin | 2005-10-17 16:53:55 +0200 (Mon, 17 Oct 2005) | 1 line
+
+-------------------------------- old ChangeLog --------------------------------
+Who     When            Where(mostly)   What
+
+EB      13/03/2001      useprefs()      Allow Weighting when input weight-maps
+                                        are missing.
+
+EB      15/03/2001      coadd_pix()     Provide a specific handling of the
+                                        weights when n=2 in COMBINE_TYPE
+                                        MEDIAN mode.
+
+EB      09/04/2001      make_back()     Fixed a bug with weight-maps in
+                                        large-image mode.
+
+EB      01/08/2001      coadd_pix()     Fixed a weighting bug in MEDIAN mode.
+
+EB      06/08/2001      -               Reorganize files and directories on the
+                                        MissFITS model.
+
+EB      10/08/2001      -               Added support for header_only and
+                                        resample_only modes.
+
+EB      13/08/2001      write_wcs()     Fixed a small bug that would cause
+                                        the RADECSYS keyword to be written
+                                        twice in the header.
+                        header.c        Added read/write support for COMIN
+                                        and COMAX custom FITS keywords.
+
+EB      07/03/2002      makeit()        Make the identification of non-image
+                                        FITS data more strict for ambiguous
+                                        headers.
+
+EB      16/03/2002      resample.c      New module extracted from coadd.c
+                        resample.h      New include for resample.c
+
+EB      18/03/2002      -               Added multithreading to resampling
+                                        routine (compile with -DUSE_THREADS
+                                        option).
+
+EB      08/06/2002	printinfo_field()
+                                        Astrom/Photom displayed flux scale was
+                                        inversed.
+EB      09/06/2002      read_aschead()  Make header parsing less strict.
+                        resample_field()
+                        frame_wcs()     Fixed problem with images outside the
+                                        output frame.
+
+EB      11/06/2002      resample_field()
+                                        Fixed pthread_mutex_destroy() bug on
+                                        Alpha.
+                        field.c         New display of external header info.
+
+EB      13/06/2002      -               Removed config.h from define.h and
+                                        included explicitely in all sources
+
+EB      14/06/2002      -               Added off_t type explicitely in
+                                        fseek()s and ftell()s. KINGSIZE_T type
+                                        added in the fits library to support
+                                        large files.
+
+EB      15/06/2002      coadd_fields()  Fixed memory bug for images completely
+                                        outside the output frame.
+
+EB      17/07/2002      fitswcs.c       Added wcs_dist() function and field
+                                        radius measurement (copied from SAM).
+
+EB      24/07/2002      wcs_dist()      Fixed a units bug.
+
+EB      29/09/2002      load_weight()   Fixed WEIGHT_FROMRMSMAP bug.
+                        coadd_fields()  Removed normalization of output
+                                        weights.
+EB      08/10/2002      init_field()    Make the sign of longitude increment
+                                        negative in automatic framing.
+                        writefitsinfo_field()
+                                        Fixed FITS header bug in WRITE_FILEINFO
+                                        mode with input weight-maps
+                        main()          Changed banner.
+EB      28/11/2002      init_field()    Fixed bad propagation of longitude
+                                        increment sign.
+                        define.h        COPYRIGHT Slightly modified.
+                        configure.in    Allow NTHREADS>1 in monothreaded build.
+                        use_prefs()     Warning added.
+
+EB      10/01/2003      interpolate_pix()
+                                        linecount[n] was not initialized.
+
+EB      18/01/2003      range_wcs()     Fixed scaling sign bug for
+					non-spherical projections
+
+EB      10/04/2003      coadd_pix()
+                        fast_median()   Activate a faster version of the
+                                        median for co-addition.
+EB      17/04/2003      resample.c      New multithreaded code.
+
+EB      18/04/2003      init_field()    Handled properly case with CENTER_TYPE
+                                        MANUAL and IMAGE_SIZE 0.
+                        make_kernel()   Optimized Lanczos kernel computations.
+
+EB      19/04/2003      fast_median()   Optimized further.
+
+EB      20/04/2003      prefs.h         Fixed missing galactic coord support.
+                        load_field()
+                        init_field()    Added support for PIXEL celestial type.
+
+EB      21/04/2003      -               Added propagation of FITS keywords.
+                        addkeywordto_head()
+                                        Fixed bug when adding COMMENTs
+                        fitswrite()
+                        fitspick()      Improved handling of H_STRINGS comments
+
+EB      28/04/2003      coadd_pix()     Optimized code.
+                        -               Added opt. support for INTEL math lib.
+                        resample_field()
+                                        Changed temp. weight naming convention.
+
+EB      03/07/2003      threads.c       New modules with macro functions to
+                                        make multithreading easier.
+	
+EB      09/07/2003      coadd.c         Completely rewrote the co-addition
+                                        code. Better optimisation and multi-
+                                        threading added.
+
+EB      09/07/2003      lin.c           Replaced the <memory.h> include with an
+                                        <stdlib.h>
+
+EB      04/08/2003      threads.c       Made code compilation optional.
+
+EB      15/08/2003      -               Small fixes to avoid gcc  -Wall
+                                        warnings.
+                        addhistoryto_cat()
+                                        date in HISTORY has now dd/mm/YYYY
+                                        format
+
+EB      16/08/2003      -               Added HAVE_GETENV configure flag.
+                        header.c        Replaced getpwuid() with
+                                        getenv("LOGNAME")
+                        main()          Produce a more concise --version
+                                        output.
+
+EB      18/08/2003      coadd_fields()  Weight-map corruption bug fixed.
+
+EB      20/08/2003      field.c         Removed obsolete #includes.
+
+EB      17/10/2003      -               Made COPYSIGN and SIGNBIT conditions
+                                        the default in wcslib.
+
+EB      20/10/2003      -               Removed additional gcc -Wall warnings.
+
+EB      21/10/2003      coadd_line()    Set output pixel to one of the input
+                                        values when all input weights are zero.
+
+EB      26/10/2003      range_wcs()
+                        invert_wcs()    Fixed bug in step increment.
+                        fitswcs.*       Updated to the latest SCAMP version.
+
+EB      28/10/2003      write_wcs()     Fixed bug when writing PVs.
+
+EB      05/11/2003      read_body()
+                        read_fitsbasic()
+                        interpolate_pix()
+                        backstat()
+                        convert_data()  Added support for BLANKed pixels.
+
+EB      06/11/2003      invert_wcs()
+                        range_wcs()     Extended the automatic min and max
+                                        WCS limits of a field to pixel borders.
+                        read_body()     Fixed NaN detection.
+
+EB      09/11/2003      convert_data()
+                        read_fitsbasic()
+                        backstat()      Fixed BLANKing bugs in WEIGHTED mode.
+
+EB      16/11/2003      -               Added PROJECTION_ERR keyword and new
+                                        "approximated astrometry" mode.
+
+EB      19/11/2003      init_field()    Positioned headerflag for output field.
+
+EB      20/11/2003      fitswcs.c
+                        makeit()
+                        init_field()    Added support for heterogeneous axis
+                                        labeling.
+EB      21/11/2003      makeit()
+                        load_field()
+                        load_weight()   Reduced memory usage with MEFs.
+
+                        projapp_init()  Removed warning for small images.
+
+EB      22/11/2003      coadd_movewdata()
+                                        Copy first pixel value in output image
+                                        if all weights are 0.
+
+EB      24/11/2003      warp_line()     Fixed a HUGE bug in resampling!!!
+
+EB      28/11/2003      tnx.c           Broken TNX support rehabilitated.
+
+EB      20/12/2003      warp_line()     Fixed projection bug with oversampling.
+
+EB      04/01/2004      raw_to_pv()     Fixed bug for polynoms >= 4th degree.
+
+EB      06/02/2004	coadd_line()	Fixed bug with COADD_CHI2.
+
+EB      28/04/2004      scale_field()   Fixed BZERO scaling bug.
+
+EB      06/11/2004      range_wcs()     Fixed auto-limits with all-sky images.
+
+EB      17/11/2004      fitsutil.c      Update + replaced %e by %E format.
+                        makeit()
+                        main()          Improved display (time, # of threads..)
+                        read_aschead()  Fixed header corruption bugs with
+                                        crippled .head lines.
+                        read_prefs()    Added automatic NTHREADS on systems
+                                        with sysconf(_SC_NPROCESSORS_ONLN).
+
+EB      18/11/2004      read_aschead()  Removed debug info left by mistake
+                                        Improved robustness of header reading
+                        configure.ac    Removed icc/gcc duplicated options.
+
+EB      05/12/2004      swarp.tex       Fixed a few confusing equations.
+
+EB      09/12/2004      makeit()        Fixed a long standing bug: weights
+                                        were not scaled with the flux scale.
+
+EB      10/12/2004      -               New .spec files and rpm handling
+                                        (cross-compiling now possible on
+                                        x86_64).
+                        back.c
+                        back.h          Replaced long's by int's.
+
+EB      26/04/2005      FITS library    Upgraded to the latest version.
+
+EB      27/04/2005      makeit()        Fixed segfault with Nextensions > 8182.
+
+EB      28/04/2005      coadd_line()    Added support for summation.
+
+EB      20/06/2005      fitswcs.c       Upgraded to the latest version.
+
+EB      21/06/2005      coadd.c         Fixed segfault and positioning pb
+                                        in RESAMPLE N mode.
+
+EB      22/06/2005      init_field()    Force sexagedecimal input order to
+                                        lng,lat
+
+EB      24/06/2005      makeit()        Dropped reaxe_wcs() for lng>lat
+
+EB      19/07/2005      init_field()    Fixed non-integer CRPIXs in automatic
+                                        IMAGE_SIZE mode.
+                        dumpprefs()     Added support for "deep dump".
+
+EB      20/07/2005      makeit()        Fixed a huge bug introduced while axing
+                                        reaxe_wcs()...
+                        -               Replace Postscript version of doc with
+                                        PDF file.
+
+EB      15/09/2005      pthread_nextline()
+                                        Fixed long-standing line-swapping bug
+                                        in multi-threaded mode.
+
+CM      12/11/2005      useprefs()      Propagate duplicate weight-map in case
+                                        of multiple input images.
+
+EB      31/01/2006      interpolate_pix()
+                                        Added additional boundary check to
+                                        prevent bogus astrometric solutions
+					from crashing SWarp.
+
+EB      11/03/2006      prefs.c         Allow very long arrays of strings to
+                                        be given as arguments to swarp.
