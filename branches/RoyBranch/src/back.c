@@ -144,6 +144,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
     }
 
 /* Loop over the data packets */
+  int numRows; // CFITSIO
   for (j=0; j<ny; j++)
     {
     if (lflag && j)
@@ -155,12 +156,31 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
 /*---- The image is small enough so that we can make exhaustive stats */
       if (j == ny-1 && field->npix%bufsize)
         bufsize = field->npix%bufsize;
-      read_body(tab, buf, bufsize);
+
+      // CFITSIO
+      if (field->tab->isTileCompressed)
+      {
+    	  numRows = bufsize/w;
+    	  read_body_with_cfitsio(field->tab, buf, TFLOAT, 1, j*numRows+1, w, (j+1)*numRows);
+      }
+      else
+    	  read_body(tab, buft, w);
+
       if (wfield)
-        {
-        read_body(wtab, wbuf, bufsize);
-        weight_to_var(wbuf, bufsize);
-        }
+      {
+
+          // CFITSIO
+    	  if (field->tab->isTileCompressed)
+    	  {
+    		  numRows = bufsize/w;
+    		  read_body_with_cfitsio(field->tab, wbuf, TFLOAT, 1, j*numRows+1, w, (j+1)*numRows);
+    	  }
+    	  else
+    		  read_body(wtab, wbuf, bufsize);
+
+    	  weight_to_var(wbuf, bufsize);
+      }
+
 /*---- Build the histograms */
       backstat(backmesh, wbackmesh, buf, wbuf, bufsize,nx, w, bw,
 	wfield?wfield->var_thresh:0.0);
@@ -210,7 +230,18 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
       buft = buf;
       for (i=nlines; i--; buft += w)
         {
-        read_body(tab, buft, w);
+
+          // CFITSIO
+    	  if (field->tab->isTileCompressed)
+    	  {
+    		  numRows = 1;
+    		  read_body_with_cfitsio(field->tab, buft, TFLOAT, 1, j*numRows+1, w, (j+1)*numRows);
+    	  }
+    	  else
+    		  read_body(tab, buft, w);
+
+        //printf("DEBUG %f %f %f %f\n", buf[0], buf[1], buf[2], buf[bufsize-1]);
+
         if (i)
           QFSEEK(tab->cat->file, jumpsize*tab->bytepix, SEEK_CUR,
 		field->filename);
@@ -224,7 +255,15 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
         wbuft = wbuf;
         for (i=nlines; i--; wbuft += w)
           {
-          read_body(wtab, wbuft, w);
+
+            // CFITSIO        	
+            if (field->tab->isTileCompressed)
+        	{
+        		numRows = 1;
+        		read_body_with_cfitsio(field->tab, wbuft, TFLOAT, 1, j*numRows+1, w, (j+1)*numRows);
+        	}
+        	else
+        		read_body(wtab, wbuft, w);
           weight_to_var(wbuft, w);
           if (i)
             QFSEEK(wtab->cat->file, jumpsize*wtab->bytepix, SEEK_CUR,
@@ -255,10 +294,32 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
         {
         if (bufsize2>size)
           bufsize2 = size;
-        read_body(tab, buf, bufsize2);
+
+        // CFITSIO
+        if (field->tab->isTileCompressed)
+        {
+        	numRows = bufsize2/w;
+        	read_body_with_cfitsio(field->tab, buf, TFLOAT, 1, j*numRows+1, w, (j+1)*numRows);
+        }
+        else
+        	read_body(tab, buf, bufsize2);
+
+        //printf("DEBUG  %f %f %f %f\n", buf[0], buf[1], buf[2], buf[bufsize-1]);
+
         if (wfield)
           {
-          read_body(wtab, wbuf, bufsize2);
+
+            // CFITSIO
+        	if (field->tab->isTileCompressed)
+        	{
+        		numRows = bufsize2/w;
+        		read_body_with_cfitsio(field->tab, wbuf, TFLOAT, 1, j*numRows+1, w, (j+1)*numRows);
+        	}
+        	else
+        		read_body(wtab, wbuf, bufsize2);
+
+        	//printf("DEBUG %f %f %f %f\n", buf[0], buf[1], buf[2], buf[bufsize-1]);
+
           weight_to_var(wbuf, bufsize2);
           }
         backhisto(backmesh, wbackmesh, buf, wbuf, bufsize2, nx, w, bw,

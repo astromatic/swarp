@@ -43,6 +43,9 @@
 #include	"fitscat_defs.h"
 #include	"fitscat.h"
 
+// CFITSIO
+#include    "fitsio.h"
+
 size_t	body_maxram = BODY_DEFRAM,
 	body_maxvram = BODY_DEFVRAM,
 	body_ramleft, body_vramleft, body_ramflag;
@@ -50,6 +53,69 @@ size_t	body_maxram = BODY_DEFRAM,
 int	body_vmnumber;
 
 char	body_swapdirname[MAXCHARS] = BODY_DEFSWAPDIR;
+
+/**
+  CFITSIO
+
+  This is a function to read from a FITS image body using cfitsio.
+
+  data - this is a pointer to an array of data storage
+  dataType - this the type of the data passed in NOT the type of data expected in the FITS file (cfitsio performs auto-data type conversion)
+  startX etc - these are the x,y positons of the block of the image to be read into the data array
+
+ */
+int read_body_with_cfitsio(
+		tabstruct* tab,
+		void* data,
+		const int dataType,
+		const int startX,
+		const int startY,
+		const int endX,
+		const int endY) {
+
+	int status, hdupos, hdutype;
+
+	status = 0; fits_get_hdu_num(tab->infptr, &hdupos);
+	if (hdupos != tab->hdunum) {
+
+		status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
+		if (status != 0) {
+
+			printf("Error moving to HDU %d\n", tab->hdunum);
+			fits_report_error(stderr, status);
+		}
+	}
+
+	long fpixel[2]={1,1}, lpixel[2]={1,1}, inc[2]={1,1};
+	fpixel[0] = startX;
+	fpixel[1] = startY;
+	lpixel[0] = endX;
+	lpixel[1] = endY;
+
+	// cfitsio doc: "Automatic data type conversion is performed if the data type of the FITS array (as deﬁned by the BITPIX keyword) diﬀers from that speciﬁed by ’datatype’."
+	status = 0; fits_read_subset(
+			tab->infptr,
+			dataType,
+			fpixel,
+			lpixel,
+			inc,
+			NULL,
+			data,
+			NULL,
+			&status);
+
+	// success
+	if (status == 0) {
+
+		//printf("DEBUG: data[0] = %f %f %f\n", (float)data[0], (float)data[1], (float)data[endX-1]);
+		return 1;
+	}
+
+	printf("fits_read_subset FAILED: %d\n", status);
+	return 0;
+}
+
+
 
 /******* alloc_body ***********************************************************
 PROTO	PIXTYPE *alloc_body(tabstruct *tab,
