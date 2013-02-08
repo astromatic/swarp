@@ -86,6 +86,15 @@ int read_body_with_cfitsio(
 		}
 	}
 
+	// set the bscale/zero before reading
+	status = 0; fits_set_bscale(tab->infptr, tab->bscale,  tab->bzero, &status);
+	if (status != 0) {
+
+		printf("Error setting bscale/bzero\n");
+		fits_report_error(stderr, status);
+	}
+
+	// set coords to read
 	long fpixel[2]={1,1}, lpixel[2]={1,1}, inc[2]={1,1};
 	fpixel[0] = startX;
 	fpixel[1] = startY;
@@ -389,14 +398,20 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
   int			curval, dval, blankflag, ival, iblank;
   
   size_t	i, bowl, spoonful, npix;
-  PIXTYPE	bs,bz;
+  //PIXTYPE	bs,bz;
+  double	bs,bz;
 
 /* a NULL cat structure indicates that no data can be read */
   if (!(cat = tab->cat))
     return;
 
-  bs = (PIXTYPE)tab->bscale;
-  bz = (PIXTYPE)tab->bzero;
+  // this cast from double to float loses precision
+  //bs = (PIXTYPE)tab->bscale;
+  //bz = (PIXTYPE)tab->bzero;
+
+  bs = tab->bscale;
+  bz = tab->bzero;
+
   blankflag = tab->blankflag;
 
   switch(tab->compress_type)
