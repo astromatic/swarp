@@ -871,6 +871,7 @@ AUTHOR	E. Bertin (IAP)
 VERSION	13/06/2012
  ***/
 void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
+//void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size, size_t currentElement)
   {
   static double	bufdata0[DATA_BUFSIZE/sizeof(double)];
   catstruct	*cat;
@@ -971,8 +972,13 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
              float	*bufdata = (float *)cbufdata0;
             for (i=spoonful; i--;)
               *(bufdata++) = (*(ptr++)-bz)/bs;
-            if (bswapflag)
-              swapbytes(cbufdata0, 4, spoonful);
+
+
+            // CFITSIO - only perform byte-swap if we are NOT writing a tile-compressed format using cfitsio
+            if (tab->infptr == NULL)
+            	if (bswapflag)
+            		swapbytes(cbufdata0, 4, spoonful);
+
             }
             break;
 
@@ -991,7 +997,24 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
                                 "read_body()");
             break;
           }
-        QFWRITE(cbufdata0, spoonful*tab->bytepix, cat->file, cat->filename);
+
+        // CFITSIO - if cfitsio output file has been set up, then proceed to write using cfitsio
+        if (tab->infptr != NULL) {
+
+        	int status = 0; fits_write_img(tab->infptr, TFLOAT, tab->currentElement, spoonful, cbufdata0, &status);
+
+        	if (status != 0) {
+
+        		printf("CFITSIO ERROR writing start=%d end=%d absolute end=%d\n", tab->currentElement, (tab->currentElement + spoonful) , (tab->naxisn[0]*tab->naxisn[1]));
+        		fits_report_error(stderr, status);
+        	}
+
+        	tab->currentElement  = tab->currentElement  + spoonful;
+        }
+        // otherwise, continue with usual AstrOmatic fits writing routine
+        else
+        	QFWRITE(cbufdata0, spoonful*tab->bytepix, cat->file, cat->filename);
+
         }
       break;
 

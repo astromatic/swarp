@@ -139,6 +139,7 @@ pkeystruct key[] =
   {"WRITE_XML", P_BOOL, &prefs.xml_flag},
   {"XML_NAME", P_STRING, prefs.xml_name},
   {"XSL_URL", P_STRING, prefs.xsl_name},
+  {"TILE_COMPRESS", P_BOOL, &prefs.tile_compress_flag},
   {""}
  };
 
@@ -259,6 +260,7 @@ char *default_prefs[] =
 #else
 "NTHREADS               1               # 1 single thread",
 #endif
+"TILE_COMPRESS          N               # Write tile compressed output image (Y/N)?",
 ""
  };
 

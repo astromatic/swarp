@@ -200,6 +200,7 @@ typedef struct structtab
   fitsfile *infptr;                     /* a cfitsio pointer to the file */
   int hdunum;                           /* FITS HDU number for this 'table' */
   int isTileCompressed;                 /* is this a tile compressed image?  */
+  long currentElement;
 
   }		tabstruct;
 
