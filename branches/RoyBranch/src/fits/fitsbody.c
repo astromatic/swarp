@@ -871,7 +871,6 @@ AUTHOR	E. Bertin (IAP)
 VERSION	13/06/2012
  ***/
 void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
-//void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size, size_t currentElement)
   {
   static double	bufdata0[DATA_BUFSIZE/sizeof(double)];
   catstruct	*cat;
