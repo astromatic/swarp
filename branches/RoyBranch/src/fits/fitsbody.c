@@ -54,78 +54,6 @@ int	body_vmnumber;
 
 char	body_swapdirname[MAXCHARS] = BODY_DEFSWAPDIR;
 
-/**
-  CFITSIO
-
-  This is a function to read from a FITS image body using cfitsio.
-
-  data - this is a pointer to an array of data storage
-  dataType - this the type of the data passed in NOT the type of data expected in the FITS file (cfitsio performs auto-data type conversion)
-  startX etc - these are the x,y positons of the block of the image to be read into the data array
-
- */
-int read_body_with_cfitsio(
-		tabstruct* tab,
-		void* data,
-		const int dataType,
-		const int startX,
-		const int startY,
-		const int endX,
-		const int endY) {
-
-	int status, hdupos, hdutype;
-
-	status = 0; fits_get_hdu_num(tab->infptr, &hdupos);
-	if (hdupos != tab->hdunum) {
-
-		status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
-		if (status != 0) {
-
-			printf("Error moving to HDU %d\n", tab->hdunum);
-			fits_report_error(stderr, status);
-		}
-	}
-
-	// set the bscale/zero before reading
-	status = 0; fits_set_bscale(tab->infptr, tab->bscale,  tab->bzero, &status);
-	if (status != 0) {
-
-		printf("Error setting bscale/bzero\n");
-		fits_report_error(stderr, status);
-	}
-
-	// set coords to read
-	long fpixel[2]={1,1}, lpixel[2]={1,1}, inc[2]={1,1};
-	fpixel[0] = startX;
-	fpixel[1] = startY;
-	lpixel[0] = endX;
-	lpixel[1] = endY;
-
-	// cfitsio doc: "Automatic data type conversion is performed if the data type of the FITS array (as deﬁned by the BITPIX keyword) diﬀers from that speciﬁed by ’datatype’."
-	status = 0; fits_read_subset(
-			tab->infptr,
-			dataType,
-			fpixel,
-			lpixel,
-			inc,
-			NULL,
-			data,
-			NULL,
-			&status);
-
-	// success
-	if (status == 0) {
-
-		//printf("DEBUG: data[0] = %f %f %f\n", (float)data[0], (float)data[1], (float)data[endX-1]);
-		return 1;
-	}
-
-	printf("fits_read_subset FAILED: %d\n", status);
-	return 0;
-}
-
-
-
 /******* alloc_body ***********************************************************
 PROTO	PIXTYPE *alloc_body(tabstruct *tab,
 		void (*func)(PIXTYPE *ptr, int npix))
@@ -160,15 +88,19 @@ PIXTYPE	*alloc_body(tabstruct *tab, void (*func)(PIXTYPE *ptr, int npix))
 			tab->extname);
 
 /* Decide if the data will go in physical memory or on swap-space */
-  npix = tab->tabsize/tab->bytepix;
+
+
+  //npix = tab->tabsize/tab->bytepix;
+  npix = tab->naxisn[0] * tab->naxisn[1];
   size = npix*sizeof(PIXTYPE);
   if (size < body_ramleft)
     {
 /*-- There should be enough RAM left: try to do a malloc() */
     if ((tab->bodybuf = malloc(size)))
       {
-      QFSEEK(tab->cat->file, tab->bodypos, SEEK_SET, tab->cat->filename);
-      read_body(tab, (PIXTYPE *)tab->bodybuf, npix);
+    	QFSEEK(tab->cat->file, tab->bodypos, SEEK_SET, tab->cat->filename);
+    	tab->currentElement = 1; // CFITSIO
+    	read_body(tab, (PIXTYPE *)tab->bodybuf, npix);
 /*---- Apply pixel processing */
       if (func)
         (*func)((PIXTYPE *)tab->bodybuf, npix);
@@ -195,6 +127,7 @@ PIXTYPE	*alloc_body(tabstruct *tab, void (*func)(PIXTYPE *ptr, int npix))
     if (!spoonful)
       spoonful = DATA_BUFSIZE;
     QFSEEK(tab->cat->file, tab->bodypos, SEEK_SET, tab->cat->filename);
+    tab->currentElement = 1; // CFITSIO
     read_body(tab, buffer, spoonful/sizeof(PIXTYPE));
 /*-- Apply pixel processing */
     if (func)
@@ -425,7 +358,37 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
         if (spoonful>size)
           spoonful = size;
         bufdata = (char *)bufdata0;
-        QFREAD(bufdata, spoonful*tab->bytepix, cat->file, cat->filename);
+
+        // CFITSIO
+        if (tab->isTileCompressed) {
+
+            // the type we pass into fits_read_img() specifies the type of the input array, not the type of the image data
+        	int type;
+        	switch(tab->bitpix) {
+
+        	case BP_FLOAT:
+        		type = TFLOAT;
+        		break;
+        	case BP_DOUBLE:
+        		type = TDOUBLE;
+        		break;
+        	default:
+        		printf("ERROR expecting a floating-point type for a tile-compressed file. Defaulting to TFLOAT\n");
+        		type = TFLOAT;
+        	}
+
+        	int status = 0; fits_read_img(tab->infptr, type,  tab->currentElement, spoonful, NULL, bufdata, NULL, &status);
+
+        	if (status != 0) {
+
+        		printf("CFITSIO ERROR reading start=%d end=%d absolute end=%d\n", tab->currentElement, (tab->currentElement + spoonful) , (tab->naxisn[0]*tab->naxisn[1]));
+        		fits_report_error(stderr, status);
+        	}
+
+        	tab->currentElement += spoonful;
+        }
+        else
+        	QFREAD(bufdata, spoonful*tab->bytepix, cat->file, cat->filename);
         switch(tab->bitpix)
           {
           case BP_BYTE:
@@ -552,6 +515,7 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
             break;
 #endif
           case BP_FLOAT:
+              if (!tab->isTileCompressed)
             if (bswapflag)
               swapbytes(bufdata, 4, spoonful);
             for (i=spoonful; i--; bufdata += sizeof(float))
@@ -561,6 +525,7 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
           case BP_DOUBLE:
             if (bswapflag)
 	      {
+               if (!tab->isTileCompressed)
               swapbytes(bufdata, 8, spoonful);
               for (i=spoonful; i--; bufdata += sizeof(double))
                 *(ptr++) = ((0x7ff00000 & *(unsigned int *)(bufdata+4))

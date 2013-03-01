@@ -1819,6 +1819,7 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
         QFSEEK(field->cat->file,
 		field->tab->bodypos+offset*field->tab->bytepix,
 		SEEK_SET, field->filename);
+        field->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
         }
 #ifdef USE_THREADS
       linei = lineibuf + (threadstep&1)*field->width;
@@ -1883,6 +1884,7 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
           QFSEEK(wfield->cat->file,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
+          wfield->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
           }
         read_ibody(wfield->tab, linei, field->width);
         }
@@ -2028,18 +2030,12 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
         QFSEEK(field->cat->file,
 		field->tab->bodypos+offset*field->tab->bytepix,
 		SEEK_SET, field->filename);
+        field->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
         }
 #ifdef USE_THREADS
       line = linebuf+(threadstep&1)*field->width;
 
-
-      // CFITSIO
-      if (field->tab->isTileCompressed)
-    	  read_body_with_cfitsio(field->tab, line, TFLOAT, 1, (nbuflines - y + ival + 1), field->width, (nbuflines - y + ival + 1));
-      //printf("DEBUG new: data[0] = %.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g\n", line[0], line[1], line[111], line[222], line[555], line[777], line[2000], line[field->width-1]);
-      else
-          read_body(field->tab, line, field->width);
-      //printf("DEBUG old: data[0] = %.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g\n", line[0], line[1], line[111], line[222], line[555], line[777], line[2000], line[field->width-1]);
+      read_body(field->tab, line, field->width);
 
       if (threadstep++)
         threads_gate_sync(pthread_stopgate2);
@@ -2049,12 +2045,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
       threads_gate_sync(pthread_startgate2);
 #else
 
-      // CFITSIO
-      if (field->tab->isTileCompressed)
-    	  read_body_with_cfitsio(field->tab, line, TFLOAT, 1, (nbuflines - y + ival + 1), field->width, (nbuflines - y + ival + 1));
-      else
-    	  read_body(field->tab, line, field->width);
-
+      read_body(field->tab, line, field->width);
       coadd_movedata(line+inoffset,
 		multibuf+muloffset, multinbuf2+inbeg, width, multinmax);
 #endif
@@ -2107,15 +2098,11 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
           QFSEEK(wfield->cat->file,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
+      	wfield->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
+
           }
 
-        // CFITSIO
-        if (field->tab->isTileCompressed)
-        	read_body_with_cfitsio(wfield->tab, line, TFLOAT, 1, (nbuflines - y + ival + 1), field->width, (nbuflines - y + ival + 1));
-        //printf("DEBUG new: data[0] = %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n", line[0], line[1], line[111], line[222], line[555], line[777], line[2000], line[field->width-1]);
-        else
-            read_body(wfield->tab, line, field->width);
-        //printf("DEBUG old: data[0] = %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n", line[0], line[1], line[111], line[222], line[555], line[777], line[2000], line[field->width-1]);
+        read_body(wfield->tab, line, field->width);
 
         }
 #ifdef USE_THREADS
