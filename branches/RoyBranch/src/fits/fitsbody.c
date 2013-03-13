@@ -362,29 +362,27 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
         // CFITSIO
         if (tab->isTileCompressed) {
 
-            // the type we pass into fits_read_img() specifies the type of the input array, not the type of the image data
-        	int type;
-        	switch(tab->bitpix) {
+        	int status, hdutype;
 
-        	case BP_FLOAT:
-        		type = TFLOAT;
-        		break;
-        	case BP_DOUBLE:
-        		type = TDOUBLE;
-        		break;
-        	default:
-        		printf("ERROR expecting a floating-point type for a tile-compressed file. Defaulting to TFLOAT\n");
-        		type = TFLOAT;
+        	// first of all, move to correct HDU
+        	status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
+        	if (status != 0) {
+
+        		printf("Error moving to HDU %d\n", tab->hdunum);
+        		fits_report_error(stderr, status);
         	}
 
-        	int status = 0; fits_read_img(tab->infptr, type,  tab->currentElement, spoonful, NULL, bufdata, NULL, &status);
+            // now read section of image
+        	status = 0; fits_read_img(tab->infptr, TFLOAT,  tab->currentElement, spoonful, NULL, bufdata, NULL, &status);
 
+        	// report reading error
         	if (status != 0) {
 
         		printf("CFITSIO ERROR reading start=%d end=%d absolute end=%d\n", tab->currentElement, (tab->currentElement + spoonful) , (tab->naxisn[0]*tab->naxisn[1]));
         		fits_report_error(stderr, status);
         	}
 
+        	// update file 'pointer'
         	tab->currentElement += spoonful;
         }
         else
@@ -421,6 +419,7 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
             break;
 
           case BP_SHORT:
+              if (!tab->isTileCompressed)
             if (bswapflag)
               swapbytes(bufdata, 2, spoonful);
             if (blankflag)
@@ -452,6 +451,7 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
             break;
 
           case BP_LONG:
+              if (!tab->isTileCompressed)
             if (bswapflag)
               swapbytes(bufdata, 4, spoonful);
             if (blankflag)
@@ -484,6 +484,7 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
 
 #ifdef HAVE_LONG_LONG_INT
           case BP_LONGLONG:
+              if (!tab->isTileCompressed)
             if (bswapflag)
               swapbytes(bufdata, 8, spoonful);
             if (blankflag)
