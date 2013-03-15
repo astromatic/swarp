@@ -372,6 +372,9 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
         		fits_report_error(stderr, status);
         	}
 
+        	// pixels count from 1
+        	if (tab->currentElement == 0) tab->currentElement = 1;
+
             // now read section of image
         	status = 0; fits_read_img(tab->infptr, TFLOAT,  tab->currentElement, spoonful, NULL, bufdata, NULL, &status);
 
