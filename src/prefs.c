@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		05/02/2012
+*	Last modified:		22/03/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -31,11 +31,18 @@
 #endif
 
 #include	<ctype.h>
+
 #ifdef HAVE_MATHIMF_H
 #include <mathimf.h>
 #else
 #include <math.h>
 #endif
+
+#ifdef HAVE_GETRLIMIT
+#include 	<sys/time.h>
+#include 	<sys/resource.h>
+#endif
+
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
@@ -521,6 +528,22 @@ void	useprefs(void)
     prefs.nthreads = 1;
     warning("NTHREADS != 1 ignored: ",
 	"this build of " BANNER " is single-threaded");
+    }
+#endif
+
+#ifdef HAVE_GETRLIMIT
+/* Check that the maximum number of open files is < what the system allows */
+  if (prefs.combine_flag)
+    {
+     struct rlimit	rlim;
+    if (prefs.nopenfiles_max && getrlimit(RLIMIT_NOFILE, &rlim) != -1
+	&& rlim.rlim_cur< RLIM_INFINITY
+	&& prefs.nopenfiles_max > (unsigned int)rlim.rlim_cur)
+      {
+      sprintf(gstr, "%d", (unsigned int)rlim.rlim_cur);
+      warning("NOPENFILES_MAX larger than the system limit currently set at ",
+		gstr);
+      }
     }
 #endif
 

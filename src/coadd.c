@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		18/07/2012
+*	Last modified:		28/03/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -35,6 +35,7 @@
 #else
 #include <math.h>
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -130,7 +131,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 25/04/2012
+VERSION 28/03/2013
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -157,7 +158,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			outwidth, width, height,min,max,
 			naxis, nlines, nlinesmax,
 			nbuflines,nbuflines2,nbuflinesmax, size, omax,omax2,
-			offbeg, offend, fieldno;
+			offbeg, offend, fieldno, nopenfiles, closeflag;
 
   coadd_type = coaddtype;
   coadd_wthresh = wthresh;
@@ -426,6 +427,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
   QPTHREAD_CREATE(&movthread, &pthread_attr, &pthread_move_lines, &p);
 #endif
 
+  nopenfiles = 0;
+
 /* Loop over output ``lines'': this can be over more than 1 (Y) dimension */
   for (y=ybufmax=0; y<height; y+=nlines)
     {
@@ -458,62 +461,85 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 /*-- Examine the batch of input images for the current output image section */
     NPRINTF(OUTPUT, "\33[1M> Reading   line:%7d / %-7d\n\33[1A", y+1,height);
     for (n=0; n<ninput; n++)
-      if (!(cflag[n] & COADDFLAG_FINISHED))
+      {
+/*---- Focus on images that begin before the current buffer ends */
+      if ((cflag[n] & COADDFLAG_FINISHED) || ybegbufline[n] >= ybufmax)
+        continue;
+      wcs = infield[n]->wcs;
+/*---- Discard images entirely below the current lower limit */
+      if (yendbufline[n] < ybuf)
         {
-        wcs = infield[n]->wcs;
-/*------ Focus on images that begin before the current buffer ends */
-        if (ybegbufline[n] < ybufmax)
-	  {
-/*-------- Discard images entirely below the current lower limit */
-          if (yendbufline[n] < ybuf)
-            {
-            cflag[n] |= COADDFLAG_FINISHED;
-            continue;
-            }
-/*-------- Open images if needed */
-          if (!(cflag[n] & COADDFLAG_OPEN))
-	    {
-            if (open_cat(infield[n]->cat, READ_ONLY) != RETURN_OK)
-              error(EXIT_FAILURE, "*Error*: cannot open for reading ",
-	      infield[n]->filename);
-            if (inwfield[n])
-	      {
-              if (open_cat(inwfield[n]->cat, READ_ONLY) != RETURN_OK)
-			error(EXIT_FAILURE,"*Error*: cannot open for reading ",
-				inwfield[n]->filename);
- 	      }
-            cflag[n] |= COADDFLAG_OPEN;
-            dy = ybegbufline[n] - ybuf;
-            if (dy<0)
-              dy = 0;
-	    }
-          else
-            dy = 0;	/* We just keep reading the file */
-          nbuflines2 = yendbufline[n] - ybuf + 1;
-          if (nbuflines2 > nbuflines)
-            nbuflines2 = nbuflines;
-          nbuflines2 -= dy;
-/*-------- Refill the buffers with new data */
-          if ((iflag && coadd_iload(infield[n], inwfield[n],
+        cflag[n] |= COADDFLAG_FINISHED;
+        continue;
+        }
+/*---- Open images if needed */
+      if (!(cflag[n] & COADDFLAG_OPEN))
+	{
+        cflag[n] |= COADDFLAG_OPEN;
+        dy = ybegbufline[n] - ybuf;
+        if (dy<0)
+          dy = 0;
+        }
+      else
+        dy = 0;	/* We just keep reading the file */
+      nbuflines2 = yendbufline[n] - ybuf + 1;
+      if (nbuflines2 > nbuflines)
+        nbuflines2 = nbuflines;
+      nbuflines2 -= dy;
+
+/*---- (re-)Open images if needed */
+      if ((closeflag = !infield[n]->cat->file))
+        {
+        if (open_cat(infield[n]->cat, READ_ONLY) != RETURN_OK)
+          error(EXIT_FAILURE,"*Error*: cannot open for reading ",
+		infield[n]->filename);
+        nopenfiles++;
+        }
+      if (inwfield[n] && (closeflag = !inwfield[n]->cat->file))
+        {
+        if (open_cat(inwfield[n]->cat, READ_ONLY) != RETURN_OK)
+          error(EXIT_FAILURE,"*Error*: cannot open for reading ",
+		inwfield[n]->filename);
+        nopenfiles++;
+        }
+
+/*---- Refill the buffers with new data */
+      if ((iflag && coadd_iload(infield[n], inwfield[n],
 			multiibuf+dy*multiwidth, multiwibuf+dy*multiwidth,
 			multinbuf+dy*(size_t)outwidth,
 			bufpos, bufmin, bufmax, nbuflines2, outwidth, omax)
 		!= RETURN_OK)
-		|| ((!iflag)&&coadd_load(infield[n], inwfield[n],
+	|| ((!iflag)&&coadd_load(infield[n], inwfield[n],
 			multibuf+dy*multiwidth, multiwbuf+dy*multiwidth,
 			multinbuf+dy*(size_t)outwidth,
 			bufpos, bufmin, bufmax, nbuflines2, outwidth, omax)
 		!= RETURN_OK))
-/*-------- End of the image, we can close the file */
-            {
-            close_cat(infield[n]->cat);
-            if (inwfield[n])
-               close_cat(inwfield[n]->cat);
-            cflag[n] ^= COADDFLAG_OPEN;
-            cflag[n] |= COADDFLAG_FINISHED;
-	    }
-	  }
-	}
+/*---- End of the image, we can close the file */
+        {
+        close_cat(infield[n]->cat);
+        nopenfiles--;
+        if (inwfield[n])
+          {
+          nopenfiles--;
+          close_cat(inwfield[n]->cat);
+          }
+        cflag[n] ^= COADDFLAG_OPEN;
+        cflag[n] |= COADDFLAG_FINISHED;
+        }
+      if (prefs.nopenfiles_max && nopenfiles >= prefs.nopenfiles_max)
+        {
+        if (close_cat(infield[n]->cat) != RETURN_OK)
+          error(EXIT_FAILURE,"*Error*: cannot close ", infield[n]->filename);
+        nopenfiles--;
+        if (inwfield[n])
+          {
+          if (close_cat(inwfield[n]->cat) != RETURN_OK)
+            error(EXIT_FAILURE,"*Error*: cannot close ", inwfield[n]->filename);
+          nopenfiles--;
+          }
+        }
+
+      }
 
     NPRINTF(OUTPUT, "\33[1M> Co-adding line:%7d / %-7d\n\33[1A", y+1,height);
 /*-- Now perform the coaddition itself */

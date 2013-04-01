@@ -290,7 +290,8 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 /* Initialize the astrometric vector */
   for (d=0; d<naxis;d++)
     {
-    rawmin[d] = rawpos0[d] = 0.5 + 0.5*(stepover[d]=1.0/oversamp[d]);
+    stepover[d]=1.0/oversamp[d];
+    rawmin[d] = rawpos0[d] = 0.5 + 0.5*stepover[d];
     rawmax[d] = (double)wcs->naxisn[d];
     }
 
