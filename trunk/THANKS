@@ -19,6 +19,10 @@ Akim Demaille <akim@lrde.epita.fr>
 Chiara Marmo <marmo@iap.fr>
 	for adding the computation of saturation levels and fixing several bugs.
 
+Julian Taylor <taylor@partner.eso.org>
+	for his patch to limit the number of files opened during image
+	combination.
+
 Eduardo Amores <amores@newb6.u-strasbg.fr>
 Pierre Astier <pierre.astier@in2p3.fr>
 John Blakeslee <jpb@adcam.pha.jhu.edu>
