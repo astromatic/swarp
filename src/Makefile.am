@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2002-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+#	Copyright:		(C) 2002-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		26/10/2010
+#	Last modified:		04/04/2013
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -33,5 +33,5 @@ swarp_SOURCES		= back.c coadd.c data.c field.c fitswcs.c header.c \
 			  globals.h header.h interpolate.h key.h misc.h \
 			  preflist.h prefs.h projapprox.h resample.h threads.h \
 			  types.h wcscelsys.h weight.h xml.h
-swarp_LDADD		= $(top_builddir)/src/fits/libfits.a $(top_builddir)/src/wcs/libwcs_c.a
+swarp_LDADD		= $(srcdir)/fits/libfits.a $(srcdir)/wcs/libwcs_c.a
 DATE=`date +"%Y-%m-%d"`

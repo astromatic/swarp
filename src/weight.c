@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/02/2012
+*	Last modified:		30/04/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -48,7 +48,7 @@
 #include	"weight.h"
 
 fieldstruct	*weight_reffield;
-PIXTYPE		weight_fac;
+PIXTYPE		weight_fac, weight_thresh;
 long		weight_pixcount;
 int		weight_type, weight_width, weight_y;
 
@@ -235,7 +235,7 @@ INPUT	Weight field ptr.
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 16/08/2001
+VERSION 30/04/2013
  ***/
 void	set_weightconv(fieldstruct *wfield)
   {
@@ -245,6 +245,7 @@ void	set_weightconv(fieldstruct *wfield)
   weight_width = wfield->width;
   weight_type = wfield->flags&(BACKRMS_FIELD|RMS_FIELD|VAR_FIELD|WEIGHT_FIELD);
   weight_fac = (PIXTYPE)(wfield->sigfac*wfield->sigfac);
+  weight_thresh = wfield->weight_thresh;
 
   return;
   }
@@ -258,7 +259,7 @@ INPUT	Input data ptr,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 05/10/2010
+VERSION 30/04/2013
  ***/
 void	weight_to_var(PIXTYPE *data, int npix)
 
@@ -289,19 +290,15 @@ void	weight_to_var(PIXTYPE *data, int npix)
       break;
     case RMS_FIELD:
       for (i=npix; i--; data++)
-        if (*data<BIG)
-          *data *= *data;
+        *data *= *data<weight_thresh? *data : BIG;
       break;
     case VAR_FIELD:
-      for (i=npix; i--;)
-        *(data++) *= weight_fac;
+      for (i=npix; i--; data++)
+        *data *= *data<weight_thresh? weight_fac : BIG;
       break;
     case WEIGHT_FIELD:
       for (i=npix; i--; data++)
-        if (*data > 0.0)
-          *data = weight_fac/(*data);
-        else
-          *data = BIG;
+        *data = *data>weight_thresh? weight_fac/(*data) : BIG;
       break;
     default:
       error(EXIT_FAILURE,
