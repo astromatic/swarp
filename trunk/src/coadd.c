@@ -1835,7 +1835,7 @@ OUTPUT	RETURN_ERROR in case no more data are worth reading,
 	RETURN_OK otherwise.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 25/04/2012
+VERSION 07/05/2013
  ***/
 int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
@@ -1845,9 +1845,10 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
   {
     wcsstruct		*wcs;
     OFF_T		offset, pixcount;
-    PIXTYPE		*linebuf, *line;
+    PIXTYPE		*linebuf, *line,*linet,
+			thresh;
     unsigned int	*multinbuf2,
-			d, y, nflag, naxis;
+			d, x,y, nflag, naxis;
     int			rawpos2[NAXIS],
 			ival, inoffset, inbeg, muloffset, width;
 #ifdef USE_THREADS
@@ -1979,6 +1980,13 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 		SEEK_SET, wfield->filename);
           }
         read_body(wfield->tab, line, field->width);
+        if ((thresh=wfield->weight_thresh)>0.0)
+          {
+          linet = line;
+          for (x=field->width; x--; linet++)
+            if (*linet<=thresh)
+              *linet = 0.0;
+          }
         }
 #ifdef USE_THREADS
       if (threadstep++)
