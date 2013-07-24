@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2003-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2003-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		19/07/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -61,7 +61,7 @@ typedef struct projapp
 
 /*----------------------- miscellaneous variables ---------------------------*/
 projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
-			double projmaxerr, int areaflag, double meanscale);
+			double projmaxerr, int areaflag);
 
 void		projapp_dmap(projappstruct *projapp),
 		projapp_end(projappstruct *projapp),
