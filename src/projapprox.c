@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2003-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2003-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		19/07/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -48,21 +48,20 @@
 
 /****** projapp_init *********************************************************
 PROTO	projappstruct *projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
-			double projmaxerr, int areaflag, double meanscale)
+			double projmaxerr, int areaflag)
 PURPOSE	Prepare all the necessary data for approximating a reprojection.
 INPUT	Input pointer to wcs structure pointer,
 	Output wcs structure pointer,
 	Maximum reprojection error (pixels) allowed,
-	Pixel area flag (triggers mapping of relative pixel areas if !=0),
-	Mean image relative scale.
+	Pixel area flag (triggers mapping of relative pixel areas if !=0).
 OUTPUT	Pointer to an allocated projappstruct structure, or NULL if
 	approximation failed 
 NOTES	Currently limited to 2D (returns NULL otherwise).
 AUTHOR	E. Bertin (IAP)
-VERSION	02/12/2008
+VERSION	19/07/2013
  ***/
 projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
-			double projmaxerr, int areaflag, double meanscale)
+			double projmaxerr, int areaflag)
   {
    projappstruct	*projapp;
    double		*projpos[NAXIS],
@@ -71,7 +70,7 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
 			stepc[NAXIS],
 			*step, *projline,*projlinet,*projappline,*projapplinet,
 			*projarea,
-			maxerror, cerror, defstep, stepcx, invscale, worldc;
+			maxerror, cerror, defstep, stepcx, worldc;
    int			linecount[NAXIS], stepcount[NAXIS], npointsc[NAXIS],
 			*npoints,
 			d,i,j, naxis,naxisnmax, ngridpoints,npointstot,
@@ -80,14 +79,6 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
 /* The present version only works in 2D */
   if (wcsin->naxis != 2 || wcsout->naxis != 2)
     return (projappstruct *)NULL;
-
-  if (areaflag && meanscale < 1/BIG)
-    {
-    warning("Wrong re-scaling with ", "this re-projection");
-    return (projappstruct *)NULL;
-    }
-
-  invscale = 1.0/meanscale;
 
   QCALLOC(projapp, projappstruct, 1);
 
@@ -190,8 +181,7 @@ projappstruct	*projapp_init(wcsstruct *wcsin, wcsstruct *wcsout,
       for (d=0; d<naxis; d++)
         *(projpos[d]++) = rawpos[d];
       if (areaflag)
-        *(projarea++) = invscale * wcs_scale(wcsout,rawposout)
-			/ wcs_scale(wcsin,rawpos);
+        *(projarea++) = wcs_scale(wcsout,rawposout) / wcs_scale(wcsin,rawpos);
       for (d=0; d<naxis; d++)
         {
         rawposout[d] = rawposmin[d] + (++stepcount[d])*step[d];
