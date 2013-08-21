@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		30/01/2012
+*	Last modified:		22/03/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -98,6 +98,7 @@ pkeystruct key[] =
    {""}, 1, MAXINFIELD, &prefs.ninterp_flag},
   {"MEM_MAX", P_INT, &prefs.mem_max, 1, 1000000000},
   {"NNODES", P_INT, &prefs.nnodes, 1, 65535},
+  {"NOPENFILES_MAX", P_INT, &prefs.nopenfiles_max, 0, 1000000000},
   {"NTHREADS", P_INT, &prefs.nthreads, 0, THREADS_PREFMAX},
   {"NODE_INDEX", P_INT, &prefs.node_index, -1, 65534},
   {"OVERSAMPLING", P_INTLIST, prefs.oversamp, 0, 2000000000, 0.0,0.0,
@@ -260,6 +261,8 @@ char *default_prefs[] =
 #else
 "NTHREADS               1               # 1 single thread",
 #endif
+"*NOPENFILES_MAX         512             # Maximum number of files opened by "
+					BANNER,
 "TILE_COMPRESS          N               # Write tile compressed output image (Y/N)?",
 ""
  };

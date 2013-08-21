@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		05/02/2012
+*	Last modified:		19/07/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -107,7 +107,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	03/02/2012
+VERSION	19/07/2013
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -267,7 +267,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 /* Turn approximation on or off */
   approxflag = ((projerr = prefs.proj_err[infield->fieldno] > 0.0)
     && (projapp = projapp_init(infield->wcs, field->wcs, projerr,
-	prefs.fscalastro_type==FSCALASTRO_VARIABLE, infield->fascale)));
+	prefs.fscalastro_type==FSCALASTRO_VARIABLE)));
 
 #ifdef USE_THREADS
 /* Set up multi-threading stuff */
@@ -290,7 +290,8 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 /* Initialize the astrometric vector */
   for (d=0; d<naxis;d++)
     {
-    rawmin[d] = rawpos0[d] = 0.5 + 0.5*(stepover[d]=1.0/oversamp[d]);
+    stepover[d]=1.0/oversamp[d];
+    rawmin[d] = rawpos0[d] = 0.5 + 0.5*stepover[d];
     rawmax[d] = (double)wcs->naxisn[d];
     }
 

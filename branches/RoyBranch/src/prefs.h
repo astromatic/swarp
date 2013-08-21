@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		24/01/2012
+*	Last modified:		22/03/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -146,6 +146,7 @@ typedef struct
   int		ncopy_keywords;		/* nb of params */
   int		nnodes;			/* Number of nodes (for clusters) */  
   int		node_index;		/* Node index (for multiprocessing) */ 
+  int		nopenfiles_max;		/* Max. number of files opened */
   enum {QUIET, LOG, NORM, FULL}	verbose_type;	/* display type */
   int		xml_flag;		/* Write XML file? */
   char		xml_name[MAXCHAR];	/* XML file name */

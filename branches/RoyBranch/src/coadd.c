@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		18/07/2012
+*	Last modified:		28/03/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -35,6 +35,7 @@
 #else
 #include <math.h>
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -260,7 +261,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 25/04/2012
+VERSION 28/03/2013
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -287,7 +288,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			outwidth, width, height,min,max,
 			naxis, nlines, nlinesmax,
 			nbuflines,nbuflines2,nbuflinesmax, size, omax,omax2,
-			offbeg, offend, fieldno;
+			offbeg, offend, fieldno, nopenfiles, closeflag;
 
   // CFITSIO set up tile compressed output images (if specified by user)
   setupTileCompressedFile(outfield);
@@ -560,6 +561,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
   QPTHREAD_CREATE(&movthread, &pthread_attr, &pthread_move_lines, &p);
 #endif
 
+  nopenfiles = 0;
+
 /* Loop over output ``lines'': this can be over more than 1 (Y) dimension */
   for (y=ybufmax=0; y<height; y+=nlines)
     {
@@ -592,30 +595,20 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 /*-- Examine the batch of input images for the current output image section */
     NPRINTF(OUTPUT, "\33[1M> Reading   line:%7d / %-7d\n\33[1A", y+1,height);
     for (n=0; n<ninput; n++)
-      if (!(cflag[n] & COADDFLAG_FINISHED))
         {
+/*---- Focus on images that begin before the current buffer ends */
+      if ((cflag[n] & COADDFLAG_FINISHED) || ybegbufline[n] >= ybufmax)
+        continue;
         wcs = infield[n]->wcs;
-/*------ Focus on images that begin before the current buffer ends */
-        if (ybegbufline[n] < ybufmax)
-	  {
-/*-------- Discard images entirely below the current lower limit */
+/*---- Discard images entirely below the current lower limit */
           if (yendbufline[n] < ybuf)
             {
             cflag[n] |= COADDFLAG_FINISHED;
             continue;
             }
-/*-------- Open images if needed */
+/*---- Open images if needed */
           if (!(cflag[n] & COADDFLAG_OPEN))
 	    {
-            if (open_cat(infield[n]->cat, READ_ONLY) != RETURN_OK)
-              error(EXIT_FAILURE, "*Error*: cannot open for reading ",
-	      infield[n]->filename);
-            if (inwfield[n])
-	      {
-              if (open_cat(inwfield[n]->cat, READ_ONLY) != RETURN_OK)
-			error(EXIT_FAILURE,"*Error*: cannot open for reading ",
-				inwfield[n]->filename);
- 	      }
             cflag[n] |= COADDFLAG_OPEN;
             dy = ybegbufline[n] - ybuf;
             if (dy<0)
@@ -627,7 +620,24 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
           if (nbuflines2 > nbuflines)
             nbuflines2 = nbuflines;
           nbuflines2 -= dy;
-/*-------- Refill the buffers with new data */
+
+/*---- (re-)Open images if needed */
+      if ((closeflag = !infield[n]->cat->file))
+        {
+        if (open_cat(infield[n]->cat, READ_ONLY) != RETURN_OK)
+          error(EXIT_FAILURE,"*Error*: cannot open for reading ",
+		infield[n]->filename);
+        nopenfiles++;
+        }
+      if (inwfield[n] && (closeflag = !inwfield[n]->cat->file))
+        {
+        if (open_cat(inwfield[n]->cat, READ_ONLY) != RETURN_OK)
+          error(EXIT_FAILURE,"*Error*: cannot open for reading ",
+		inwfield[n]->filename);
+        nopenfiles++;
+        }
+
+/*---- Refill the buffers with new data */
           if ((iflag && coadd_iload(infield[n], inwfield[n],
 			multiibuf+dy*multiwidth, multiwibuf+dy*multiwidth,
 			multinbuf+dy*(size_t)outwidth,
@@ -638,16 +648,32 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			multinbuf+dy*(size_t)outwidth,
 			bufpos, bufmin, bufmax, nbuflines2, outwidth, omax)
 		!= RETURN_OK))
-/*-------- End of the image, we can close the file */
+/*---- End of the image, we can close the file */
             {
             close_cat(infield[n]->cat);
+        nopenfiles--;
             if (inwfield[n])
+          {
+          nopenfiles--;
                close_cat(inwfield[n]->cat);
+          }
             cflag[n] ^= COADDFLAG_OPEN;
             cflag[n] |= COADDFLAG_FINISHED;
 	    }
+      if (prefs.nopenfiles_max && nopenfiles >= prefs.nopenfiles_max)
+        {
+        if (close_cat(infield[n]->cat) != RETURN_OK)
+          error(EXIT_FAILURE,"*Error*: cannot close ", infield[n]->filename);
+        nopenfiles--;
+        if (inwfield[n])
+          {
+          if (close_cat(inwfield[n]->cat) != RETURN_OK)
+            error(EXIT_FAILURE,"*Error*: cannot close ", inwfield[n]->filename);
+          nopenfiles--;
 	  }
 	}
+
+      }
 
     NPRINTF(OUTPUT, "\33[1M> Co-adding line:%7d / %-7d\n\33[1A", y+1,height);
 /*-- Now perform the coaddition itself */
@@ -1952,7 +1978,7 @@ OUTPUT	RETURN_ERROR in case no more data are worth reading,
 	RETURN_OK otherwise.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 25/04/2012
+VERSION 07/05/2013
  ***/
 int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
@@ -1962,9 +1988,10 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
   {
     wcsstruct		*wcs;
     OFF_T		offset, pixcount;
-    PIXTYPE		*linebuf, *line;
+    PIXTYPE		*linebuf, *line,*linet,
+			thresh;
     unsigned int	*multinbuf2,
-			d, y, nflag, naxis;
+			d, x,y, nflag, naxis;
     int			rawpos2[NAXIS],
 			ival, inoffset, inbeg, muloffset, width;
 #ifdef USE_THREADS
@@ -2034,9 +2061,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
         }
 #ifdef USE_THREADS
       line = linebuf+(threadstep&1)*field->width;
-
       read_body(field->tab, line, field->width);
-
       if (threadstep++)
         threads_gate_sync(pthread_stopgate2);
       pthread_linebuf = line+inoffset;
@@ -2044,7 +2069,6 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
       pthread_multinbuf = multinbuf2+inbeg;
       threads_gate_sync(pthread_startgate2);
 #else
-
       read_body(field->tab, line, field->width);
       coadd_movedata(line+inoffset,
 		multibuf+muloffset, multinbuf2+inbeg, width, multinmax);
@@ -2083,7 +2107,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
       if (wfield)
         {
         if (nflag)
-/*-------- well now we are back within the frame; we might need to fseek() */
+/*-------- well now we are back withing the frame; we might need to fseek() */
           {
           nflag = 0;
           offset = 0;
@@ -2099,11 +2123,15 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
       	wfield->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
-
           }
-
         read_body(wfield->tab, line, field->width);
-
+        if ((thresh=wfield->weight_thresh)>0.0)
+          {
+          linet = line;
+          for (x=field->width; x--; linet++)
+            if (*linet<=thresh)
+              *linet = 0.0;
+          }
         }
 #ifdef USE_THREADS
       if (threadstep++)

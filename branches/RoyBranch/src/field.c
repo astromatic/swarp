@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		29/02/2012
+*	Last modified:		06/06/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -362,7 +362,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   Global preferences are used.
 AUTHOR  E. Bertin (IAP)
-VERSION 29/02/2012
+VERSION 06/06/2013
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   {
@@ -879,7 +879,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
 	}
       wcs_to_raw(wcs, wcscenter, rawcenter);
       for (n=0; n<naxis; n++)
-        wcs->crpix[n] += (int)(wcs->naxisn[n]/2 - rawcenter[n] +0.49);
+        wcs->crpix[n] += (int)(wcs->naxisn[n]/2 - rawcenter[n] +0.9999);
       }
     }
 
