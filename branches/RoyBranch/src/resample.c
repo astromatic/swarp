@@ -132,7 +132,11 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 
 /* Create new file name */
   strcpy(filename2, infield->rfilename);
-  if ((pstr=strrchr(filename2, '.')))
+
+  // TODO HACK deal with special case of .fits.fz files
+  if ((pstr=strstr(filename2, ".fits.fz")))
+	  *pstr = '\0';
+  else if ((pstr=strrchr(filename2, '.')))
     *pstr = '\0';
   if (infield->version>1)
     sprintf(pstr, "_v%d", infield->version);
