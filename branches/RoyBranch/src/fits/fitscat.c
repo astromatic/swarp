@@ -41,6 +41,7 @@
 
 #include	"fitscat_defs.h"
 #include	"fitscat.h"
+#include	"fitsio2.h"
 
 /****** about_cat **************************************************************
 PROTO	int about_cat(catstruct *cat, FILE *stream)
@@ -165,6 +166,25 @@ int	close_cat(catstruct *cat)
   return RETURN_OK;
   }
 
+
+int	close_cfitsio(catstruct *cat)
+{
+
+	if (cat->tab->infptr) {
+
+		int status = 0; fits_close_file(cat->tab->infptr, &status);
+		if (status != 0) {
+			fits_report_error(stderr, status);
+			printf("ERROR could not close FITS file with cfitsio: %s\n", cat->filename);
+		}
+		else {
+			//printf("SUCCESS CFITSIO CLOSE\n\n");
+			cat->tab->infptr == NULL;
+		}
+
+	}
+	//printf("NO CFITSIO FILE TO CLOSE\n");
+}
 
 /****** free_cat ***************************************************************
 PROTO	void free_cat(catstruct **cat, int ncat)

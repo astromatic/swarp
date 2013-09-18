@@ -242,6 +242,7 @@ VERSION	16/04/2000
 void	end_field(fieldstruct *field)
 
   {
+  close_cfitsio(field->cat);
 /* Check first that a tab structure is present */
   if (field->tab)
     {
