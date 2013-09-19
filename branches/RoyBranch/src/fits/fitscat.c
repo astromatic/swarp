@@ -366,7 +366,9 @@ int	map_cat(catstruct *cat)
     tab->infptr = infptr;
     status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
     if (status != 0) printf("ERROR could not move to hdu %d in file %s\n", tab->hdunum, cat->filename);
-    tab->tabsize = infptr->Fptr->rowlength;
+    //tab->tabsize = infptr->Fptr->rowlength;
+
+    //printf("TABSIZE = %ld\n", tab->tabsize);
 
     if (tab->tabsize) {
 
