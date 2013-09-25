@@ -41,7 +41,6 @@
 
 #include	"fitscat_defs.h"
 #include	"fitscat.h"
-#include	"fitsio2.h"
 
 /****** about_cat **************************************************************
 PROTO	int about_cat(catstruct *cat, FILE *stream)
