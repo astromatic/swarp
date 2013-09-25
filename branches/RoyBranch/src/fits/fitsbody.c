@@ -301,6 +301,61 @@ void	free_body(tabstruct *tab)
   }
 
 
+void readTileCompressed(tabstruct *tab,  size_t	spoonful, double* bufdata0) {
+
+	int status, hdutype;
+
+ 	// first of all, move to correct HDU
+ 	status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
+ 	if (status != 0) {
+
+ 		printf("Error moving to HDU %d\n", tab->hdunum);
+ 		fits_report_error(stderr, status);
+ 	}
+
+ 	// pixels count from 1
+ 	if (tab->currentElement == 0) tab->currentElement = 1;
+
+     // now read section of image
+ 	int datatype;
+     switch(tab->bitpix){
+          case BYTE_IMG:
+              datatype = TBYTE;
+              break;
+          case SHORT_IMG:
+              datatype = TSHORT;
+              break;
+          case LONG_IMG:
+              datatype = TLONG;
+              break;
+          case FLOAT_IMG:
+              datatype = TFLOAT;
+              break;
+          case DOUBLE_IMG:
+              datatype = TDOUBLE;
+              break;
+      }
+
+ 	int anynul;
+     double bscale = 1.0, bzero = 0.0, nulval = 0.;
+
+     // turn off any scaling so that we copy raw pixel values
+     status = 0; fits_set_bscale(tab->infptr,  bscale, bzero, &status);
+
+     // now read the image
+ 	status = 0; fits_read_img(tab->infptr, datatype,  tab->currentElement, spoonful, &nulval, bufdata0, &anynul, &status);
+
+ 	// report reading error
+ 	if (status != 0) {
+
+ 		printf("CFITSIO ERROR reading start=%d end=%d absolute end=%d\n", tab->currentElement, (tab->currentElement + spoonful) , (tab->naxisn[0]*tab->naxisn[1]));
+ 		fits_report_error(stderr, status);
+ 	}
+
+ 	// update file 'pointer'
+ 	tab->currentElement += spoonful;
+ }
+
 /******* read_body ************************************************************
 PROTO	read_body(tabstruct *tab, PIXTYPE *ptr, long size)
 PURPOSE	Read floating point values from the body of a FITS table.
@@ -358,36 +413,11 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
         bufdata = (char *)bufdata0;
 
         // CFITSIO
-        if (tab->isTileCompressed) {
-
-        	int status, hdutype;
-
-        	// first of all, move to correct HDU
-        	status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
-        	if (status != 0) {
-
-        		printf("Error moving to HDU %d\n", tab->hdunum);
-        		fits_report_error(stderr, status);
-        	}
-
-        	// pixels count from 1
-        	if (tab->currentElement == 0) tab->currentElement = 1;
-
-            // now read section of image
-        	status = 0; fits_read_img(tab->infptr, TFLOAT,  tab->currentElement, spoonful, NULL, bufdata, NULL, &status);
-
-        	// report reading error
-        	if (status != 0) {
-
-        		printf("CFITSIO ERROR reading start=%d end=%d absolute end=%d\n", tab->currentElement, (tab->currentElement + spoonful) , (tab->naxisn[0]*tab->naxisn[1]));
-        		fits_report_error(stderr, status);
-        	}
-
-        	// update file 'pointer'
-        	tab->currentElement += spoonful;
-        }
+        if (tab->isTileCompressed)
+        	readTileCompressed(tab, spoonful, bufdata0);
         else
         	QFREAD(bufdata, spoonful*tab->bytepix, cat->file, cat->filename);
+
         switch(tab->bitpix)
           {
           case BP_BYTE:
@@ -703,7 +733,13 @@ void	read_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
         if (spoonful>size)
           spoonful = size;
         bufdata = (char *)bufdata0;
-        QFREAD(bufdata, spoonful*tab->bytepix, cat->file, cat->filename);
+
+        // CFITSIO
+         if (tab->isTileCompressed)
+         	readTileCompressed(tab, spoonful, bufdata0);
+         else
+        	QFREAD(bufdata, spoonful*tab->bytepix, cat->file, cat->filename);
+
         switch(tab->bitpix)
           {
           case BP_BYTE:
@@ -713,6 +749,7 @@ void	read_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
             break;
 
           case BP_SHORT:
+              if (!tab->isTileCompressed)
             if (bswapflag)
               swapbytes(bufdata, 2, spoonful);
 #pragma ivdep
@@ -721,6 +758,7 @@ void	read_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
             break;
 
           case BP_LONG:
+              if (!tab->isTileCompressed)
             if (bswapflag)
               swapbytes(bufdata, 4, spoonful);
 #pragma ivdep
@@ -730,6 +768,7 @@ void	read_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
 
 #ifdef HAVE_LONG_LONG_INT
           case BP_LONGLONG:
+              if (!tab->isTileCompressed)
             if (bswapflag)
               swapbytes(bufdata, 8, spoonful);
 #pragma ivdep
