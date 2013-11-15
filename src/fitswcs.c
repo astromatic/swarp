@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic software
 *
-*	Copyright:		(C) 1993-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 1993-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		13/07/2012
+*	Last modified:		15/11/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -328,7 +328,7 @@ INPUT	tab structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	18/06/2012
+VERSION	15/11/2013
  ***/
 wcsstruct	*read_wcs(tabstruct *tab)
 
@@ -395,9 +395,8 @@ wcsstruct	*read_wcs(tabstruct *tab)
       error(EXIT_FAILURE, "*Error*: CDELT parameters out of range in ",
 	filename);
     }
-
+printf("%s\n", buf);
   if (fitsfind(buf, "CD?_????")!=RETURN_ERROR)
-    {
 /*-- If CD keywords exist, use them for the linear mapping terms... */
     for (l=0; l<naxis; l++)
       for (j=0; j<naxis; j++)
@@ -405,8 +404,16 @@ wcsstruct	*read_wcs(tabstruct *tab)
         sprintf(str, "CD%d_%d", l+1, j+1);
         FITSREADF(buf, str, wcs->cd[l*naxis+j], l==j?1.0:0.0)
         }
-    }
-  else if (fitsfind(buf, "PC00?00?")!=RETURN_ERROR)
+  else if (fitsfind(buf, "PC?_????")!=RETURN_ERROR)
+/*-- ...If PC keywords exist, use them for the linear mapping terms... */
+    for (l=0; l<naxis; l++)
+      for (j=0; j<naxis; j++)
+        {
+        sprintf(str, "PC%d_%d", l+1, j+1);
+        FITSREADF(buf, str, wcs->cd[l*naxis+j], l==j?1.0:0.0)
+        wcs->cd[l*naxis+j] *= wcs->cdelt[l];
+        }
+  else if (fitsfind(buf, "PC0??0??")!=RETURN_ERROR)
 /*-- ...If PC keywords exist, use them for the linear mapping terms... */
     for (l=0; l<naxis; l++)
       for (j=0; j<naxis; j++)

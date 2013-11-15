@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		15/11/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -58,7 +58,7 @@ INPUT	Name of the ASCII file,
 OUTPUT	RETURN_OK if the file was found, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	18/11/2004
+VERSION	15/11/2013
  ***/
 int	read_aschead(char *filename, int frameno, tabstruct *tab)
   {
@@ -67,7 +67,7 @@ int	read_aschead(char *filename, int frameno, tabstruct *tab)
    h_type	htype;
    t_type	ttype;
    char		*gstrt;
-   int		i, pos;
+   int		i, pos, wcsflag;
 
   if ((file=fopen(filename, "r")))
     {
@@ -78,6 +78,7 @@ int	read_aschead(char *filename, int frameno, tabstruct *tab)
 		&& strncmp(gstr,"END\n",4));
     pos = fitsfind(tab->headbuf, "END     ");
     memset(gstr, ' ', 80);
+    wcsflag = 1;
     while (fgets(gstr, 81, file) && strncmp(gstr,"END ",4)
 				&& strncmp(gstr,"END\n",4))
       {
@@ -97,6 +98,24 @@ int	read_aschead(char *filename, int frameno, tabstruct *tab)
 	||!wstrncmp(keyword, "BSCALE  ", 8)
 	||!wstrncmp(keyword, "BZERO   ", 8))
         continue;
+/*---- Prevent mixing of PC and CD WCS keywords (new ones take precedence) */
+      if (wcsflag)
+        {
+        if (!wstrncmp(keyword, "PC0??0??", 8)
+		|| !wstrncmp(keyword, "PC?_????", 8))
+          {
+          fitsremove(tab->headbuf, "CD?_????");
+          pos = fitsfind(tab->headbuf, "END     ");
+          wcsflag = 0;
+          }
+        else if (!wstrncmp(keyword, "CD?_????", 8))
+          {
+          fitsremove(tab->headbuf, "PC0??0??");
+          fitsremove(tab->headbuf, "PC?_????");
+          pos = fitsfind(tab->headbuf, "END     ");
+          wcsflag = 0;
+          }
+        }
 /*---- Always keep a one-line margin */
       if ((pos+1)*80>=tab->headnblock*FBSIZE)
         {
