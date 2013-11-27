@@ -395,7 +395,7 @@ wcsstruct	*read_wcs(tabstruct *tab)
       error(EXIT_FAILURE, "*Error*: CDELT parameters out of range in ",
 	filename);
     }
-printf("%s\n", buf);
+
   if (fitsfind(buf, "CD?_????")!=RETURN_ERROR)
 /*-- If CD keywords exist, use them for the linear mapping terms... */
     for (l=0; l<naxis; l++)
@@ -579,7 +579,8 @@ printf("%s\n", buf);
       }
     else
       {
-      FITSREADF(buf, "LONGPOLE", wcs->longpole, 999.0);
+      if (fitsread(buf, "LONPOLE",&wcs->longpole,H_FLOAT,T_DOUBLE) != RETURN_OK)
+        FITSREADF(buf, "LONGPOLE", wcs->longpole, 999.0);
       FITSREADF(buf, "LATPOLE ", wcs->latpole, 999.0);
 /*---- Old convention */
       if (fitsfind(buf, "PROJP???") != RETURN_ERROR)
@@ -623,7 +624,7 @@ INPUT	tab structure,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	01/09/2010
+VERSION	27/11/2013
  ***/
 void	write_wcs(tabstruct *tab, wcsstruct *wcs)
 
@@ -651,26 +652,26 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
     addkeywordto_head(tab, "MJD-OBS ", "Modified Julian date at start");
     fitswrite(tab->headbuf, "MJD-OBS ", &mjd, H_EXPO,T_DOUBLE);
     }
-  addkeywordto_head(tab, "RADECSYS", "Astrometric system");
+  addkeywordto_head(tab, "RADESYS ", "Astrometric system");
   switch(wcs->radecsys)
     {
     case RDSYS_ICRS:
-      fitswrite(tab->headbuf, "RADECSYS", "ICRS", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "ICRS", H_STRING, T_STRING);
       break;
     case RDSYS_FK5:
-      fitswrite(tab->headbuf, "RADECSYS", "FK5", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "FK5", H_STRING, T_STRING);
       break;
     case RDSYS_FK4:
-      fitswrite(tab->headbuf, "RADECSYS", "FK4", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "FK4", H_STRING, T_STRING);
       break;
     case RDSYS_FK4_NO_E:
-      fitswrite(tab->headbuf, "RADECSYS", "FK4-NO-E", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "FK4-NO-E", H_STRING, T_STRING);
       break;
     case RDSYS_GAPPT:
-      fitswrite(tab->headbuf, "RADECSYS", "GAPPT", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "GAPPT", H_STRING, T_STRING);
       break;
     default:
-      error(EXIT_FAILURE, "*Error*: unknown RADECSYS type in write_wcs()", "");
+      error(EXIT_FAILURE, "*Error*: unknown RADESYS type in write_wcs()", "");
     }
   for (l=0; l<naxis; l++)
     {
@@ -693,7 +694,7 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
       fitswrite(tab->headbuf, str, &wcs->cd[l*naxis+j], H_EXPO, T_DOUBLE);
       }
     for (j=0; j<100; j++)
-      if (wcs->projp[j+100*l] != 0.0)
+      if (fabs(wcs->projp[j+100*l]) > TINY)
         {
         sprintf(str, "PV%d_%d", l+1, j);
         addkeywordto_head(tab, str, "Projection distortion parameter");
