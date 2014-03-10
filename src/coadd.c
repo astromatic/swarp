@@ -1224,12 +1224,12 @@ int	coadd_line(int l, int b, int *bufmin)
                 fprintf(cliplog, "%4d %6d %6d %+10g\n",
 			o1,
 			((int)(outpix - outbuf))%coadd_width + bufmin[0],
-			b + l + bufmin[1],
+			b + l + (b==0 ? bufmin[1] : 1),
 			mu);
                 fprintf(cliplog, "%4d %6d %6d %+10g\n",
 			o2,
 			((int)(outpix - outbuf))%coadd_width + bufmin[0],
-			b + l + bufmin[1],
+			b + l + (b==0 ? bufmin[1] : 1),
 			-mu);
                 }
               }
@@ -1257,7 +1257,7 @@ int	coadd_line(int l, int b, int *bufmin)
                 fprintf(cliplog, "%4d %6d %6d %+10g\n",
 			o,
 			((int)(outpix - outbuf))%coadd_width + bufmin[0],
-			b + l + bufmin[1],
+			b + l + (b==0 ? bufmin[1] : 1),
 			((*(pixstack+i) - mu > 0.0)?1.0 : -1.0) *
 				(fabsf(fabsf(*(pixstack+i) - mu) -
 				prefs.clip_ampfrac*amu)) / sigmaeff);
