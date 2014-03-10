@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/10/2010
+*	Last modified:		10/03/2014
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -54,7 +54,7 @@ int	main(int argc, char *argv[])
   {
    char		**argkey, **argval,
 		*str, *listbuf;
-   int		a, narg, nim, ntok, opt, opt2, bufpos,bufsize;
+   int		a, narg, nim, ntok, opt, opt2;
 
   if (argc<2)
     {
@@ -76,8 +76,6 @@ int	main(int argc, char *argv[])
   strcpy(prefs.prefs_name, "default.swarp");
   narg = nim = 0;
   listbuf = (char *)NULL;
-  bufpos = 0;
-  bufsize = MAXCHAR*1000;
 
   for (a=1; a<argc; a++)
     {

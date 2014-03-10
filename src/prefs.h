@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		22/03/2013
+*	Last modified:		10/03/2014
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -107,6 +107,12 @@ typedef struct
   interpenum	resamp_type[INTERP_MAXDIM];/* Image resampling method */
   int		nresamp_type;		/* nb of params */
   coaddenum	coadd_type;		/* Coaddition type */
+  double	clip_ampfrac;		/* Fraction of ampl. variation allowed*/
+					/* before clipping */
+  double	clip_sigma;		/* RMS multiple variation allowed */
+					/* before clipping */
+  int		clip_logflag;		/* Save clipping logfile? */
+  char		clip_logname[MAXCHAR];	/* filename for clipping log */
   int		blank_flag;		/* Blank pixels with a weight of 0? */
 /* Output image coordinates */
   char		projection_name[MAXCHAR];/* Projection WCS code */
