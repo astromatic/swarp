@@ -1,0 +1,55 @@
+Mark Calabretta <mcalabre@atnf.csiro.au>
+	SWarp makes extensive use of his nice WCS library
+
+Nicolas Devillard <ndevilla@free.fr>
+	Enlightening discussions about interpolation engines,
+	fast medians and pthread portability issues.
+	See http://ndevilla.free.fr/
+
+Ville Laurikari	<vl@iki.fi>
+	For his VL_PROG_CC_WARNINGS (modified to ACX_PROG_CC_OPTIM)
+
+Steven G. Johnson <stevenj@alum.mit.edu>	
+	For his acx_pthread.m4
+
+Akim Demaille <akim@lrde.epita.fr>
+	for solving the $datarootdir issue and providing the URBI_RESOLVE_DIR()
+	function.
+
+Chiara Marmo <marmo@iap.fr>
+	for adding the computation of saturation levels and fixing several bugs.
+
+Julian Taylor <taylor@partner.eso.org>
+	for his patch to limit the number of files opened during image
+	combination.
+
+Eduardo Amores <amores@newb6.u-strasbg.fr>
+Pierre Astier <pierre.astier@in2p3.fr>
+John Blakeslee <jpb@adcam.pha.jhu.edu>
+Oliver Czoke <oczoske@astro.uni-bonn.de>
+Mireille Dantel-Fort <mireille.dantel@obspm.fr>
+Shantanu Desai <shantanu@astro.illinois.edu>
+Erik Deul <deul@strw.leidenuniv.nl>
+Joerg P. Dietrich <jdietric@eso.org>
+Laurent Domisse <domisse@iap.fr>
+Thomas Erben <terben@astro.uni-bonn.de>
+Dafydd Wyn Evans <dwe@ast.cam.ac.uk>
+Norman Grogin <nagrogin@stsci.edu>
+Stephen Gwyn <stephen.gwyn@astrsp-mrs.fr>
+Delphine Hardin <hardin@in2p3.fr>
+Jan Kohnert <jkohnert@aip.de>
+Vincent Lebrun <Vincent.LeBrun@astrsp-mrs.fr>
+Frederic Magnard <magnard@iap.fr>
+Henry-Joy McCracken <hjmcc@iap.fr>
+Joe Mohr <jmohr@illinois.edu>
+Mario Radovich <radovich@na.astro.it>
+Roeland Rengelink <rengelin@strw.LeidenUniv.nl>
+Armin Rest <rest@ctiosz.ctio.noao.edu>
+Chris Sabbey <sabbey@ast.cam.ac.uk>
+Roy Williams <roy@cacr.caltech.edu>
+	Help in discovering bugs or bringing suggestions
+
+Institut d'Astrophysique de Paris
+TERAPIX project
+        Financial and technical support
+

@@ -1,0 +1,42 @@
+.TH SWARP "1" "March 2014" "SWarp 2.38.0" "User Commands"
+.SH NAME
+swarp \- resample and combine FITS images
+.SH SYNOPSIS
+.B swarp
+\fIinput\_image1\fR [\fIinput\_image2 ...\fR] [\fI-c configuration-file\fR]
+.RS
+[\fI-parameter1 value1 -parameter2 value2 ...\fR]
+.RE
+.TP
+.B swarp \fI-d\fR
+.SH DESCRIPTION
+Resample and combine FITS images in an arbitrary World Coordinate
+System.
+.RE
+See http://astromatic.net/software/swarp for more details.
+.SS "Operation modes:"
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+print this help, then exit
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+print version number, then exit
+.TP
+\fB\-d\fR, \fB\-\-dump\fR
+dump a default configuration file
+.SH AUTHOR
+Written by Emmanuel Bertin (Institut d'Astrophysique de Paris).
+.PP
+Copyright 2000-2010 Emmanuel Bertin
+.RE
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "REPORTING BUGS"
+Report bugs to <astromatic@iap.fr>.
+.SH "SEE ALSO"
+.BR sex (1).
+.PP
+The full documentation for
+.B SWarp
+is maintained as a PDF manual available at
+.B http://astromatic.net/software/swarp

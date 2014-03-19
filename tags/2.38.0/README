@@ -1,0 +1,38 @@
+Swarp is a program that resamples and coadd FITS images to any arbitrary
+astrometric projection recognized by the WCS standard (see
+http://www.cv.nrao.edu/fits/documents/wcs/wcs.html)
+
+This file describes shortly the SYNTAX of Swarp.
+See INSTALL for instructions about install.
+For more information, please refer to the documentation
+(see http://astromatic.net/software/swarp)
+
+The general SYNTAX is similar to that of SExtractor:
+
+% swarp [<fits_file1>, <fits_file2>,...] [-c <Configuration_file>]
+        [-<keyword> <value>] ...
+
+- Keyword parameters given in the command line override those from the
+  configuration file.
+- If the list-file is given as unique argument, Swarp looks for a
+  default configuration file called ``default.swarp''. If no configuration
+  file is available, swarp uses internal defaults.
+- Swarp creates 2 FITS files in output: the coadded image and its
+  "weight-map" (coverage map).
+- FITS headers (any FITS image, or even an ASCII dump, ended by "END     ")
+  can be provided in addition to the input images. They must be in the same
+  directory and have the same name except for the ".fits" suffix which must
+  be replaced by ".head". This suffix can be changed using the HEAD_SUFFIX
+  configuration parameter. External ASCII headers for multiextension FITS files
+  are allowed: simply, each extension header section must be ended by the
+  "END     " keyword.
+
+% swarp -d
+
+prints a default configuration file on the standard output
+
+Please report any bug or strange behaviour in the SWarp forum:
+http://astromatic.net/forum
+
+					Emmanuel Bertin <bertin@iap.fr>
+
