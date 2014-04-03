@@ -63,6 +63,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
    size_t	bufsize, bufsize2,
 		bufshift, size,meshsize,jumpsize;
    off_t	fcurpos,wfcurpos, wfcurpos2,fcurpos2;
+   off_t	cfitsio_fcurpos,cfitsio_wfcurpos, cfitsio_wfcurpos2,cfitsio_fcurpos2; // CFITSIO
    int		i,j,k,m,n, step, nlines,
 		w,bw, bh, nx,ny,nb,
 		lflag, nr;
@@ -93,14 +94,17 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
 /* Save current positions in files */
 
   wfcurpos = wfcurpos2 = 0;	/* to avoid gcc -Wall warnings */
+  cfitsio_wfcurpos = cfitsio_wfcurpos2 = 0;	/* CFITSIO to avoid gcc -Wall warnings */
   QFSEEK(tab->cat->file, tab->bodypos, SEEK_SET, field->filename);
   tab->currentElement = 1; // CFITSIO
   QFTELL(fcurpos, tab->cat->file, field->filename);
+  cfitsio_fcurpos = (fcurpos - tab->bodypos)/tab->bytepix; // CFITSIO
   if (wfield)
     {
     QFSEEK(wtab->cat->file, wtab->bodypos, SEEK_SET, wfield->filename);
     wtab->currentElement = 1; // CFITSIO
     QFTELL(wfcurpos, wtab->cat->file, wfield->filename);
+    cfitsio_wfcurpos = (wfcurpos - wtab->bodypos)/wtab->bytepix; // CFITSIO
     }
 
 /* Allocate a correct amount of memory to store pixels */
@@ -188,8 +192,13 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
       {
 /*---- Image size too big, we have to skip a few data !*/
       QFTELL(fcurpos2, tab->cat->file, field->filename);
-      if (wfield)
+      cfitsio_fcurpos2 = (fcurpos2 - tab->bodypos)/tab->bytepix; // CFITSIO
+
+      if (wfield) {
+
         QFTELL(wfcurpos2, wtab->cat->file, wfield->filename);
+        cfitsio_wfcurpos2 = (wfcurpos2 - wtab->bodypos)/wtab->bytepix; // CFITSIO
+      }
       if (j == ny-1 && (n=field->height%field->backh))
         {
         meshsize = n*(size_t)w;
@@ -242,7 +251,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
       backstat(backmesh, wbackmesh, buf, wbuf, bufsize, nx, w, bw,
 	wfield?wfield->var_thresh:0.0);
       QFSEEK(tab->cat->file, fcurpos2, SEEK_SET, field->filename);
-      tab->currentElement = (fcurpos2 == 0) ? 1 : fcurpos2; // CFITSIO
+      tab->currentElement = (cfitsio_fcurpos2 == 0) ? 1 : cfitsio_fcurpos2; // CFITSIO
       bm = backmesh;
       for (m=nx; m--; bm++)
         if (bm->mean <= -BIG)
@@ -251,8 +260,9 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
           QCALLOC(bm->histo, int, bm->nlevels);
       if (wfield)
         {
+
         QFSEEK(wtab->cat->file, wfcurpos2, SEEK_SET, wfield->filename);
-        wtab->currentElement = (wfcurpos2 == 0) ? 1 : wfcurpos2; // CFITSIO
+        wtab->currentElement = (cfitsio_wfcurpos2 == 0) ? 1 : cfitsio_wfcurpos2; // CFITSIO
         wbm = wbackmesh;
         for (m=nx; m--; wbm++)
           if (wbm->mean <= -BIG)
@@ -307,10 +317,11 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
 
 /* Go back to the original position */
   QFSEEK(field->tab->cat->file, fcurpos, SEEK_SET, field->filename);
-  field->tab->currentElement = fcurpos; // CFITSIO
+  field->tab->currentElement = (cfitsio_fcurpos == 0) ? 1 : cfitsio_fcurpos; // CFITSIO
+
   if (wfield) {
     QFSEEK(wfield->tab->cat->file, wfcurpos, SEEK_SET, wfield->filename);
-    wfield->tab->currentElement = (wfcurpos == 0) ? 1 : wfcurpos; // CFITSIO
+    wfield->tab->currentElement = (cfitsio_wfcurpos == 0) ? 1 : cfitsio_wfcurpos; // CFITSIO
   }
 
 /* Median-filter and check suitability of the background map */
