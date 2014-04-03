@@ -199,6 +199,7 @@ FLAGTYPE	*alloc_ibody(tabstruct *tab,
     if ((tab->bodybuf = malloc(size)))
       {
       QFSEEK(tab->cat->file, tab->bodypos, SEEK_SET, tab->cat->filename);
+  	  tab->currentElement = 1; // CFITSIO
       read_ibody(tab, (FLAGTYPE *)tab->bodybuf, npix);
 /*---- Apply pixel processing */
       if (func)
@@ -226,6 +227,7 @@ FLAGTYPE	*alloc_ibody(tabstruct *tab,
     if (!spoonful)
       spoonful = DATA_BUFSIZE;
     QFSEEK(tab->cat->file, tab->bodypos, SEEK_SET, tab->cat->filename);
+	tab->currentElement = 1; // CFITSIO
     read_ibody(tab, buffer, spoonful/sizeof(FLAGTYPE));
 /*-- Apply pixel processing */
     if (func)
@@ -300,7 +302,11 @@ void	free_body(tabstruct *tab)
   return;
   }
 
-
+/******* readTileCompressed ************************************************************
+ *
+ * Function to read a chunk of a tile-compressed FITS image
+ *
+ ***/
 void readTileCompressed(tabstruct *tab,  size_t	spoonful, double* bufdata0) {
 
 	int status, hdutype;
@@ -318,42 +324,42 @@ void readTileCompressed(tabstruct *tab,  size_t	spoonful, double* bufdata0) {
 
      // now read section of image
  	int datatype;
-     switch(tab->bitpix){
-          case BYTE_IMG:
-              datatype = TBYTE;
-              break;
-          case SHORT_IMG:
-              datatype = TSHORT;
-              break;
-          case LONG_IMG:
-              datatype = TLONG;
-              break;
-          case FLOAT_IMG:
-              datatype = TFLOAT;
-              break;
-          case DOUBLE_IMG:
-              datatype = TDOUBLE;
-              break;
-      }
+    switch(tab->bitpix){
+         case BYTE_IMG:
+             datatype = TBYTE;
+             break;
+         case SHORT_IMG:
+             datatype = TSHORT;
+             break;
+         case LONG_IMG:
+             datatype = TLONG;
+             break;
+         case FLOAT_IMG:
+             datatype = TFLOAT;
+             break;
+         case DOUBLE_IMG:
+             datatype = TDOUBLE;
+             break;
+     }
 
- 	int anynul;
+ 	 int anynul;
      double bscale = 1.0, bzero = 0.0, nulval = 0.;
 
      // turn off any scaling so that we copy raw pixel values
      status = 0; fits_set_bscale(tab->infptr,  bscale, bzero, &status);
 
      // now read the image
- 	status = 0; fits_read_img(tab->infptr, datatype,  tab->currentElement, spoonful, &nulval, bufdata0, &anynul, &status);
+ 	 status = 0; fits_read_img(tab->infptr, datatype,  tab->currentElement, spoonful, &nulval, bufdata0, &anynul, &status);
 
- 	// report reading error
- 	if (status != 0) {
+ 	 // report reading error
+ 	 if (status != 0) {
 
- 		printf("CFITSIO ERROR reading start=%d end=%d absolute end=%d\n", tab->currentElement, (tab->currentElement + spoonful) , (tab->naxisn[0]*tab->naxisn[1]));
- 		fits_report_error(stderr, status);
- 	}
+ 		 printf("CFITSIO ERROR reading start=%d end=%d absolute end=%d\n", tab->currentElement, (tab->currentElement + spoonful) , (tab->naxisn[0]*tab->naxisn[1]));
+ 		 fits_report_error(stderr, status);
+ 	 }
 
- 	// update file 'pointer'
- 	tab->currentElement += spoonful;
+ 	 // update file 'pointer'
+ 	 tab->currentElement += spoonful;
  }
 
 /******* read_body ************************************************************
@@ -1035,10 +1041,35 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
             break;
           }
 
-        // CFITSIO - if cfitsio output file has been set up, then proceed to write using cfitsio
-        if (tab->infptr != NULL) {
+          // CFITSIO - if cfitsio output file has been set up, then proceed to write using cfitsio
+          if (tab->infptr != NULL) {
 
-        	int status = 0; fits_write_img(tab->infptr, TFLOAT, tab->currentElement, spoonful, cbufdata0, &status);
+        	  // now read section of image
+        	  int datatype;
+        	  switch(tab->bitpix) {
+
+        	  case BYTE_IMG:
+        		  datatype = TBYTE;
+        		  break;
+        	  case SHORT_IMG:
+        		  datatype = TSHORT;
+        		  break;
+        	  case LONG_IMG:
+        		  datatype = TLONG;
+        		  break;
+        	  case FLOAT_IMG:
+        		  datatype = TFLOAT;
+        		  break;
+        	  case DOUBLE_IMG:
+        		  datatype = TDOUBLE;
+        		  break;
+        	  }
+
+        	// turn off any scaling so that we copy the raw pixel values
+        	double *array, bscale = 1.0, bzero = 0.0, nulval = 0.;
+        	int status = 0; fits_set_bscale(tab->infptr, bscale, bzero, &status);
+
+        	status = 0; fits_write_img(tab->infptr, datatype, tab->currentElement, spoonful, cbufdata0, &status);
 
         	if (status != 0) {
 
