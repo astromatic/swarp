@@ -120,6 +120,136 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 		*pthread_move_lines(void *arg);
 #endif
 
+
+ /**
+  * CFITSIO
+  *
+  * Function to create a cfitsio tile-compressed image.
+  * Uses the existing filename with an 'fz' extension.
+  * Currently, cfitsio compression defaults are used:
+  * - each tile is one row of the image
+  * - Rice compression is used
+  */
+ int setupTileCompressedFile(fieldstruct *outfield) {
+
+	if (!prefs.tile_compress_flag) {
+
+		outfield->cat->tab->infptr = NULL;
+ 		//printf("DEBUG CFITSIO NOT creating tile-compressed output image file\n");
+		return 0;
+	}
+
+ 	// create a file-name: use existing name with '.fz' suffix
+ 	char compressedFilename[strlen(outfield->cat->filename) + 20];
+ 	sprintf(compressedFilename, "!%s.fz[compress]", outfield->cat->filename);
+
+ 	// now create file
+ 	int status = 0; fits_create_file(&outfield->cat->tab->infptr, compressedFilename, &status);
+ 	if (status != 0) {
+
+ 		printf("CFITSIO ERROR creating output image file\n");
+ 		fits_report_error(stderr, status);
+ 		return 0;
+ 	}
+
+ 	// now create image extension
+ 	long naxis[2] = {outfield->cat->tab->naxisn[0], outfield->cat->tab->naxisn[1]};
+ 	status = 0; fits_create_img(outfield->cat->tab->infptr, FLOAT_IMG, 2, naxis, &status);
+ 	if (status != 0) {
+
+ 		printf("CFITSIO ERROR creating output image extension\n");
+ 		fits_report_error(stderr, status);
+ 		return 0;
+ 	}
+
+ 	// point to the first element in the image, ready for writing
+ 	outfield->tab->currentElement = 1;
+
+ 	//printf("DEBUG CFITSIO successfully created tile-compressed output image file, %s\n", compressedFilename);
+
+ 	// now, change original filename to temp one (.tmp suffix)
+ 	sprintf(outfield->cat->filename, "%s.tmp", outfield->cat->filename);
+
+ 	return 1;
+ }
+
+ /**
+   * CFITSIO
+   *
+   * Function to copy all non-structural keywords from one FITS file to tile-compressed one
+   *
+   */
+ int copyHeaderToTileCompressedFile(fieldstruct *outfield) {
+
+	 if (outfield->tab->infptr == NULL) return 0;
+
+	 // use cfitsio to open input file from which to copy header
+	 fitsfile *infptr;
+	 int status = 0; fits_open_file(&infptr, outfield->cat->filename, READONLY, &status);
+	 if (status != 0) {
+
+		 printf("ERROR cfitsio could not open FITS file for header copying: %s\n", outfield->cat->filename);
+		 fits_report_error(stderr, status);
+		 return 0;
+	 }
+
+	 // copy headers
+	 int nkeys;
+	 fits_get_hdrspace(infptr, &nkeys, NULL, &status);
+
+	 // loop through and copy non-structural keywords
+	 int i;
+	 char card[81];
+	 for (i=1; i<=nkeys; i++) {
+
+		 fits_read_record(infptr, i, card, &status);
+
+		 if (fits_get_keyclass(card) > TYP_CMPRS_KEY) {
+
+			 fits_write_record(outfield->tab->infptr, card, &status);
+			 //printf("DEBUG    WRITING %s\n", card);
+		 }
+		 //else
+	     //printf("DEBUG NOT WRITING %s\n", card);
+	 }
+
+	 return 1;
+ }
+
+ /**
+   * CFITSIO
+   *
+   * Function to close a cfitsio-created tile-compressed image.
+   * Also deletes temp non-tile-compressed file used to copy header keywords.
+   *
+   */
+  int closeTileCompressedFile(fieldstruct *outfield) {
+
+ 	 if (outfield->tab->infptr == NULL) return 0;
+
+ 	 // first copy header from non-tile compressed file
+ 	 copyHeaderToTileCompressedFile(outfield);
+
+ 	 int status = 0; fits_close_file(outfield->tab->infptr, &status);
+ 	 if (status != 0) {
+
+ 		 printf("CFITSIO ERROR closing tile-compressed image file\n");
+ 		 fits_report_error(stderr, status);
+ 		 return 0;
+ 	 }
+
+ 	 //printf("CFITSIO successfully closed tile-compressed output image file\n");
+
+ 	 // now delete temp file
+ 	 if (unlink (outfield->cat->filename) != 0) {
+
+ 		 printf("CFITSIO ERROR could not delete %s\n", outfield->cat->filename);
+ 	 }
+
+ 	 return 1;
+  }
+
+
 /******* coadd_fields *********************************************************
 PROTO	int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,
 			int ninput,
@@ -163,6 +293,10 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			naxis, nlines, nlinesmax,
 			nbuflines,nbuflines2,nbuflinesmax, size, omax,omax2,
 			offbeg, offend, fieldno, nopenfiles, closeflag;
+
+  // CFITSIO set up tile compressed output images (if specified by user)
+  setupTileCompressedFile(outfield);
+  setupTileCompressedFile(outwfield);
 
   coadd_type = coaddtype;
   coadd_wthresh = wthresh;
@@ -742,6 +876,13 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
       }
     free(multinbuf);
     }
+
+  // CFITSIO close tile compressed files
+  if (prefs.tile_compress_flag) {
+
+	  closeTileCompressedFile(outfield);
+	  closeTileCompressedFile(outwfield);
+  }
 
   return RETURN_OK;
   }
@@ -1865,6 +2006,7 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
         QFSEEK(field->cat->file,
 		field->tab->bodypos+offset*field->tab->bytepix,
 		SEEK_SET, field->filename);
+        field->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
         }
 #ifdef USE_THREADS
       linei = lineibuf + (threadstep&1)*field->width;
@@ -1929,6 +2071,7 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
           QFSEEK(wfield->cat->file,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
+          wfield->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
           }
         read_ibody(wfield->tab, linei, field->width);
         }
@@ -2077,6 +2220,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
         QFSEEK(field->cat->file,
 		field->tab->bodypos+offset*field->tab->bytepix,
 		SEEK_SET, field->filename);
+        field->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
         }
 #ifdef USE_THREADS
       line = linebuf+(threadstep&1)*field->width;
@@ -2145,6 +2289,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
           QFSEEK(wfield->cat->file,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
+      	wfield->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
           }
         read_body(wfield->tab, line, field->width);
         if ((thresh=wfield->weight_thresh)>0.0)
