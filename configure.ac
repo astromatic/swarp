@@ -43,6 +43,7 @@ AC_SUBST(DATE2, "$date2")
 AC_SUBST(DATE3, "$date3")
 
 # Include macros
+sinclude(acx_cfitsio.m4)
 sinclude(acx_pthread.m4)
 sinclude(acx_prog_cc_optim.m4)
 sinclude(acx_urbi_resolve_dir.m4)
@@ -115,7 +116,14 @@ AC_CHECK_FUNC([isnan], AC_DEFINE_UNQUOTED([HAVE_ISNAN2], 1,
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
-# Provide a special option for the default XSLT URL
+# Provide special options for CFITSIO
+AC_ARG_WITH(cfitsio-libdir,
+        [AS_HELP_STRING([--with-cfitsio-libdir=<CFITSIO library path>],
+        [Alternative directory for the CFITSIO library])])
+AC_ARG_WITH(cfitsio-incdir,
+        [AS_HELP_STRING([--with-cfitsio-incdir=<CFITSIO include dir>],
+        [Alternative directory for CFITSIO include files])])
+
 # Provide a special option for the default XSLT URL
 with_xsl_url="file://"$(URBI_RESOLVE_DIR([$datadir]))"/$PACKAGE_NAME/$PACKAGE_NAME.xsl"
 AC_ARG_WITH(xsl_url,
@@ -170,6 +178,14 @@ if test "$use_pthreads" = "yes"; then
   LIBS="$PTHREAD_LIBS $LIBS"
 fi
 AM_CONDITIONAL(USE_THREADS, test $use_pthreads = "yes")
+
+########################## handle the CFITSIO library ########################
+ACX_CFITSIO($with_cfitsio_libdir,$with_cfitsio_incdir,
+	[LIBS="$CFITSIO_LIBS $LIBS"]
+	if test "$CFITSIO_WARN" != ""; then
+	  AC_MSG_WARN([$CFITSIO_WARN])
+	fi,
+	AC_MSG_ERROR([$CFITSIO_ERROR Exiting.]))
 
 # Compile with profiling option
 if test "$enable_profiling" = "yes"; then

@@ -112,7 +112,8 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
   if (tab->naxis<1)
     error(EXIT_FAILURE, "*Error*: Zero-dimensional table in ",field->filename);
 
-/* Force data to be at least 2D */
+/* Force data to be at least 2D (CFITSIO: Note, only valid when NOT tile compressed) */
+  if(!tab->isTileCompressed)
   if (tab->naxis<2)
     {
     tab->naxis = 2;
@@ -241,6 +242,8 @@ VERSION	16/04/2000
 void	end_field(fieldstruct *field)
 
   {
+  //close_cfitsio(field->cat); CFITSIO this now being down in closeTileCompressedFile() in coadd.c
+
 /* Check first that a tab structure is present */
   if (field->tab)
     {
