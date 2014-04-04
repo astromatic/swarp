@@ -260,7 +260,6 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
           QCALLOC(bm->histo, int, bm->nlevels);
       if (wfield)
         {
-
         QFSEEK(wtab->cat->file, wfcurpos2, SEEK_SET, wfield->filename);
         wtab->currentElement = (cfitsio_wfcurpos2 == 0) ? 1 : cfitsio_wfcurpos2; // CFITSIO
         wbm = wbackmesh;
