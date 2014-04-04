@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2011 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		01/08/2011
+*	Last modified:		10/03/2014
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -68,7 +68,7 @@ void	makeit(void)
    double		dtime, dtimef;
    char			*rfilename;
    int		       	*next;
-   int			i,j,k,l, ninfield, ntinfield,ntinfield2, lng,lat,
+   int			i,j,k,l, ninfield, ntinfield,ntinfield2,
 			nfield,	jima,jweight, version;
 
 /* Install error logging */
@@ -148,13 +148,6 @@ void	makeit(void)
         QREALLOC(inwfield,fieldstruct *, nfield);
         }
       infield[k] = load_field(cat, j, i);
-      for (l=0; l<ntinfield; l++)
-        if ((infield[l]->wcs->lng != -1 &&  infield[l]->wcs->lat != -1)
-		&&  infield[l]->wcs->lat < infield[l]->wcs->lng)
-          {
-          lng = infield[l]->wcs->lat;
-          lat = infield[l]->wcs->lng;
-          }
       inwfield[k] = load_weight(wcat, infield[k], jweight<0? j:jweight, i,
 				prefs.weight_type[i]);
       next[i]++;
@@ -195,9 +188,6 @@ void	makeit(void)
   outwfield = NULL;
   NFPRINTF(OUTPUT, "Creating NEW output image ...")
   outfield = init_field(infield, ntinfield, prefs.outfield_name);
-/* Check consistency of lng and lat axes */
-  lng = outfield->wcs->lng;
-  lat = outfield->wcs->lat;
   NFPRINTF(OUTPUT, "Creating NEW weight-map ...")
   outwfield = init_weight(prefs.outwfield_name, outfield);
   NFPRINTF(OUTPUT, "")
@@ -401,7 +391,7 @@ static int	selectext(char *filename)
       *bracr = '\0';
     next = strtol(bracl+1, NULL, 0);
 
-    // VERY BAD HACK to check if this is tile-compressed, if so, add +1 to extension number requested
+    // CFITSIO : VERY BAD HACK to check if this is tile-compressed, if so, add +1 to extension number requested
     if (strstr(filename, ".fits.fz") != NULL) next = next + 1;
 
     return next;

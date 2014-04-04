@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic software
 *
-*	Copyright:		(C) 1993-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 1993-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		13/07/2012
+*	Last modified:		15/11/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -328,7 +328,7 @@ INPUT	tab structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	18/06/2012
+VERSION	15/11/2013
  ***/
 wcsstruct	*read_wcs(tabstruct *tab)
 
@@ -397,7 +397,6 @@ wcsstruct	*read_wcs(tabstruct *tab)
     }
 
   if (fitsfind(buf, "CD?_????")!=RETURN_ERROR)
-    {
 /*-- If CD keywords exist, use them for the linear mapping terms... */
     for (l=0; l<naxis; l++)
       for (j=0; j<naxis; j++)
@@ -405,8 +404,16 @@ wcsstruct	*read_wcs(tabstruct *tab)
         sprintf(str, "CD%d_%d", l+1, j+1);
         FITSREADF(buf, str, wcs->cd[l*naxis+j], l==j?1.0:0.0)
         }
+  else if (fitsfind(buf, "PC?_????")!=RETURN_ERROR)
+/*-- ...If PC keywords exist, use them for the linear mapping terms... */
+    for (l=0; l<naxis; l++)
+      for (j=0; j<naxis; j++)
+        {
+        sprintf(str, "PC%d_%d", l+1, j+1);
+        FITSREADF(buf, str, wcs->cd[l*naxis+j], l==j?1.0:0.0)
+        wcs->cd[l*naxis+j] *= wcs->cdelt[l];
     }
-  else if (fitsfind(buf, "PC00?00?")!=RETURN_ERROR)
+  else if (fitsfind(buf, "PC0??0??")!=RETURN_ERROR)
 /*-- ...If PC keywords exist, use them for the linear mapping terms... */
     for (l=0; l<naxis; l++)
       for (j=0; j<naxis; j++)
@@ -572,6 +579,7 @@ wcsstruct	*read_wcs(tabstruct *tab)
       }
     else
       {
+      if (fitsread(buf, "LONPOLE",&wcs->longpole,H_FLOAT,T_DOUBLE) != RETURN_OK)
       FITSREADF(buf, "LONGPOLE", wcs->longpole, 999.0);
       FITSREADF(buf, "LATPOLE ", wcs->latpole, 999.0);
 /*---- Old convention */
@@ -616,7 +624,7 @@ INPUT	tab structure,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	01/09/2010
+VERSION	27/11/2013
  ***/
 void	write_wcs(tabstruct *tab, wcsstruct *wcs)
 
@@ -644,26 +652,26 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
     addkeywordto_head(tab, "MJD-OBS ", "Modified Julian date at start");
     fitswrite(tab->headbuf, "MJD-OBS ", &mjd, H_EXPO,T_DOUBLE);
     }
-  addkeywordto_head(tab, "RADECSYS", "Astrometric system");
+  addkeywordto_head(tab, "RADESYS ", "Astrometric system");
   switch(wcs->radecsys)
     {
     case RDSYS_ICRS:
-      fitswrite(tab->headbuf, "RADECSYS", "ICRS", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "ICRS", H_STRING, T_STRING);
       break;
     case RDSYS_FK5:
-      fitswrite(tab->headbuf, "RADECSYS", "FK5", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "FK5", H_STRING, T_STRING);
       break;
     case RDSYS_FK4:
-      fitswrite(tab->headbuf, "RADECSYS", "FK4", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "FK4", H_STRING, T_STRING);
       break;
     case RDSYS_FK4_NO_E:
-      fitswrite(tab->headbuf, "RADECSYS", "FK4-NO-E", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "FK4-NO-E", H_STRING, T_STRING);
       break;
     case RDSYS_GAPPT:
-      fitswrite(tab->headbuf, "RADECSYS", "GAPPT", H_STRING, T_STRING);
+      fitswrite(tab->headbuf, "RADESYS ", "GAPPT", H_STRING, T_STRING);
       break;
     default:
-      error(EXIT_FAILURE, "*Error*: unknown RADECSYS type in write_wcs()", "");
+      error(EXIT_FAILURE, "*Error*: unknown RADESYS type in write_wcs()", "");
     }
   for (l=0; l<naxis; l++)
     {
@@ -686,7 +694,7 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
       fitswrite(tab->headbuf, str, &wcs->cd[l*naxis+j], H_EXPO, T_DOUBLE);
       }
     for (j=0; j<100; j++)
-      if (wcs->projp[j+100*l] != 0.0)
+      if (fabs(wcs->projp[j+100*l]) > TINY)
         {
         sprintf(str, "PV%d_%d", l+1, j);
         addkeywordto_head(tab, str, "Projection distortion parameter");

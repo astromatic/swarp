@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		22/03/2013
+*	Last modified:		10/03/2014
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -71,11 +71,16 @@ pkeystruct key[] =
   {"CENTER_TYPE", P_KEYLIST, prefs.center_type, 0,0, 0.0,0.0,
    {"MANUAL", "ALL", "MOST",""},
    1, INTERP_MAXDIM, &prefs.ncenter_type},
+  {"CLIP_AMPFRAC", P_FLOAT, &prefs.clip_ampfrac, 0, 0, 0.0, BIG},
+  {"CLIP_LOGNAME", P_STRING, prefs.clip_logname},
+  {"CLIP_SIGMA",   P_FLOAT, &prefs.clip_sigma,   0, 0, 0.0, BIG},
+  {"CLIP_WRITELOG", P_BOOL, &prefs.clip_logflag},
   {"COMBINE", P_BOOL, &prefs.combine_flag},
   {"COMBINE_BUFSIZE", P_INT, &prefs.coaddbuf_size, 1, 16384*1024},
   {"COMBINE_TYPE", P_KEY, &prefs.coadd_type, 0,0, 0.0,0.0,
-   {"MEDIAN", "AVERAGE", "MIN", "MAX", "WEIGHTED", "CHI_OLD", "CHI-MODE",
-	"CHI-MEAN", "SUM", "WEIGHTED_WEIGHT", "MEDIAN_WEIGHT",
+   {"MEDIAN", "AVERAGE", "MIN", "MAX", "WEIGHTED", "CLIPPED",
+	"CHI_OLD", "CHI-MODE", "CHI-MEAN", "SUM",
+	"WEIGHTED_WEIGHT", "MEDIAN_WEIGHT",
 	"AND", "NAND", "OR", "NOR", ""}},
   {"COPY_KEYWORDS", P_STRINGLIST, prefs.copy_keywords, 0,0, 0.0, 0.0,
    {""}, 0, 1024, &prefs.ncopy_keywords},
@@ -172,11 +177,19 @@ char *default_prefs[] =
 "#------------------------------- Co-addition ----------------------------------",
 " ",
 "COMBINE                Y               # Combine resampled images (Y/N)?",
-"COMBINE_TYPE           MEDIAN          # MEDIAN,AVERAGE,MIN,MAX,WEIGHTED,",
+"COMBINE_TYPE           MEDIAN          # MEDIAN,AVERAGE,MIN,MAX,WEIGHTED,CLIPPED",
 "                                       # CHI-OLD,CHI-MODE,CHI-MEAN,SUM,",
 "                                       # WEIGHTED_WEIGHT,MEDIAN_WEIGHT,",
 "                                       # AND,NAND,OR or NOR",
-"*BLANK_BADPIXELS        N              # Set to 0 pixels having a weight of 0",
+"*CLIP_AMPFRAC           0.3             # Fraction of flux variation allowed",
+"*                                       # with clipping",
+"*CLIP_SIGMA             4.0             # RMS error multiple variation allowed",
+"*                                       # with clipping",
+"*CLIP_WRITELOG          N               # Write output file with coordinates of",
+"*                                       # clipped pixels (Y/N) ",
+"*CLIP_LOGNAME           clipped.log     # Name of output file with coordinates",
+"*                                       # of clipped pixels",
+"*BLANK_BADPIXELS        N               # Set to 0 pixels having a weight of 0",
 " ",
 "#-------------------------------- Astrometry ----------------------------------",
 " ",

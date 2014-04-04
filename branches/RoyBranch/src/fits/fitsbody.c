@@ -340,6 +340,9 @@ void readTileCompressed(tabstruct *tab,  size_t	spoonful, double* bufdata0) {
          case DOUBLE_IMG:
              datatype = TDOUBLE;
              break;
+         default:
+        	 datatype = TFLOAT;
+        	 break;
      }
 
  	 int anynul;
@@ -1016,7 +1019,6 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
             for (i=spoonful; i--;)
               *(bufdata++) = (*(ptr++)-bz)/bs;
 
-
             // CFITSIO - only perform byte-swap if we are NOT writing a tile-compressed format using cfitsio
             if (tab->infptr == NULL)
             	if (bswapflag)
@@ -1063,6 +1065,9 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
         	  case DOUBLE_IMG:
         		  datatype = TDOUBLE;
         		  break;
+              default:
+              	 datatype = TFLOAT;
+              	 break;
         	  }
 
         	// turn off any scaling so that we copy the raw pixel values

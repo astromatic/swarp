@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		28/03/2013
+*	Last modified:		10/03/2014
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -74,9 +74,11 @@ static double		gammln();
  FLAGTYPE	*multiibuf,*multiwibuf, *outibuf,*outwibuf; 
  PIXTYPE	*multibuf,*multiwbuf, *outbuf,*outwbuf,
 		coadd_wthresh, *coadd_pixstack, *coadd_pixfstack;
- unsigned int	*multinbuf;
+ unsigned int	*multinbuf,*multiobuf;
  int		coadd_nomax, coadd_width, iflag;
  char		padbuf[FBSIZE];
+ FILE		*cliplog;
+ fieldstruct	**infields;
 
 #ifdef USE_THREADS
  pthread_t		*thread,
@@ -86,14 +88,15 @@ static double		gammln();
 			*pthread_startgate2, *pthread_stopgate2;
  FLAGTYPE		*pthread_lineibuf, *pthread_multiibuf;
  PIXTYPE		*pthread_linebuf, *pthread_multibuf;
- unsigned int		*pthread_multinbuf;
+ unsigned int		*pthread_multinbuf, *pthread_multiobuf,
+			*pthread_baseline_y, *pthread_origin;
  int			pthread_bufline, pthread_nbuflines, pthread_npix,
 			pthread_step, pthread_endflag, pthread_wdataflag;
 #endif
 
 /*------------------------------ function -----------------------------------*/
  static int	coadd_iline(int l),
-		coadd_line(int l);
+		coadd_line(int l, int b, int *bufmin);
 
  static double	*chi_bias(int n);
  static PIXTYPE	fast_median(PIXTYPE *arr, int n);
@@ -103,10 +106,11 @@ static double		gammln();
 			int *rawpos, int *rawmin, int *rawmax,
 			int nlines, int outwidth, int multinmax),
 		coadd_load(fieldstruct *field, fieldstruct *wfield,
-			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
+			PIXTYPE *multibuf, unsigned int *multiobuf,
+			PIXTYPE *multiwbuf,
 			unsigned int *multinbuf,
 			int *rawpos, int *rawmin, int *rawmax,
-			int nlines, int outwidth, int multinmax);
+			int nlines, int outwidth, int multinmax, int n);
 static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 			int ne, int ce, int **compsub, int *ncompsub,
 			int **best, int *nbest);
@@ -261,7 +265,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 28/03/2013
+VERSION 10/03/2014
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -399,7 +403,9 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
     omax2++;
     fieldno = infield[n1]->fieldno;
     exptime += infield[n1]->exptime;
-    w = (coaddtype == COADD_WEIGHTED && infield[n1]->backsig > 0.0)?
+    w = ((coaddtype == COADD_WEIGHTED || coaddtype == COADD_CLIPPED) &&
+	infield[n1]->backsig > 0.0)?	// entirely true only in the
+					// approximation of no clipping
 	1.0/(infield[n1]->fbacksig*infield[n1]->fbacksig) : 1.0;
     w1 += w;
     if (infield[n1]->fgain > 0.0)
@@ -419,7 +425,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 
 /* Approximation to the final equivalent gain */
   outfield->fgain = 0.0;
-  if (coaddtype == COADD_WEIGHTED || coaddtype == COADD_AVERAGE)
+  if (coaddtype == COADD_WEIGHTED || coaddtype == COADD_AVERAGE ||
+	coaddtype == COADD_CLIPPED)
     {
     if (w2 > 0.0)
       outfield->fgain = w1*w1/w2;
@@ -489,6 +496,14 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
   else
     {
     QMALLOC(multibuf, PIXTYPE, nbuflinesmax*multiwidth);
+    QMALLOC(multiobuf, unsigned int, nbuflinesmax*multiwidth);
+    if (coadd_type==COADD_CLIPPED && prefs.clip_logflag)
+      {
+    /* Open clipping log for mode COADD_CLIPPED */
+      if(!(cliplog = fopen(prefs.clip_logname,"w")))
+        error(EXIT_FAILURE, "*Error*: cannot open for writing ",
+		prefs.clip_logname);
+      }
     QMALLOC(multiwbuf, PIXTYPE, nbuflinesmax*multiwidth);
     }
   QMALLOC(multinbuf, unsigned int, nbuflinesmax*outwidth);
@@ -537,6 +552,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 /* Only for WRITING the weights */
   set_weightconv(outwfield);
 
+  infields = infield; // global pointer so coadd_line can access it easily
+
 /* Start all threads! */
 #ifdef USE_THREADS
 /* Set up multi-threading stuff */
@@ -555,7 +572,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
   for (p=0; p<nproc; p++)
     {
     proc[p] = p;
-    QPTHREAD_CREATE(&thread[p], &pthread_attr, &pthread_coadd_lines, &proc[p]);
+    QPTHREAD_CREATE(&thread[p], &pthread_attr, &pthread_coadd_lines, &bufmin);
     }
 /* Start the data mover thread */
   QPTHREAD_CREATE(&movthread, &pthread_attr, &pthread_move_lines, &p);
@@ -644,9 +661,10 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			bufpos, bufmin, bufmax, nbuflines2, outwidth, omax)
 		!= RETURN_OK)
 		|| ((!iflag)&&coadd_load(infield[n], inwfield[n],
-			multibuf+dy*multiwidth, multiwbuf+dy*multiwidth,
+			multibuf+dy*multiwidth, multiobuf+dy*multiwidth,
+			multiwbuf+dy*multiwidth,
 			multinbuf+dy*(size_t)outwidth,
-			bufpos, bufmin, bufmax, nbuflines2, outwidth, omax)
+			bufpos, bufmin, bufmax, nbuflines2, outwidth, omax, n)
 		!= RETURN_OK))
 /*---- End of the image, we can close the file */
             {
@@ -682,6 +700,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
     pthread_bufline = 0;
     pthread_nbuflines = nbuflines;
     QPTHREAD_MUTEX_UNLOCK(&coaddmutex);
+    pthread_baseline_y = &y;
     threads_gate_sync(pthread_startgate);
 /* ( Slave threads process the current buffer data here ) */
     threads_gate_sync(pthread_stopgate);
@@ -691,7 +710,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
         coadd_iline(y2);
     else
       for (y2=0; y2<nbuflines; y2++)
-        coadd_line(y2);
+        coadd_line(y2, y, bufmin);
 #endif
     NPRINTF(OUTPUT, "\33[1M> Writing   line:%7d / %-7d\n\33[1A", y+1,height);
 /*-- Write the image buffer lines */
@@ -798,6 +817,9 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
     if (inwfield[n])
       close_cat(inwfield[n]->cat);
     }
+  if (coadd_type == COADD_CLIPPED && prefs.clip_logflag)
+    fclose(cliplog);
+  
 
 #ifdef USE_THREADS
   pthread_endflag = 1;
@@ -847,6 +869,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
     else
       {
       free(multibuf);
+      free(multiobuf);
       free(multiwbuf);
       free(outbuf);
       free(outwbuf);
@@ -1077,13 +1100,15 @@ INPUT	Pointer to the thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	18/07/2012
+VERSION	10/03/2014
  ***/
 void	*pthread_coadd_lines(void *arg)
   {
-   int	bufline;
+   int	*bufmin,
+	bufline;
 
   bufline = -1;
+  bufmin = (int *)arg;
   threads_gate_sync(pthread_startgate);
   while (!pthread_endflag)
     {
@@ -1095,14 +1120,15 @@ void	*pthread_coadd_lines(void *arg)
       if (iflag)
         coadd_iline(bufline);
       else
-        coadd_line(bufline);
+        coadd_line(bufline, *pthread_baseline_y, bufmin);
       }
     else
       {
       QPTHREAD_MUTEX_UNLOCK(&coaddmutex);
 /*---- Wait for the input buffer to be updated */
       threads_gate_sync(pthread_stopgate);
-/* ( Master thread process loads and saves new data here ) */
+/*---- (Master thread process loads and saves new data here, ... */
+/*---- ... including base line pointer) */
       threads_gate_sync(pthread_startgate);
       }
     }
@@ -1197,23 +1223,27 @@ int coadd_iline(int l)
 
 
 /******* coadd_line **********************************************************
-PROTO	int coadd_line(int l)
+PROTO	int coadd_line(int l, int b, int *bufmin)
 PURPOSE	Coadd a line of pixels.
-INPUT	Current line number.
+INPUT	Current line number within the buffer,
+	buffer base line number,
+	offset of arrays w.r.t. final output (required for correct clipped pixel
+	coordinates)
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   Requires many global variables (for multithreading).
-AUTHOR  E. Bertin (IAP)
-VERSION	25/06/2011
+AUTHOR  E. Bertin (IAP), D. Gruen (USM)
+VERSION	10/03/2014
  ***/
-int coadd_line(int l)
+int	coadd_line(int l, int b, int *bufmin)
 
   {
    PIXTYPE		*inpix,*inwpix,*inpixt,*inwpixt,
-			*pixstack, *pixfstack, *pixt,*pixft, *outpix,*outwpix,
-			fval2;
-   double		mu, val,val0,val2,val3, wval,wval0,wval2,wval3;
-   unsigned int	*inn;
-   int			i,x, ninput, ninput2, blankflag;
+			*pixstack, *pixfstack, *pixwstack, *pixt,*pixft, *pixwt,
+			*pixstackbuf, *outpix,*outwpix,
+			fval2, mu;
+   double		val,val0,val2,val3, wval,wval0,wval2,wval3;
+   unsigned int		*inn, *inorigin, *inorigint, *pixostack, *pixot;
+   int			i,x, ninput, ninput2, blankflag, origin2;
 
   blankflag = prefs.blank_flag;
   inpix = multibuf+l*coadd_width*coadd_nomax;
@@ -1260,6 +1290,137 @@ int coadd_line(int l)
           }
         }
       break;
+
+    case COADD_CLIPPED:
+      QMALLOC(pixstack,  PIXTYPE, coadd_nomax);
+      QMALLOC(pixwstack, PIXTYPE, coadd_nomax);
+      QMALLOC(pixstackbuf, PIXTYPE, coadd_nomax);
+      QMALLOC(pixostack, unsigned int, coadd_nomax);
+      inorigin = multiobuf + l*coadd_width*coadd_nomax;
+      for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax,
+		inorigin += coadd_nomax) // for each pixel in the line
+        {
+        ninput2 = 0;
+        val2 = 0.0;
+        wval = 0.0;
+        inpixt = inpix;
+        inwpixt = inwpix;
+        pixt  = pixstack;
+        pixwt = pixwstack;
+        pixot = pixostack;
+        inorigint = inorigin;
+        for (i=*(inn++); i--;)
+          {
+          val2 = *(inpixt++);
+          wval2 = *(inwpixt++);
+          origin2 = *(inorigint++);
+
+          if (wval2<coadd_wthresh)
+            {
+            ninput2++;
+            *(pixt++) = val2;
+            *(pixwt++) = wval2;
+            *(pixot++) = origin2;
+            wval += 1.0 / sqrt(wval2);
+            }
+          }
+
+        switch(ninput2)
+          {
+          case 0: // no good values
+            *(outpix++) = blankflag? 0.0 : val2;
+            *(outwpix++) = BIG;
+	    break;
+
+          case 1: // only one good value: take it
+            *(outpix++) = *(pixstack);
+            *(outwpix++) = *(pixwstack);
+            break;
+
+          case 2:	// only two good values: reject both if not compatible;
+			// else use weighted mean
+            {
+             int	o1 = *(pixostack),
+			o2 = *(pixostack+1);
+             float	f1f2o2 = fabsf(*(pixstack)+*(pixstack+1)) / 2.0,
+			sumw = *(pixwstack) + *(pixwstack+1),
+			sigmaeff = sqrtf(sumw + f1f2o2*(1.0/infields[o1]->fgain
+				+ 1.0/infields[o2]->fgain)),
+			dpix = *(pixstack)-*(pixstack+1);
+            if (fabs(dpix) <= prefs.clip_sigma*sigmaeff +
+		prefs.clip_ampfrac*f1f2o2)
+              {
+              *(outpix++)  = (*(pixstack) * *(pixwstack+1) +
+              *(pixstack+1) * *(pixwstack)) / sumw;
+              *(outwpix++) = *(pixwstack) * *(pixwstack+1) / sumw;
+              }
+	    else // difference is too high, discard both
+	      {
+              *(outpix++) = 0.0;
+              *(outwpix++) = BIG;
+              if (prefs.clip_logflag)
+                {
+                mu = (dpix > 0.0 ? 1.0 : -1.0) *
+			(fabsf(dpix ) - prefs.clip_ampfrac*f1f2o2) / sigmaeff;
+                fprintf(cliplog, "%4d %6d %6d %+10g\n",
+			o1,
+			((int)(outpix - outbuf))%coadd_width + bufmin[0],
+			b + l + (b==0 ? bufmin[1] : 1),
+			mu);
+                fprintf(cliplog, "%4d %6d %6d %+10g\n",
+			o2,
+			((int)(outpix - outbuf))%coadd_width + bufmin[0],
+			b + l + (b==0 ? bufmin[1] : 1),
+			-mu);
+                }
+              }
+            }
+	    break;
+
+          default: // 3 or more, take a median and discard incompatible values
+            memcpy(pixstackbuf, pixstack, sizeof(PIXTYPE)*coadd_nomax);
+            mu = fast_median(pixstackbuf,ninput2);
+             float amu = fabsf(mu);
+
+            wval = val = 0.0;
+
+            for(i=0; i<ninput2; i++)
+              {
+               int	o = *(pixostack+i);
+               float	sigmaeff = sqrtf(*(pixwstack+i)+amu/infields[o]->fgain);
+              if (fabsf(*(pixstack+i) - mu) <= prefs.clip_sigma*sigmaeff +
+			prefs.clip_ampfrac*amu)
+                {
+                wval += (wval2 = 1.0 / *(pixwstack+i));
+                val  += wval2 * *(pixstack+i);
+                }
+              else if (prefs.clip_logflag)
+                fprintf(cliplog, "%4d %6d %6d %+10g\n",
+			o,
+			((int)(outpix - outbuf))%coadd_width + bufmin[0],
+			b + l + (b==0 ? bufmin[1] : 1),
+			((*(pixstack+i) - mu > 0.0)?1.0 : -1.0) *
+				(fabsf(fabsf(*(pixstack+i) - mu) -
+				prefs.clip_ampfrac*amu)) / sigmaeff);
+              }
+            if (wval > 0.0)
+              {
+              *(outwpix++) = (wval = 1.0/wval);
+              *(outpix++) = val*wval; 
+              }
+            else
+              {
+              *(outwpix++) = BIG;
+              *(outpix++) = 0.0;
+              }
+          }
+        }
+      free(pixstack);
+      free(pixwstack);
+      free(pixstackbuf);
+      free(pixostack);
+      break;
+
     case COADD_MEDIAN:
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax)
         {
@@ -1958,33 +2119,35 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
 
 /******* coadd_load **********************************************************
 PROTO	int coadd_load(fieldstruct *field, fieldstruct *wfield,
-			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
-			unsigned int *multinbuf,
+			PIXTYPE *multibuf, unsigned int *multiobuf,
+			PIXTYPE *multiwbuf, unsigned int *multinbuf,
 			int *rawpos, int *bufmin, int *bufmax,
-			int nlines, int outwidth, int multinmax)
+			int nlines, int outwidth, int multinmax, int nfield)
 PURPOSE	Load images and weights to coadd in the current buffer.
 INPUT	Input field ptr array,
-	Input weight field ptr array,
-	Science image buffer,
-	Weight image buffer,
-	Number-of-pixels buffer,
-	Array of current coordinates in output frame,
-	Array of minimum coordinates in output frame,
-	Array of maximum coordinates in output frame,
-	Total number of lines (can be higher than the number of buffers lines),
-	Pixel buffer line width,
-	Number of overlapping images.
+	input weight field ptr array,
+	science image buffer,
+        science image origin id buffer,
+	weight image buffer,
+	number-of-pixels buffer,
+	array of current coordinates in output frame,
+	array of minimum coordinates in output frame,
+	array of maximum coordinates in output frame,
+	total number of lines (can be higher than the number of buffers lines),
+	pixel buffer line width,
+	number of overlapping images,
+        input origin ID
 OUTPUT	RETURN_ERROR in case no more data are worth reading,
 	RETURN_OK otherwise.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 07/05/2013
+VERSION 10/03/2014
  ***/
 int	coadd_load(fieldstruct *field, fieldstruct *wfield,
-			PIXTYPE *multibuf, PIXTYPE *multiwbuf,
-			unsigned int *multinbuf,
+			PIXTYPE *multibuf, unsigned int *multiobuf,
+			PIXTYPE *multiwbuf, unsigned int *multinbuf,
 			int *rawpos, int *bufmin, int *bufmax,
-			int nbuflines, int outwidth, int multinmax)
+			int nbuflines, int outwidth, int multinmax, int oid)
   {
     wcsstruct		*wcs;
     OFF_T		offset, pixcount;
@@ -2066,14 +2229,18 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
         threads_gate_sync(pthread_stopgate2);
       pthread_linebuf = line+inoffset;
       pthread_multibuf = multibuf+muloffset;
+      pthread_multiobuf = multiobuf+muloffset;
+      pthread_origin    = &oid;
       pthread_multinbuf = multinbuf2+inbeg;
       threads_gate_sync(pthread_startgate2);
 #else
       read_body(field->tab, line, field->width);
       coadd_movedata(line+inoffset,
-		multibuf+muloffset, multinbuf2+inbeg, width, multinmax);
+		multibuf+muloffset, multiobuf+muloffset, multinbuf2+inbeg,
+		width, multinmax, oid);
 #endif
       multibuf += (size_t)outwidth*multinmax;
+      multiobuf += outwidth*multinmax;
       multinbuf2 += outwidth;
       y--;
       }
@@ -2185,7 +2352,7 @@ INPUT	Pointer to the thread number (unused).
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	18/07/2012
+VERSION	10/03/2014
  ***/
 void	*pthread_move_lines(void *arg)
   {
@@ -2207,8 +2374,8 @@ void	*pthread_move_lines(void *arg)
         coadd_moveidata(pthread_lineibuf, pthread_multiibuf, pthread_multinbuf,
 		pthread_npix, pthread_step);
       else
-        coadd_movedata(pthread_linebuf, pthread_multibuf, pthread_multinbuf,
-		pthread_npix, pthread_step);
+        coadd_movedata(pthread_linebuf, pthread_multibuf, pthread_multiobuf,
+		pthread_multinbuf, pthread_npix, pthread_step, *pthread_origin);
       }
     threads_gate_sync(pthread_stopgate2);
 /*-- ( Master thread loads new data here ) */
@@ -2224,23 +2391,27 @@ void	*pthread_move_lines(void *arg)
 
 /******* coadd_movedata ******************************************************
 PROTO	void coadd_movedata(PIXTYPE *linebuf, PIXTYPE *multibuf,
-			int *multinbuf, int npix, int step)
+			unsigned int *multiobuf, int *multinbuf,
+			int npix, int step, int oid)
 PURPOSE	Move data from the input load buffer to the co-addition buffer.
 INPUT	Input Buffer,
 	co-addition buffer,
+        origin id buffer
 	number-of-inputs buffer,
 	number of pixels to process,
-	step in pixels of the co-addition buffer.
+	step in pixels of the co-addition buffer
+        origin id.
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 03/07/2003
+VERSION 10/03/2014
  ***/
 void	coadd_movedata(PIXTYPE *linebuf, PIXTYPE *multibuf,
-			unsigned int *multinbuf, int npix, int step)
+			unsigned int *multiobuf, unsigned int *multinbuf,
+			int npix, int step, int oid)
   {
    PIXTYPE	*pix, *multi;
-   unsigned int	*multin,
+   unsigned int	*multin, *multo,
 		x;
 
   pix = linebuf;
@@ -2248,6 +2419,16 @@ void	coadd_movedata(PIXTYPE *linebuf, PIXTYPE *multibuf,
   multin = multinbuf;
   for (x=npix; x--;  multi += step)
     *(multi+*(multin++)) = *(pix++);
+
+  if(coadd_type==COADD_CLIPPED)
+    {
+    multo = multiobuf;
+    multin = multinbuf;
+    for (x=npix; x--;  multo += step)
+      {
+      *(multo+*(multin++)) = oid;
+      }
+    }
 
   return;
   }

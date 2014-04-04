@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+#	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		27/02/2013
+#	Last modified:		10/03/2014
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,7 +29,7 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.34.0, [bertin@iap.fr])
+AC_INIT(swarp, 2.38.0, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CONFIG_HEADERS(config.h)
@@ -106,7 +106,8 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MMAP
 AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
-AC_CHECK_FUNCS([atexit getenv gethostname memcpy memmove memset mmap strstr])
+AC_CHECK_FUNCS([atexit getenv gethostname memcpy memmove memset mmap strstr \
+		getrlimit])
 AC_CHECK_FUNCS([cosd sind tand acosd asind atand atan2d sincos])
 AC_CHECK_FUNC([isnan], AC_DEFINE_UNQUOTED([HAVE_ISNAN2], 1,
 		[Second isnan check]))
@@ -200,7 +201,7 @@ fi
 if test "$enable_best_link" = "yes"; then
   if test "$enable_icc" = "yes"; then
     AM_LDFLAGS="-static-intel -openmp-link static -shared-libgcc \
-	 -static-libtool-libs -avoid-version $AM_LDFLAGS"
+	-no-intel-extensions $AM_LDFLAGS"
   else
     AM_LDFLAGS="-static -shared-libgcc $AM_LDFLAGS"
   fi
