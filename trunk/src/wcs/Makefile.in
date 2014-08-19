@@ -86,7 +86,8 @@ DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/autoconf/depcomp \
 	$(top_srcdir)/autoconf/mkinstalldirs
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acx_pthread.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/acx_cfitsio.m4 \
+	$(top_srcdir)/acx_pthread.m4 \
 	$(top_srcdir)/acx_prog_cc_optim.m4 \
 	$(top_srcdir)/acx_urbi_resolve_dir.m4 \
 	$(top_srcdir)/configure.ac
@@ -134,6 +135,8 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
+CFITSIO_ERROR = @CFITSIO_ERROR@
+CFITSIO_LIBS = @CFITSIO_LIBS@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@

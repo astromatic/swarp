@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* CFITSIO header filename. */
+#undef CFITSIO_H
+
 /* Archive creation date */
 #undef DATE
 
@@ -17,6 +20,9 @@
 
 /* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
+
+/* Define if you have the CFITSIO libraries and header files. */
+#undef HAVE_CFITSIO
 
 /* Define to 1 if you have the `cosd' function. */
 #undef HAVE_COSD
