@@ -170,23 +170,24 @@ int	close_cat(catstruct *cat)
 Closes a file previously opened by cfitsio 
 
 ***/
-int	close_cfitsio(catstruct *cat)
+int	close_cfitsio(fitsfile *infptr)
 {
 
-	if (cat->tab->infptr) {
+	if (infptr != NULL) {
 
-		int status = 0; fits_close_file(cat->tab->infptr, &status);
+		int status = 0; fits_close_file(infptr, &status);
 		if (status != 0) {
 			fits_report_error(stderr, status);
-			printf("ERROR could not close FITS file with cfitsio: %s\n", cat->filename);
+			printf("ERROR could not close FITS file with cfitsio\n");
 		}
 		else {
-			//printf("SUCCESS CFITSIO CLOSE\n\n");
-			cat->tab->infptr == NULL;
+			//printf("Successfully closed FITS file with cfitsio\n");
+			infptr == NULL;
 		}
-
 	}
-	//printf("NO CFITSIO FILE TO CLOSE\n");
+	else {
+	    //printf("ERROR no cfitsio file to close\n");
+	}
 }
 
 /****** free_cat ***************************************************************
@@ -357,6 +358,7 @@ int	map_cat(catstruct *cat)
    }
    hdunum = 1;
 
+  int any_tile_compressed = 0;
   for (ntab=0; !get_head(tab); ntab++)
     {
     readbasic_head(tab);
@@ -365,13 +367,22 @@ int	map_cat(catstruct *cat)
     tab->nseg = tab->seg = 1;
 
     // CFITSIO
-    tab->hdunum = hdunum;
-    tab->infptr = infptr;
-    status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
-    if (status != 0) printf("ERROR could not move to hdu %d in file %s\n", tab->hdunum, cat->filename);
-    //tab->tabsize = infptr->Fptr->rowlength;
+    if (tab->isTileCompressed) {
 
-    //printf("TABSIZE = %ld\n", tab->tabsize);
+      any_tile_compressed = 1;
+      tab->hdunum = hdunum;
+      tab->infptr = infptr;
+
+      status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
+      if (status != 0) printf("ERROR could not move to hdu %d in file %s\n", tab->hdunum, cat->filename);
+      //tab->tabsize = infptr->Fptr->rowlength;
+
+      //printf("TABSIZE = %ld\n", tab->tabsize);
+    }
+    else {
+
+      tab->infptr = NULL;
+    }
 
     if (tab->tabsize) {
 
@@ -396,6 +407,10 @@ int	map_cat(catstruct *cat)
     // CFITSIO
     hdunum++;
     }
+
+  // we will not need CFitsIO, so close CFitsIO file pointer now
+  if (!any_tile_compressed)
+    close_cfitsio(infptr);
 
   cat->ntab = ntab;
   free(tab);
