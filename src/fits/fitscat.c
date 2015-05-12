@@ -375,23 +375,19 @@ int	map_cat(catstruct *cat)
 
       status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
       if (status != 0) printf("ERROR could not move to hdu %d in file %s\n", tab->hdunum, cat->filename);
-      //tab->tabsize = infptr->Fptr->rowlength;
 
-      //printf("TABSIZE = %ld\n", tab->tabsize);
+      if (tab->tabsize)
+        fseek(cat->file, infptr->Fptr->headstart[hdunum], SEEK_SET);
     }
+    // NOT tile-compressed
     else {
 
       tab->infptr = NULL;
+
+      if (tab->tabsize)
+        QFSEEK(cat->file, PADTOTAL(tab->tabsize), SEEK_CUR, cat->filename);
     }
 
-    if (tab->tabsize) {
-
-      // IMPORTANT: moving to start of next header using fseek and cfitsio position rather than table size, as done previously
-      fseek(cat->file, infptr->Fptr->headstart[hdunum], SEEK_SET);
-
-      // this is how it was done previously
-      //QFSEEK(cat->file, PADTOTAL(tab->tabsize), SEEK_CUR, cat->filename);
-    }
     if (prevtab)
       {
       tab->prevtab = prevtab;
