@@ -130,7 +130,7 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
   * - each tile is one row of the image
   * - Rice compression is used
   */
- int setupTileCompressedFile(fieldstruct *outfield) {
+ int setupTileCompressedFile(fieldstruct *outfield, int disallow_negative_pixels) {
 
 	if (!prefs.tile_compress_flag) {
 
@@ -154,7 +154,20 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 
  	// now create image extension
  	long naxis[2] = {outfield->cat->tab->naxisn[0], outfield->cat->tab->naxisn[1]};
- 	status = 0; fits_create_img(outfield->cat->tab->infptr, FLOAT_IMG, 2, naxis, &status);
+ 
+	if (disallow_negative_pixels) {
+          // set quantisation method. We can use this to prevent <0 pixel values
+          status = 0; fits_set_quantize_method(outfield->cat->tab->infptr, SUBTRACTIVE_DITHER_2, &status);
+ 	  if (status != 0) {
+
+ 	  	printf("CFITSIO ERROR error setting CFitsIO quantise methos\n");
+ 	  	fits_report_error(stderr, status);
+ 	  	return 0;
+ 	  }
+        }
+
+	// actually create the image
+	status = 0; fits_create_img(outfield->cat->tab->infptr, FLOAT_IMG, 2, naxis, &status);
  	if (status != 0) {
 
  		printf("CFITSIO ERROR creating output image extension\n");
@@ -295,8 +308,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			offbeg, offend, fieldno, nopenfiles, closeflag;
 
   // CFITSIO set up tile compressed output images (if specified by user)
-  setupTileCompressedFile(outfield);
-  setupTileCompressedFile(outwfield);
+  setupTileCompressedFile(outfield, 0);
+  setupTileCompressedFile(outwfield, 1);
 
   coadd_type = coaddtype;
   coadd_wthresh = wthresh;
