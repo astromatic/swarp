@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2015 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		10/03/2014
+*	Last modified:		23/10/2015
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -1091,7 +1091,7 @@ INPUT	Current line number within the buffer,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   Requires many global variables (for multithreading).
 AUTHOR  E. Bertin (IAP), D. Gruen (USM)
-VERSION	10/03/2014
+VERSION	23/10/2015
  ***/
 int	coadd_line(int l, int b, int *bufmin)
 
@@ -1127,7 +1127,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           fval2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && fval2>-BIG/2)
             {
             ninput2++;
             wval += (wval2=1.0/wval2);
@@ -1174,7 +1174,7 @@ int	coadd_line(int l, int b, int *bufmin)
           wval2 = *(inwpixt++);
           origin2 = *(inorigint++);
 
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             *(pixt++) = val2;
@@ -1262,7 +1262,7 @@ int	coadd_line(int l, int b, int *bufmin)
 				(fabsf(fabsf(*(pixstack+i) - mu) -
 				prefs.clip_ampfrac*amu)) / sigmaeff);
               }
-            if (wval > 0.0)
+            if (wval > 0.0 && val>-BIG/2)
               {
               *(outwpix++) = (wval = 1.0/wval);
               *(outpix++) = val*wval; 
@@ -1294,7 +1294,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           fval2 = *(inpixt++);
           wval2 = *(inwpixt++);        
-          if (wval2 < coadd_wthresh)
+          if (wval2 < coadd_wthresh && fval2>-BIG/2)
             {
             *(pixt++) = fval2;
             wval += 1.0/sqrt(wval2);
@@ -1334,7 +1334,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           fval2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && fval2>-BIG/2)
             {
             ninput2++;
             val += fval2;
@@ -1368,7 +1368,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             if (val2<val)
@@ -1401,7 +1401,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             if (val2>val)
@@ -1436,7 +1436,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             wval0 = 1.0/wval2;
@@ -1472,7 +1472,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             val0 = val2;
@@ -1512,7 +1512,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             val0 = val2;
@@ -1550,7 +1550,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             val += val2;
