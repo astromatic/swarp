@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2015 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		10/03/2014
+*	Last modified:		26/11/2015
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -94,6 +94,10 @@ pkeystruct key[] =
    {""}, 1, MAXINFIELD, &prefs.ngain_default},
   {"GAIN_KEYWORD", P_STRING, prefs.gain_keyword},
   {"SATLEV_KEYWORD", P_STRING, prefs.sat_keyword},
+  {"HEADEROUT_NAME", P_STRINGLIST, prefs.outhead_name, 0,0, 0.0,0.0,
+   {""}, 0, 1, &prefs.nouthead_name},
+  {"HEADER_NAME", P_STRINGLIST, prefs.inhead_name, 0,0, 0.0,0.0,
+   {""}, 0, MAXINFIELD, &prefs.ninhead_name},
   {"HEADER_ONLY", P_BOOL, &prefs.headeronly_flag},
   {"HEADER_SUFFIX", P_STRING, prefs.head_suffix},
   {"IMAGEOUT_NAME", P_STRING, prefs.outfield_name},
@@ -159,7 +163,9 @@ char *default_prefs[] =
 "#----------------------------------- Output -----------------------------------",
 "IMAGEOUT_NAME          coadd.fits      # Output filename",
 "WEIGHTOUT_NAME       coadd.weight.fits # Output weight-map filename",
+"*HEADEROUT_NAME                         # Out. header filename (overrides suffix)",
 " ",
+"*HEADER_NAME                            # Header filename if suffix not used",
 "HEADER_ONLY            N               # Only a header as an output file (Y/N)?",
 "HEADER_SUFFIX          .head           # Filename extension for additional headers",
 " ",

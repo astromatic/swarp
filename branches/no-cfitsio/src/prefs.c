@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2015 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		22/03/2013
+*	Last modified:		26/11/2015
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -347,6 +347,8 @@ void    readprefs(char *filename, char **argkey, char **argval, int narg)
               QMALLOC(((char **)key[nkey].ptr)[i], char, MAXCHAR);
               strcpy(((char **)key[nkey].ptr)[i], value);
               value = strtok((char *)NULL, notokstr);
+              if (flagz)
+                break;
               }
             if (i<key[nkey].nlistmin)
               error(EXIT_FAILURE, keyword, " list has not enough members");
@@ -583,6 +585,11 @@ void	useprefs(void)
   weight_flag = 0;
   for (i=0; i<prefs.nweight_type; i++)
     weight_flag |= (prefs.weight_type[i]!=WEIGHT_NONE);
+
+/* Check header filenames */ 
+  if (prefs.ninhead_name && prefs.ninhead_name != prefs.ninfield)
+      warning("The numbers of input headers and images do not match: ",
+		"the last images will rely only on the header suffix");
 
 /* If Weights are needed... */
   if (weight_flag)

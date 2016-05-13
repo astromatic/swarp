@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2015 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		19/08/2014
+*	Last modified:		26/11/2015
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -60,12 +60,14 @@ INPUT	Cat structure,
 	FITS extension number in file (0=primary)
 	Field number in coaddition (for various config settings)
 	Field flags,
+	FITS header filename (null=none).
 OUTPUT	The new field pointer if OK, NULL otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	25/08/2010
+VERSION	26/11/2015
  ***/
-fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
+fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno,
+			char *hfilename)
 
   {
    tabstruct	*tab, *intab;
@@ -97,18 +99,24 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno)
   else
     field->rfilename++;
 
+/* Check if a header filename is provided */
+  if (hfilename && *hfilename)
+    strcpy(field->hfilename, hfilename);
+  else { 
 /* Create a file name with a "header" extension */
-  strcpy(field->hfilename, field->filename);
-  if (!(pstr = strrchr(field->hfilename, '.')))
-    pstr = field->hfilename+strlen(field->hfilename);
-  sprintf(pstr, "%s", prefs.head_suffix);
+    strcpy(field->hfilename, field->filename);
+    if (!(pstr = strrchr(field->hfilename, '.')))
+      pstr = field->hfilename+strlen(field->hfilename);
+    sprintf(pstr, "%s", prefs.head_suffix);
+  }
 
   sprintf(gstr, "Looking for %s ...", field->rfilename);
   NFPRINTF(OUTPUT, gstr);
 
 /* Insert additional header informations from the "header" file */
   field->headflag = !read_aschead(field->hfilename, frameno, tab);
-
+  if (hfilename && *hfilename && !field->headflag)
+    warning(hfilename, " header file not found");
   if (tab->naxis<1)
     error(EXIT_FAILURE, "*Error*: Zero-dimensional table in ",field->filename);
 
@@ -351,19 +359,21 @@ void	printinfo_field(fieldstruct *field, fieldstruct *wfield)
 
 /******* init_field ********************************************************
 PROTO	fieldstruct *init_field(fieldstruct **infield, int ninput,
-				char *filename)
+				char *filename, char *hfilename)
 
 PURPOSE	Automatically set appropriate output field parameters according to the
 	prefs and a set of input fields.
 INPUT	Input field ptr array,
 	number of input fields,
-	Filename.
+	Filename,
+	FITS header filename (null=none).
 OUTPUT	Pointer to the new output field.
 NOTES   Global preferences are used.
 AUTHOR  E. Bertin (IAP)
-VERSION 19/08/2014
+VERSION 26/11/2015
  ***/
-fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
+fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
+			char *hfilename)
   {
    extern char		celsysname[][2][8];
 
@@ -389,11 +399,16 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
     field->rfilename = field->filename;
   else
     field->rfilename++;
-/* Create a file name with a "header" extension */
-  strcpy(field->hfilename, filename);
-  if (!(pstr = strrchr(field->hfilename, '.')))
-    pstr = field->hfilename+strlen(field->hfilename);
-  sprintf(pstr, "%s", prefs.head_suffix);
+/* Check if a header filename is provided */
+  if (hfilename && *hfilename)
+    strcpy(field->hfilename, hfilename);
+  else { 
+/*-- Create a file name with a "header" extension */
+    strcpy(field->hfilename, filename);
+    if (!(pstr = strrchr(field->hfilename, '.')))
+      pstr = field->hfilename+strlen(field->hfilename);
+    sprintf(pstr, "%s", prefs.head_suffix);
+  }
 
   field->cat = new_cat(1);
   init_cat(field->cat);
@@ -932,6 +947,8 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename)
   if (read_aschead(field->hfilename, 0, tab))
     {
 /*-- No external header: update WCS internal structures only */
+    if (hfilename && *hfilename)
+      warning(hfilename, " header file not found");
     if (!wcs->wcsprm)
       QCALLOC(wcs->wcsprm, struct wcsprm, 1);
 /*-- Test if the WCS is recognized and a celestial pair is found */

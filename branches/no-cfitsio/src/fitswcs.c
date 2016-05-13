@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic software
 *
-*	Copyright:		(C) 1993-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 1993-2016 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		15/11/2013
+*	Last modified:		08/03/2016
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -709,6 +709,43 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
   }
 
 
+/******* wipe_wcs ***********************************************************
+PROTO	void wipe_wcs(tabstruct *tab)
+PURPOSE	Remove all WCS (World Coordinate System) info in a FITS header.
+INPUT	tab structure.
+OUTPUT	-.
+NOTES	-.
+AUTHOR	E. Bertin (IAP)
+VERSION	27/11/2013
+ ***/
+void	wipe_wcs(tabstruct *tab)
+
+  {
+  removekeywordfrom_head(tab, "CRVAL???");
+  removekeywordfrom_head(tab, "CTYPE???");
+  removekeywordfrom_head(tab, "CUNIT???");
+  removekeywordfrom_head(tab, "CRPIX???");
+  removekeywordfrom_head(tab, "CRDER???");
+  removekeywordfrom_head(tab, "CSYER???");
+  removekeywordfrom_head(tab, "CDELT???");
+  removekeywordfrom_head(tab, "CROTA???");
+  removekeywordfrom_head(tab, "CD?_????");
+  removekeywordfrom_head(tab, "PROJP_??");
+  removekeywordfrom_head(tab, "PV?_????");
+  removekeywordfrom_head(tab, "PC?_????");
+  removekeywordfrom_head(tab, "PC0??0??");
+  removekeywordfrom_head(tab, "EQUINOX?");
+  removekeywordfrom_head(tab, "RADESYS?");
+  removekeywordfrom_head(tab, "RADECSYS");
+  removekeywordfrom_head(tab, "LONPOLE?");
+  removekeywordfrom_head(tab, "LONGPOLE");
+  removekeywordfrom_head(tab, "LATPOLE?");
+  removekeywordfrom_head(tab, "WAT?????");
+
+  return;
+  }
+
+
 /******* end_wcs **************************************************************
 PROTO	void end_wcs(wcsstruct *wcs)
 PURPOSE	Free WCS (World Coordinate System) infos.
@@ -781,7 +818,7 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	13/07/2012
+VERSION	08/03/2016
  ***/
 void	invert_wcs(wcsstruct *wcs)
 
@@ -793,7 +830,7 @@ void	invert_wcs(wcsstruct *wcs)
 			lngstep,latstep, rawsize, epsilon;
    int			group[] = {1,1};
 				/* Don't ask, this is needed by poly_init()! */
-   int		i,j,lng,lat,deg, tnxflag, maxflag;
+   int		i,j,lng,lat,deg, tnxflag, maxflag, maxflagflag;
 
 /* Check first that inversion is not straightforward */
   lng = wcs->wcsprm->lng;
@@ -864,7 +901,7 @@ void	invert_wcs(wcsstruct *wcs)
     if (deg>1)
       poly_end(poly);
     poly = poly_init(group, 2, &deg, 1);
-    poly_fit(poly, outpos, lngpos, NULL, WCS_NGRIDPOINTS2, NULL);
+    poly_fit(poly, outpos, lngpos, NULL, WCS_NGRIDPOINTS2, NULL, 0.0);
     maxflag = 0;
     outpost = outpos;
     lngpost = lngpos;
@@ -875,10 +912,10 @@ void	invert_wcs(wcsstruct *wcs)
         break;
         }
     }
-  if (maxflag)
-    warning("Significant inaccuracy likely to occur in projection","");
 /* Now link the created structure */
   wcs->prj->inv_x = wcs->inv_x = poly;
+
+  maxflagflag = maxflag;
 
 /* Invert "latitude" */
 /* Compute the extent of the pixel in reduced projected coordinates */
@@ -898,7 +935,7 @@ void	invert_wcs(wcsstruct *wcs)
     if (deg>1)
       poly_end(poly);
     poly = poly_init(group, 2, &deg, 1);
-    poly_fit(poly, outpos, latpos, NULL, WCS_NGRIDPOINTS2, NULL);
+    poly_fit(poly, outpos, latpos, NULL, WCS_NGRIDPOINTS2, NULL, 0.0);
     maxflag = 0;
     outpost = outpos;
     latpost = latpos;
@@ -909,10 +946,13 @@ void	invert_wcs(wcsstruct *wcs)
         break;
         }
     }
-  if (maxflag)
-    warning("Significant inaccuracy likely to occur in projection","");
 /* Now link the created structure */
   wcs->prj->inv_y = wcs->inv_y = poly;
+
+  maxflagflag |= maxflag;
+
+  if (maxflagflag)
+    warning("Significant inaccuracy likely to occur in projection","");
 
 /* Free memory */
   free(outpos);
@@ -2121,6 +2161,27 @@ double  fmod_m90_p90(double angle)
   {
   return angle>0.0? fmod(angle+90.0,180.0)-90.0 : fmod(angle-90.0,180.0)+90.0;
   }
+
+
+/********************************* fmod_0_pmod *******************************/
+/*
+Fold input angle in the [0,+mod[ domain.
+*/
+double  fmod_0_pmod(double angle, double mod)
+  {
+  return angle>0.0? fmod(angle,mod) : fmod(angle,mod)+mod;
+  }
+
+
+/******************************* fmod_mmod_pmod ******************************/
+/*
+Fold input angle in the [-mod,+mod[ domain.
+*/
+double  fmod_mmod_pmod(double angle, double mod)
+  {
+  return angle>0.0? fmod(angle+mod,2.0*mod)-mod : fmod(angle-mod,2.0*mod)+mod;
+  }
+
 
 
 /********************************* fcmp_0_p360 *******************************/

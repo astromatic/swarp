@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2000-2015 Emmanuel Bertin -- IAP/CNRS/UPMC
+#	Copyright:		(C) 2000-2016 IAP/CNRS/UPMC
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		23/10/2015
+#	Last modified:		16/03/2016
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,7 +29,7 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.38.0.3, [bertin@iap.fr])
+AC_INIT(swarp, 2.40.0, [bertin@iap.fr])
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CONFIG_HEADERS(config.h)
@@ -184,7 +184,7 @@ fi
 # "Best" linking option
 if test "$enable_best_link" = "yes"; then
   if test "$enable_icc" = "yes"; then
-    AM_LDFLAGS="-static-intel -openmp-link static -shared-libgcc \
+    AM_LDFLAGS="-static-intel -qopenmp-link static -shared-libgcc \
 	-no-intel-extensions $AM_LDFLAGS"
   else
     AM_LDFLAGS="-static -shared-libgcc $AM_LDFLAGS"

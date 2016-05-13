@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2015 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		30/01/2012
+*	Last modified:		26/11/2015
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -115,8 +115,9 @@ typedef struct field
 extern fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
 					int fflags),
 			*init_field(fieldstruct **infield, int ninput,
-				char *filename),
-			*load_field(catstruct *cat, int frameno, int fieldno);
+				char *filename, char *hfilename),
+			*load_field(catstruct *cat, int frameno, int fieldno,
+				char *hfilename);
 
 extern void		end_field(fieldstruct *field),
 			printinfo_field(fieldstruct *field,

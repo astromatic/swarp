@@ -147,7 +147,7 @@ void	makeit(void)
         QREALLOC(infield, fieldstruct *, nfield);
         QREALLOC(inwfield,fieldstruct *, nfield);
         }
-      infield[k] = load_field(cat, j, i);
+      infield[k] = load_field(cat, j, i, prefs.inhead_name[i]);
       inwfield[k] = load_weight(wcat, infield[k], jweight<0? j:jweight, i,
 				prefs.weight_type[i]);
       next[i]++;
@@ -187,7 +187,8 @@ void	makeit(void)
 /* Create output image (but nothing written to disk yet) */
   outwfield = NULL;
   NFPRINTF(OUTPUT, "Creating NEW output image ...")
-  outfield = init_field(infield, ntinfield, prefs.outfield_name);
+  outfield = init_field(infield, ntinfield, prefs.outfield_name,
+		prefs.outhead_name[0]);
   NFPRINTF(OUTPUT, "Creating NEW weight-map ...")
   outwfield = init_weight(prefs.outwfield_name, outfield);
   NFPRINTF(OUTPUT, "")
