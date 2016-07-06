@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2016 IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		19/07/2013
+*	Last modified:		06/07/2016
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -107,7 +107,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	19/07/2013
+VERSION	06/07/2016
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -265,7 +265,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
     ascale = 1.0;
 
 /* Turn approximation on or off */
-  approxflag = ((projerr = prefs.proj_err[infield->fieldno] > 0.0)
+  approxflag = (((projerr = prefs.proj_err[infield->fieldno]) > 0.0)
     && (projapp = projapp_init(infield->wcs, field->wcs, projerr,
 	prefs.fscalastro_type==FSCALASTRO_VARIABLE)));
 
