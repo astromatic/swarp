@@ -79,7 +79,7 @@ if test "$enable_auto_flags" = "yes"; then
   LDFLAGS=""
   ACX_PROG_CC_OPTIM
 fi
-AC_PROG_RANLIB
+LT_INIT
 AC_PROG_INSTALL
 
 # Checks for libraries.
