@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
+#	Copyright:		(C) 2000-2018 IAP/CNRS/UPMC
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		19/08/2014
+#	Last modified:		08/01/2018
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,7 +29,9 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(swarp, 2.38.1, [bertin@iap.fr])
+AC_INIT(SWarp, 2.38.2, [astromatic@astromatic.net],
+	swarp, [http://astromatic.net/software/swarp])
+
 AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CONFIG_HEADERS(config.h)
@@ -38,7 +40,8 @@ date=`date +%Y-%m-%d`
 date2=`date +"%a %b %d %Y"`
 date3=`date +"%B %Y"`
 AC_DEFINE_UNQUOTED(DATE, "$date", [Archive creation date])
-AC_SUBST(PACKAGER, "Emmanuel Bertin")
+AC_SUBST(PACKAGER, "AstrOmatic")
+AC_SUBST(DATE1, "$date1")
 AC_SUBST(DATE2, "$date2")
 AC_SUBST(DATE3, "$date3")
 
@@ -48,8 +51,19 @@ sinclude(acx_pthread.m4)
 sinclude(acx_prog_cc_optim.m4)
 sinclude(acx_urbi_resolve_dir.m4)
 
+# Provide a special option for setting the package release number
+AC_ARG_WITH(release,
+	[AS_HELP_STRING([--with-release=<release number>],
+	[set the package release number (default = 1)])],
+	[],
+	[with_release="no"])
+if test "$with_release" = "no"; then
+  with_release=1
+fi
+AC_SUBST(PACKAGE_RELEASE, "$with_release")
+
 # Display pakage and version number
-AC_MSG_RESULT([*********** Configuring:  $PACKAGE $VERSION ($date) **********])
+AC_MSG_RESULT([*********** Configuring:  $PACKAGE $VERSION - $PACKAGE_RELEASE ($date) ********])
 
 # Provide special option for choosing automatically the compilation flags.
 AC_MSG_CHECKING([if compilation flags are set automatically])
@@ -200,7 +214,7 @@ fi
 # "Best" linking option
 if test "$enable_best_link" = "yes"; then
   if test "$enable_icc" = "yes"; then
-    AM_LDFLAGS="-static-intel -openmp-link static -shared-libgcc \
+    AM_LDFLAGS="-static-intel -qopenmp-link static -shared-libgcc \
 	-no-intel-extensions $AM_LDFLAGS"
   else
     AM_LDFLAGS="-static -shared-libgcc $AM_LDFLAGS"

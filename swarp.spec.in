@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2005-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+#	Copyright:		(C) 2005-2018 IAP/CNRS/UPMC
 #
 #	License:		GNU General Public License
 #
@@ -22,13 +22,14 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		26/10/2010
+#	Last modified:		08/01/2018
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%define name @PACKAGE_NAME@
+%define name @PACKAGE_TARNAME@
 %define version @PACKAGE_VERSION@
-%define release 1
+%define release @PACKAGE_RELEASE@%{?dist}
+%define debug_package %{nil}
 %undefine _missing_build_ids_terminate_build
 
 Summary: resample and combine astronomical FITS images
@@ -68,11 +69,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc AUTHORS BUGS ChangeLog COPYRIGHT HISTORY INSTALL LICENSE README THANKS doc/swarp.pdf
-%{_bindir}/@PACKAGE_NAME@
-%{_mandir}/man1/@PACKAGE_NAME@.1*
-%{_mandir}/manx/@PACKAGE_NAME@.x*
-%{_datadir}/@PACKAGE_NAME@
+%doc AUTHORS BUGS ChangeLog COPYRIGHT HISTORY INSTALL LICENSE README.md THANKS
+%{_bindir}/@PACKAGE_TARNAME@
+%{_mandir}/man1/@PACKAGE_TARNAME@.1*
+%{_mandir}/manx/@PACKAGE_TARNAME@.x*
+%{_datadir}/@PACKAGE_TARNAME@
 
 %changelog
 * @DATE2@ @PACKAGER@ <@PACKAGE_BUGREPORT@>
