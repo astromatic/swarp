@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2000-2018 IAP/CNRS/UPMC
+#	Copyright:		(C) 2000-2019 IAP/CNRS/UPMC
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		08/01/2018
+#	Last modified:		15/11/2019
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,7 +29,7 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(SWarp, 2.38.2, [astromatic@astromatic.net],
+AC_INIT(SWarp, 2.39.0, [astromatic@astromatic.net],
 	swarp, [http://astromatic.net/software/swarp])
 
 AC_CONFIG_SRCDIR(src/makeit.c)

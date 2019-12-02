@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		15/11/2013
+*	Last modified:		15/11/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -50,47 +50,37 @@
 
 
 /****** read_aschead ********************************************************
-PROTO	int	read_aschead(char *filename, int frameno, tabstruct *tab)
-PURPOSE	Read a ASCII header file and update the current field's tab
+PROTO	int read_aschead(char *filename, int frameno, tabstruct *tab)
+PURPOSE	Read an ASCII header file and update the current field's tab
 INPUT	Name of the ASCII file,
 	Frame number (if extensions),
 	Tab structure.
 OUTPUT	RETURN_OK if the file was found, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	15/11/2013
+VERSION	15/11/2019
  ***/
 int	read_aschead(char *filename, int frameno, tabstruct *tab)
   {
-   static char	keyword[MAXCHAR],data[MAXCHAR],comment[MAXCHAR];
-   FILE		*file;
-   h_type	htype;
-   t_type	ttype;
-   char		*gstrt;
-   int		i, pos, wcsflag;
+   char		keyword[88],data[88],comment[88], str[MAXCHAR];
+   FILE         *file;
+   h_type       htype;
+   t_type       ttype;
+   int          i, cdfirstflag,pvfirstflag;
 
   if ((file=fopen(filename, "r")))
     {
 /*- Skip previous ENDs in multi-FITS extension headers */
     for (i=(frameno?(frameno-1):0); i--;)
-      while (fgets(gstr, MAXCHAR, file)
-		&& strncmp(gstr,"END ",4)
-		&& strncmp(gstr,"END\n",4));
-    pos = fitsfind(tab->headbuf, "END     ");
-    memset(gstr, ' ', 80);
-    wcsflag = 1;
-    while (fgets(gstr, 81, file) && strncmp(gstr,"END ",4)
-				&& strncmp(gstr,"END\n",4))
+      while (fgets(str, MAXCHAR, file)
+               && strncmp(str,"END ",4)
+               && strncmp(str,"END\n",4));
+    memset(str, ' ', 80);
+    cdfirstflag = pvfirstflag = 1;
+    while (fgets(str, 81, file) && strncmp(str,"END ",4)
+                               && strncmp(str,"END\n",4))
       {
-/*---- Remove possible junk within the 80 first chars (linefeeds, etc.) */
-      gstrt = gstr;
-      for (i=80; i--; gstrt++)
-        if (*gstrt < ' ' || *gstrt >'~')
-          *gstrt = ' ';
-/*---- Skip non-FITS parts */
-      if (gstr[0]<=' ' || (gstr[8]!=' ' && gstr[8]!='='))
-        continue;
-      fitspick(gstr, keyword, data, &htype, &ttype, comment);
+      fitspick(str, keyword, data, &htype, &ttype, comment);
 /*---- Block critical keywords */
       if (!wstrncmp(keyword, "SIMPLE  ", 8)
 	||!wstrncmp(keyword, "BITPIX  ", 8)
@@ -98,36 +88,31 @@ int	read_aschead(char *filename, int frameno, tabstruct *tab)
 	||!wstrncmp(keyword, "BSCALE  ", 8)
 	||!wstrncmp(keyword, "BZERO   ", 8))
         continue;
-/*---- Prevent mixing of PC and CD WCS keywords (new ones take precedence) */
-      if (wcsflag)
+/*---- Wipe out conflicting keywords */
+      if (pvfirstflag && !wstrncmp(keyword, "PV?_????", 8))
+        {
+        removekeywordfrom_head(tab, "PV?_????");
+        pvfirstflag = 0;
+        }
+      if (cdfirstflag)
         {
         if (!wstrncmp(keyword, "PC0??0??", 8)
 		|| !wstrncmp(keyword, "PC?_????", 8))
           {
-          fitsremove(tab->headbuf, "CD?_????");
-          pos = fitsfind(tab->headbuf, "END     ");
-          wcsflag = 0;
+          removekeywordfrom_head(tab, "CD?_????");
+          cdfirstflag = 0;
           }
-        else if (!wstrncmp(keyword, "CD?_????", 8))
+	else if (!wstrncmp(keyword, "CD?_????", 8))
           {
-          fitsremove(tab->headbuf, "PC0??0??");
-          fitsremove(tab->headbuf, "PC?_????");
-          pos = fitsfind(tab->headbuf, "END     ");
-          wcsflag = 0;
+          removekeywordfrom_head(tab, "CDELT???");
+          removekeywordfrom_head(tab, "PC0??0??");
+          removekeywordfrom_head(tab, "PC?_????");
+          cdfirstflag = 0;
           }
         }
-/*---- Always keep a one-line margin */
-      if ((pos+1)*80>=tab->headnblock*FBSIZE)
-        {
-        tab->headnblock++;
-        QREALLOC(tab->headbuf, char, tab->headnblock*FBSIZE);
-        memset(tab->headbuf+(tab->headnblock-1)*FBSIZE, ' ', FBSIZE);
-        }
-      fitsadd(tab->headbuf, keyword, comment);
-      if (fitsfind(tab->headbuf, "END     ")>=pos)
-        pos++;
+      addkeywordto_head(tab, keyword, comment);
       fitswrite(tab->headbuf, keyword, data, htype, ttype);
-      memset(gstr, ' ', 80);
+      memset(str, ' ', 80);
       }
     fclose(file);
 /*-- Update the tab data */

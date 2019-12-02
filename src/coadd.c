@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2019 IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		10/03/2014
+*	Last modified:		15/11/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "define.h"
 #include "types.h"

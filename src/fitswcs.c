@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic software
 *
-*	Copyright:		(C) 1993-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 1993-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		15/11/2013
+*	Last modified:		02/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -328,7 +328,7 @@ INPUT	tab structure.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	15/11/2013
+VERSION	04/05/2018
  ***/
 wcsstruct	*read_wcs(tabstruct *tab)
 
@@ -397,6 +397,7 @@ wcsstruct	*read_wcs(tabstruct *tab)
     }
 
   if (fitsfind(buf, "CD?_????")!=RETURN_ERROR)
+    {
 /*-- If CD keywords exist, use them for the linear mapping terms... */
     for (l=0; l<naxis; l++)
       for (j=0; j<naxis; j++)
@@ -404,6 +405,7 @@ wcsstruct	*read_wcs(tabstruct *tab)
         sprintf(str, "CD%d_%d", l+1, j+1);
         FITSREADF(buf, str, wcs->cd[l*naxis+j], l==j?1.0:0.0)
         }
+    }
   else if (fitsfind(buf, "PC?_????")!=RETURN_ERROR)
 /*-- ...If PC keywords exist, use them for the linear mapping terms... */
     for (l=0; l<naxis; l++)
@@ -439,9 +441,10 @@ wcsstruct	*read_wcs(tabstruct *tab)
   if (!wcsset(wcs->naxis,(const char(*)[9])wcs->ctype, wcs->wcsprm)
 	&& wcs->wcsprm->flag<999)
     {
-     char	*pstr;
-     double	date;
-     int	biss, dpar[3];
+     char	*pstr, tstr[100];
+     double	dpar[6] = {0.0},
+		date, jdsec, tmp, biss;
+     int	sflag;
 
 /*-- Coordinate reference frame */
 /*-- Search for an observation date expressed in Julian days */
@@ -458,28 +461,30 @@ wcsstruct	*read_wcs(tabstruct *tab)
       FITSREADS(buf, "DATE-OBS", str, "");
       if (*str)
         {
-/*------ Decode DATE-OBS format: DD/MM/YY or YYYY-MM-DD */
-        for (l=0; l<3 && (pstr = strtok_r(l?NULL:str,"/- ", &ptr)); l++)
-          dpar[l] = atoi(pstr);
-        if (l<3 || !dpar[0] || !dpar[1] || !dpar[2])
+/*------ Decode DATE-OBS format: DD/MM/YYThh:mm:ss[.sss] or YYYY-MM-DDThh:mm:ss[.sss] */
+        sflag = strchr(str, '/') != NULL;
+        for (l=0; l<5 && (pstr = strtok_r(l ? NULL : str, "/-T: ", &ptr)); l++)
+          dpar[l] = atof(pstr);
+        if (l<3 || dpar[0] == 0.0 || dpar[1] == 0.0 || dpar[2] == 0.0)
           {
 /*-------- If DATE-OBS value corrupted or incomplete, assume 2000-1-1 */
           warning("Invalid DATE-OBS value in header: ", str);
-          dpar[0] = 2000; dpar[1] = 1; dpar[2] = 1;
+          dpar[0] = 2000.0; dpar[1] = 1.0; dpar[2] = 1.0;
           }
-        else if (strchr(str, '/') && dpar[0]<32 && dpar[2]<100)
+        else if (sflag && dpar[0] < 32.0 && dpar[2] < 100.0)
           {
-          j = dpar[0];
-          dpar[0] = dpar[2]+1900;
-          dpar[2] = j;
+          tmp = dpar[0];
+          dpar[0] = dpar[2] + 1900.0;
+          dpar[2] = tmp;
           }
 
-        biss = (dpar[0]%4)?0:1;
+        biss = (((int)dpar[0]) % 4) ? 0.0 : 1.0;
 /*------ Convert date to MJD */
-        date = -678956 + (365*dpar[0]+dpar[0]/4) - biss
-			+ ((dpar[1]>2?((int)((dpar[1]+1)*30.6)-63+biss)
-		:((dpar[1]-1)*(63+biss))/2) + dpar[2]);
-        wcs->obsdate = 2000.0 - (MJD2000 - date)/365.25;
+        jdsec = (dpar[5] + dpar[4] * 60.0 + dpar[3] * 3600.0) / 86400.0;
+        date = ((365.0 * dpar[0] + dpar[0] / 4.0) - 678956.0 - biss
+		+ ((dpar[1] > 2.0? (floor((dpar[1] + 1.0) * 30.6) - 63.0 + biss)
+		: ((dpar[1] - 1.0) * (63.0 + biss)) / 2.0) + dpar[2])) + jdsec;
+        wcs->obsdate = 2000.0 - (MJD2000 - date) / 365.25;
         }
       else
 /*------ Well if really no date is found */
@@ -709,6 +714,43 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
   }
 
 
+/******* wipe_wcs ***********************************************************
+PROTO	void wipe_wcs(tabstruct *tab)
+PURPOSE	Remove all WCS (World Coordinate System) info in a FITS header.
+INPUT	tab structure.
+OUTPUT	-.
+NOTES	-.
+AUTHOR	E. Bertin (IAP)
+VERSION	27/11/2013
+ ***/
+void	wipe_wcs(tabstruct *tab)
+
+  {
+  removekeywordfrom_head(tab, "CRVAL???");
+  removekeywordfrom_head(tab, "CTYPE???");
+  removekeywordfrom_head(tab, "CUNIT???");
+  removekeywordfrom_head(tab, "CRPIX???");
+  removekeywordfrom_head(tab, "CRDER???");
+  removekeywordfrom_head(tab, "CSYER???");
+  removekeywordfrom_head(tab, "CDELT???");
+  removekeywordfrom_head(tab, "CROTA???");
+  removekeywordfrom_head(tab, "CD?_????");
+  removekeywordfrom_head(tab, "PROJP_??");
+  removekeywordfrom_head(tab, "PV?_????");
+  removekeywordfrom_head(tab, "PC?_????");
+  removekeywordfrom_head(tab, "PC0??0??");
+  removekeywordfrom_head(tab, "EQUINOX?");
+  removekeywordfrom_head(tab, "RADESYS?");
+  removekeywordfrom_head(tab, "RADECSYS");
+  removekeywordfrom_head(tab, "LONPOLE?");
+  removekeywordfrom_head(tab, "LONGPOLE");
+  removekeywordfrom_head(tab, "LATPOLE?");
+  removekeywordfrom_head(tab, "WAT?????");
+
+  return;
+  }
+
+
 /******* end_wcs **************************************************************
 PROTO	void end_wcs(wcsstruct *wcs)
 PURPOSE	Free WCS (World Coordinate System) infos.
@@ -781,7 +823,7 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	13/07/2012
+VERSION	16/11/2019
  ***/
 void	invert_wcs(wcsstruct *wcs)
 
@@ -793,7 +835,7 @@ void	invert_wcs(wcsstruct *wcs)
 			lngstep,latstep, rawsize, epsilon;
    int			group[] = {1,1};
 				/* Don't ask, this is needed by poly_init()! */
-   int		i,j,lng,lat,deg, tnxflag, maxflag;
+   int		i,j,lng,lat,deg, tnxflag, maxflag, maxflagflag;
 
 /* Check first that inversion is not straightforward */
   lng = wcs->wcsprm->lng;
@@ -851,7 +893,7 @@ void	invert_wcs(wcsstruct *wcs)
   pixin[lng] += ARCSEC/DEG;
   linfwd(pixin, wcs->lin, raw);
   rawsize = sqrt((raw[lng]-rawmin[lng])*(raw[lng]-rawmin[lng])
-		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat]))*DEG/ARCSEC;
+		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat]));
   if (!rawsize)
     error(EXIT_FAILURE, "*Error*: incorrect linear conversion in ",
 		wcs->wcsprm->pcode);
@@ -875,10 +917,10 @@ void	invert_wcs(wcsstruct *wcs)
         break;
         }
     }
-  if (maxflag)
-    warning("Significant inaccuracy likely to occur in projection","");
 /* Now link the created structure */
   wcs->prj->inv_x = wcs->inv_x = poly;
+
+  maxflagflag = maxflag;
 
 /* Invert "latitude" */
 /* Compute the extent of the pixel in reduced projected coordinates */
@@ -886,7 +928,7 @@ void	invert_wcs(wcsstruct *wcs)
   pixin[lat] += ARCSEC/DEG;
   linfwd(pixin, wcs->lin, raw);
   rawsize = sqrt((raw[lng]-rawmin[lng])*(raw[lng]-rawmin[lng])
-		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat]))*DEG/ARCSEC;
+		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat]));
   if (!rawsize)
     error(EXIT_FAILURE, "*Error*: incorrect linear conversion in ",
 		wcs->wcsprm->pcode);
@@ -909,10 +951,13 @@ void	invert_wcs(wcsstruct *wcs)
         break;
         }
     }
-  if (maxflag)
-    warning("Significant inaccuracy likely to occur in projection","");
 /* Now link the created structure */
   wcs->prj->inv_y = wcs->inv_y = poly;
+
+  maxflagflag |= maxflag;
+
+  if (maxflagflag)
+    warning("Significant inaccuracy likely to occur in projection","");
 
 /* Free memory */
   free(outpos);
