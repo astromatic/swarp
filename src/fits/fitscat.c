@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 1995-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		29/08/2012
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -165,6 +165,7 @@ int	close_cat(catstruct *cat)
   return RETURN_OK;
   }
 
+#ifdef	HAVE_CFITSIO
 /****** close_cfitsio **************************************************************
 
 Closes a file previously opened by cfitsio 
@@ -189,6 +190,8 @@ int	close_cfitsio(fitsfile *infptr)
 	    //printf("ERROR no cfitsio file to close\n");
 	}
 }
+#endif // HAVE_CFITSIO
+
 
 /****** free_cat ***************************************************************
 PROTO	void free_cat(catstruct **cat, int ncat)
@@ -348,7 +351,7 @@ int	map_cat(catstruct *cat)
   tab->cat = cat;
   QFTELL(cat->file, tab->headpos, cat->filename);
 
-   // CFITSIO
+#ifdef	HAVE_CFITSIO
    fitsfile *infptr;
    int status, hdutype, hdunum;
    status = 0; fits_open_file(&infptr, cat->filename, READONLY, &status);
@@ -359,6 +362,8 @@ int	map_cat(catstruct *cat)
    hdunum = 1;
 
   int any_tile_compressed = 0;
+#endif // HAVE_CFITSIO
+
   for (ntab=0; !get_head(tab); ntab++)
     {
     readbasic_head(tab);
@@ -366,7 +371,7 @@ int	map_cat(catstruct *cat)
     QFTELL(cat->file, tab->bodypos, cat->filename);
     tab->nseg = tab->seg = 1;
 
-    // CFITSIO
+#ifdef	HAVE_CFITSIO
     if (tab->isTileCompressed) {
 
       any_tile_compressed = 1;
@@ -388,6 +393,12 @@ int	map_cat(catstruct *cat)
         QFSEEK(cat->file, PADTOTAL(tab->tabsize), SEEK_CUR, cat->filename);
     }
 
+    hdunum++;
+#else
+    if (tab->tabsize)
+      QFSEEK(cat->file, PADTOTAL(tab->tabsize), SEEK_CUR, cat->filename);
+#endif // HAVE_CFITSIO
+
     if (prevtab)
       {
       tab->prevtab = prevtab;
@@ -399,14 +410,13 @@ int	map_cat(catstruct *cat)
     QCALLOC(tab, tabstruct, 1);
     tab->cat = cat;
     QFTELL(cat->file, tab->headpos, cat->filename);
-
-    // CFITSIO
-    hdunum++;
     }
 
+#ifdef	HAVE_CFITSIO
   // we will not need CFitsIO, so close CFitsIO file pointer now
   if (!any_tile_compressed)
     close_cfitsio(infptr);
+#endif
 
   cat->ntab = ntab;
   free(tab);

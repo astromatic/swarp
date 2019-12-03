@@ -906,7 +906,7 @@ void	invert_wcs(wcsstruct *wcs)
     if (deg>1)
       poly_end(poly);
     poly = poly_init(group, 2, &deg, 1);
-    poly_fit(poly, outpos, lngpos, NULL, WCS_NGRIDPOINTS2, NULL);
+    poly_fit(poly, outpos, lngpos, NULL, WCS_NGRIDPOINTS2, NULL, 0.0);
     maxflag = 0;
     outpost = outpos;
     lngpost = lngpos;
@@ -940,7 +940,7 @@ void	invert_wcs(wcsstruct *wcs)
     if (deg>1)
       poly_end(poly);
     poly = poly_init(group, 2, &deg, 1);
-    poly_fit(poly, outpos, latpos, NULL, WCS_NGRIDPOINTS2, NULL);
+    poly_fit(poly, outpos, latpos, NULL, WCS_NGRIDPOINTS2, NULL, 0.0);
     maxflag = 0;
     outpost = outpos;
     latpost = latpos;
@@ -2166,6 +2166,27 @@ double  fmod_m90_p90(double angle)
   {
   return angle>0.0? fmod(angle+90.0,180.0)-90.0 : fmod(angle-90.0,180.0)+90.0;
   }
+
+
+/********************************* fmod_0_pmod *******************************/
+/*
+Fold input angle in the [0,+mod[ domain.
+*/
+double  fmod_0_pmod(double angle, double mod)
+  {
+  return angle>0.0? fmod(angle,mod) : fmod(angle,mod)+mod;
+  }
+
+
+/******************************* fmod_mmod_pmod ******************************/
+/*
+Fold input angle in the [-mod,+mod[ domain.
+*/
+double  fmod_mmod_pmod(double angle, double mod)
+  {
+  return angle>0.0? fmod(angle+mod,2.0*mod)-mod : fmod(angle-mod,2.0*mod)+mod;
+  }
+
 
 
 /********************************* fcmp_0_p360 *******************************/

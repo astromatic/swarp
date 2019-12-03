@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2017 IAP/CNRS/UPMC
+*	Copyright:		(C) 1995-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		02/10/2017
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -101,7 +101,6 @@ PIXTYPE	*alloc_body(tabstruct *tab, void (*func)(PIXTYPE *ptr, int npix))
     if ((tab->bodybuf = malloc(size)))
       {
       QFSEEK(tab->cat->file, tab->bodypos, SEEK_SET, tab->cat->filename);
-    	tab->currentElement = 1; // CFITSIO
 #ifdef	HAVE_CFITSIO
       tab->currentElement = 1;
 #endif
@@ -321,7 +320,7 @@ void	free_body(tabstruct *tab)
  * Function to read a chunk of a tile-compressed FITS image
  *
  ***/
-void readTileCompressed(tabstruct *tab,  size_t	spoonful, double* bufdata0) {
+void readTileCompressed(tabstruct *tab,  size_t	spoonful, void *bufdata0) {
 
    int status, hdutype;
 
@@ -385,7 +384,7 @@ void readTileCompressed(tabstruct *tab,  size_t	spoonful, double* bufdata0) {
   tab->currentElement += spoonful;
 }
 
-#endif
+#endif // HAVE_CFITSIO
 
 /******* read_body ************************************************************
 PROTO	read_body(tabstruct *tab, PIXTYPE *ptr, long size)
@@ -440,12 +439,12 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
 
 #ifdef	HAVE_CFITSIO
         if (tab->isTileCompressed)
-       	  readTileCompressed(tab, spoonful, bufdata0);
+       	  readTileCompressed(tab, spoonful, (void *)bufdata0);
         else
           QFREAD(bufdata, spoonful*tab->bytepix, cat->file, cat->filename);
 #else
         QFREAD(bufdata, spoonful*tab->bytepix, cat->file, cat->filename);
-#endif
+#endif // HAVE_CFITSIO
         switch(tab->bitpix)
           {
           case BP_BYTE:
@@ -780,7 +779,7 @@ void	read_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
 
 #ifdef	HAVE_CFITSIO
         if (tab->isTileCompressed)
-          readTileCompressed(tab, spoonful, bufdata0);
+          readTileCompressed(tab, spoonful, (void *)bufdata0);
         else
           QFREAD(bufdata, spoonful*tab->bytepix, cat->file, cat->filename);
 #else
@@ -964,6 +963,7 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
 
   bs = (PIXTYPE)tab->bscale;
   bz = (PIXTYPE)tab->bzero;
+
   cat = tab->cat;
   if (!cat)
     error(EXIT_FAILURE, "*Internal Error*: no parent cat structure for table ",
@@ -1144,7 +1144,7 @@ void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
           QFWRITE(cbufdata0, spoonful*tab->bytepix, cat->file, cat->filename);
 #else
         QFWRITE(cbufdata0, spoonful*tab->bytepix, cat->file, cat->filename);
-#endif
+#endif // HAVE_CFITSIO
         }
       break;
 

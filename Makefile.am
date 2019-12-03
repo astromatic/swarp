@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2002-2018 IAP/CNRS/UPMC
+#	Copyright:		(C) 2002-2019 IAP/CNRS/SorbonneU
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by

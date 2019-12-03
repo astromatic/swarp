@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		15/11/2019
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -63,22 +63,22 @@ VERSION	15/11/2019
 int	read_aschead(char *filename, int frameno, tabstruct *tab)
   {
    char		keyword[88],data[88],comment[88], str[MAXCHAR];
-   FILE         *file;
-   h_type       htype;
-   t_type       ttype;
-   int          i, cdfirstflag,pvfirstflag;
+   FILE		*file;
+   h_type	htype;
+   t_type	ttype;
+   int   	i, cdfirstflag,pvfirstflag;
 
   if ((file=fopen(filename, "r")))
     {
 /*- Skip previous ENDs in multi-FITS extension headers */
     for (i=(frameno?(frameno-1):0); i--;)
       while (fgets(str, MAXCHAR, file)
-               && strncmp(str,"END ",4)
-               && strncmp(str,"END\n",4));
+		&& strncmp(str,"END ",4)
+		&& strncmp(str,"END\n",4));
     memset(str, ' ', 80);
     cdfirstflag = pvfirstflag = 1;
     while (fgets(str, 81, file) && strncmp(str,"END ",4)
-                               && strncmp(str,"END\n",4))
+				&& strncmp(str,"END\n",4))
       {
       fitspick(str, keyword, data, &htype, &ttype, comment);
 /*---- Block critical keywords */

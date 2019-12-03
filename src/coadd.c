@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2019 IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		15/11/2019
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -121,6 +121,7 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 		*pthread_move_lines(void *arg);
 #endif
 
+#ifdef HAVE_CFITSIO
 
  /**
   * CFITSIO
@@ -263,6 +264,7 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
  	 return 1;
   }
 
+#endif // HAVE_CFITSIO
 
 /******* coadd_fields *********************************************************
 PROTO	int coadd_fields(fieldstruct **infield, fieldstruct **inwfield,
@@ -308,9 +310,11 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			nbuflines,nbuflines2,nbuflinesmax, size, omax,omax2,
 			offbeg, offend, fieldno, nopenfiles, closeflag;
 
+#ifdef HAVE_CFITSIO
   // CFITSIO set up tile compressed output images (if specified by user)
   setupTileCompressedFile(outfield, 0);
   setupTileCompressedFile(outwfield, 1);
+#endif // HAVE_CFITSIO
 
   coadd_type = coaddtype;
   coadd_wthresh = wthresh;
@@ -891,13 +895,14 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
     free(multinbuf);
     }
 
+#ifdef HAVE_CFITSIO
   // CFITSIO close tile compressed files
   if (prefs.tile_compress_flag) {
 
 	  closeTileCompressedFile(outfield);
 	  closeTileCompressedFile(outwfield);
   }
-
+#endif // HAVE_CFITSIO
   return RETURN_OK;
   }
 
@@ -1246,7 +1251,7 @@ INPUT	Current line number within the buffer,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   Requires many global variables (for multithreading).
 AUTHOR  E. Bertin (IAP), D. Gruen (USM)
-VERSION	10/03/2014
+VERSION	23/10/2015
  ***/
 int	coadd_line(int l, int b, int *bufmin)
 
@@ -1282,7 +1287,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           fval2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && fval2>-BIG/2)
             {
             ninput2++;
             wval += (wval2=1.0/wval2);
@@ -1329,7 +1334,7 @@ int	coadd_line(int l, int b, int *bufmin)
           wval2 = *(inwpixt++);
           origin2 = *(inorigint++);
 
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             *(pixt++) = val2;
@@ -1417,7 +1422,7 @@ int	coadd_line(int l, int b, int *bufmin)
 				(fabsf(fabsf(*(pixstack+i) - mu) -
 				prefs.clip_ampfrac*amu)) / sigmaeff);
               }
-            if (wval > 0.0)
+            if (wval > 0.0 && val>-BIG/2)
               {
               *(outwpix++) = (wval = 1.0/wval);
               *(outpix++) = val*wval; 
@@ -1449,7 +1454,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           fval2 = *(inpixt++);
           wval2 = *(inwpixt++);        
-          if (wval2 < coadd_wthresh)
+          if (wval2 < coadd_wthresh && fval2>-BIG/2)
             {
             *(pixt++) = fval2;
             wval += 1.0/sqrt(wval2);
@@ -1489,7 +1494,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           fval2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && fval2>-BIG/2)
             {
             ninput2++;
             val += fval2;
@@ -1523,7 +1528,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             if (val2<val)
@@ -1556,7 +1561,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             if (val2>val)
@@ -1591,7 +1596,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             wval0 = 1.0/wval2;
@@ -1627,7 +1632,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             val0 = val2;
@@ -1667,7 +1672,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             val0 = val2;
@@ -1705,7 +1710,7 @@ int	coadd_line(int l, int b, int *bufmin)
           {
           val2 = *(inpixt++);
           wval2 = *(inwpixt++);
-          if (wval2<coadd_wthresh)
+          if (wval2<coadd_wthresh && val2>-BIG/2)
             {
             ninput2++;
             val += val2;
@@ -1951,7 +1956,7 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
 			int nbuflines, int outwidth, int multinmax)
   {
     wcsstruct		*wcs;
-    OFF_T		offset, pixcount;
+    OFF_T2		offset, pixcount;
     FLAGTYPE		*lineibuf, *linei;
     unsigned int	*multinbuf2,
 			d, y, nflag, naxis;
@@ -2015,12 +2020,14 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
           pixcount *= wcs->naxisn[d-1];
           ival = rawpos2[d] - wcs->outmin[d];
           if (ival > 0)
-            offset += (OFF_T)ival*pixcount;
+            offset += (OFF_T2)ival*pixcount;
           }
         QFSEEK(field->cat->file,
 		field->tab->bodypos+offset*field->tab->bytepix,
 		SEEK_SET, field->filename);
-        field->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
+#ifdef HAVE_CFITSIO
+        field->tab->currentElement = (offset == 0) ? 1 : offset;
+#endif // HAVE_CFITSIO
         }
 #ifdef USE_THREADS
       linei = lineibuf + (threadstep&1)*field->width;
@@ -2085,7 +2092,9 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
           QFSEEK(wfield->cat->file,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
-          wfield->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
+#ifdef HAVE_CFITSIO
+          wfield->tab->currentElement = (offset == 0) ? 1 : offset;
+#endif // HAVE_CFITSIO
           }
         read_ibody(wfield->tab, linei, field->width);
         }
@@ -2164,7 +2173,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 			int nbuflines, int outwidth, int multinmax, int oid)
   {
     wcsstruct		*wcs;
-    OFF_T		offset, pixcount;
+    OFF_T2		offset, pixcount;
     PIXTYPE		*linebuf, *line,*linet,
 			thresh;
     unsigned int	*multinbuf2,
@@ -2229,12 +2238,14 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
           pixcount *= wcs->naxisn[d-1];
           ival = rawpos2[d] - wcs->outmin[d];
           if (ival > 0)
-            offset += (OFF_T)ival*pixcount;
+            offset += (OFF_T2)ival*pixcount;
           }
         QFSEEK(field->cat->file,
 		field->tab->bodypos+offset*field->tab->bytepix,
 		SEEK_SET, field->filename);
-        field->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
+#ifdef HAVE_CFITSIO
+        field->tab->currentElement = (offset == 0) ? 1 : offset;
+#endif // HAVE_CFITSIO
         }
 #ifdef USE_THREADS
       line = linebuf+(threadstep&1)*field->width;
@@ -2303,7 +2314,9 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
           QFSEEK(wfield->cat->file,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
-      	wfield->tab->currentElement = (offset == 0) ? 1 : offset; // CFITSIO
+#ifdef HAVE_CFITSIO
+      	wfield->tab->currentElement = (offset == 0) ? 1 : offset;
+#endif // HAVE_CFITSIO
           }
         read_body(wfield->tab, line, field->width);
         if ((thresh=wfield->weight_thresh)>0.0)

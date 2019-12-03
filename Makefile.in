@@ -23,7 +23,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2002-2018 IAP/CNRS/UPMC
+#	Copyright:		(C) 2002-2019 IAP/CNRS/SorbonneU
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -116,8 +116,10 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acx_cfitsio.m4 \
-	$(top_srcdir)/acx_pthread.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/acx_cfitsio.m4 $(top_srcdir)/acx_pthread.m4 \
 	$(top_srcdir)/acx_prog_cc_optim.m4 \
 	$(top_srcdir)/acx_urbi_resolve_dir.m4 \
 	$(top_srcdir)/configure.ac
@@ -227,8 +229,8 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/autoconf/ltmain.sh \
 	$(top_srcdir)/autoconf/missing AUTHORS ChangeLog INSTALL \
 	THANKS TODO autoconf/compile autoconf/config.guess \
-	autoconf/config.sub autoconf/install-sh autoconf/ltmain.sh \
-	autoconf/missing
+	autoconf/config.sub autoconf/depcomp autoconf/install-sh \
+	autoconf/ltmain.sh autoconf/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)

@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		10/03/2014
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -94,6 +94,10 @@ pkeystruct key[] =
    {""}, 1, MAXINFIELD, &prefs.ngain_default},
   {"GAIN_KEYWORD", P_STRING, prefs.gain_keyword},
   {"SATLEV_KEYWORD", P_STRING, prefs.sat_keyword},
+  {"HEADEROUT_NAME", P_STRINGLIST, prefs.outhead_name, 0,0, 0.0,0.0,
+   {""}, 0, 1, &prefs.nouthead_name},
+  {"HEADER_NAME", P_STRINGLIST, prefs.inhead_name, 0,0, 0.0,0.0,
+   {""}, 0, MAXINFIELD, &prefs.ninhead_name},
   {"HEADER_ONLY", P_BOOL, &prefs.headeronly_flag},
   {"HEADER_SUFFIX", P_STRING, prefs.head_suffix},
   {"IMAGEOUT_NAME", P_STRING, prefs.outfield_name},
@@ -128,6 +132,9 @@ pkeystruct key[] =
    {""}, 1, MAXINFIELD, &prefs.nsat_default},
   {"SUBTRACT_BACK", P_BOOLLIST, prefs.subback_flag, 0,0, 0.0,0.0,
    {""}, 1, MAXINFIELD, &prefs.nsubback_flag},
+#ifdef HAVE_CFITSIO
+  {"TILE_COMPRESS", P_BOOL, &prefs.tile_compress_flag},
+#endif
   {"VERBOSE_TYPE", P_KEY, &prefs.verbose_type, 0,0, 0.0,0.0,
    {"QUIET", "LOG", "NORMAL", "FULL", ""}},
   {"VMEM_DIR", P_STRING, prefs.swapdir_name},
@@ -145,7 +152,6 @@ pkeystruct key[] =
   {"WRITE_XML", P_BOOL, &prefs.xml_flag},
   {"XML_NAME", P_STRING, prefs.xml_name},
   {"XSL_URL", P_STRING, prefs.xsl_name},
-  {"TILE_COMPRESS", P_BOOL, &prefs.tile_compress_flag},
   {""}
  };
 
@@ -160,9 +166,14 @@ char *default_prefs[] =
 "#----------------------------------- Output -----------------------------------",
 "IMAGEOUT_NAME          coadd.fits      # Output filename",
 "WEIGHTOUT_NAME       coadd.weight.fits # Output weight-map filename",
+"*HEADEROUT_NAME                         # Out. header filename (overrides suffix)",
 " ",
+"*HEADER_NAME                            # Header filename if suffix not used",
 "HEADER_ONLY            N               # Only a header as an output file (Y/N)?",
 "HEADER_SUFFIX          .head           # Filename extension for additional headers",
+#ifdef HAVE_CFITSIO
+"*TILE_COMPRESS          N               # Write tile compressed output image (Y/N)?",
+#endif
 " ",
 "#------------------------------- Input Weights --------------------------------",
 " ",
@@ -276,7 +287,6 @@ char *default_prefs[] =
 #endif
 "*NOPENFILES_MAX         512             # Maximum number of files opened by "
 					BANNER,
-"TILE_COMPRESS          N               # Write tile compressed output image (Y/N)?",
 ""
  };
 

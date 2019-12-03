@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		10/03/2014
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -147,7 +147,7 @@ void	makeit(void)
         QREALLOC(infield, fieldstruct *, nfield);
         QREALLOC(inwfield,fieldstruct *, nfield);
         }
-      infield[k] = load_field(cat, j, i);
+      infield[k] = load_field(cat, j, i, prefs.inhead_name[i]);
       inwfield[k] = load_weight(wcat, infield[k], jweight<0? j:jweight, i,
 				prefs.weight_type[i]);
       next[i]++;
@@ -187,7 +187,8 @@ void	makeit(void)
 /* Create output image (but nothing written to disk yet) */
   outwfield = NULL;
   NFPRINTF(OUTPUT, "Creating NEW output image ...")
-  outfield = init_field(infield, ntinfield, prefs.outfield_name);
+  outfield = init_field(infield, ntinfield, prefs.outfield_name,
+		prefs.outhead_name[0]);
   NFPRINTF(OUTPUT, "Creating NEW weight-map ...")
   outwfield = init_weight(prefs.outwfield_name, outfield);
   NFPRINTF(OUTPUT, "")
@@ -390,10 +391,12 @@ static int	selectext(char *filename)
     if ((bracr=strrchr(bracl+1, ']')))
       *bracr = '\0';
     next = strtol(bracl+1, NULL, 0);
-
-    // CFITSIO : VERY BAD HACK to check if this is tile-compressed, if so, add +1 to extension number requested
-    if (strstr(filename, ".fits.fz") != NULL) next = next + 1;
-
+#ifdef HAVE_CFITSIO
+    // CFITSIO : VERY BAD HACK to check if this is tile-compressed,
+    // if so, add +1 to extension number requested
+    if (strstr(filename, ".fits.fz") != NULL)
+      next = next + 1;
+#endif
     return next;
     }
 

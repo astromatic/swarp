@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 1995-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		29/08/2012
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -36,8 +36,9 @@
 #include <sys/types.h>
 #endif
 
-// CFITSIO
+#ifdef HAVE_CFITSIO
 #include CFITSIO_H
+#endif
 
 #define	MAXCHARS	256	/* max. number of characters */
 #define WARNING_NMAX	1000	/* max. number of recorded warnings */
@@ -184,8 +185,8 @@ typedef struct structtab
   char		*headbuf;		/* buffer containing the header */
   int		headnblock;		/* number of FITS blocks */
   char		*bodybuf;		/* buffer containing the body */
-  OFF_T2		bodypos;		/* position of the body in the file */
-  OFF_T2		headpos;		/* position of the head in the file */
+  OFF_T2		bodypos;	/* position of the body in the file */
+  OFF_T2		headpos;	/* position of the head in the file */
   struct structcat *cat;		/* (original) parent catalog */
   struct structtab *prevtab, *nexttab;	/* previous and next tab in chain */
   int		seg;			/* segment position */
@@ -195,13 +196,12 @@ typedef struct structtab
   int		swapflag;		/* mapped to a swap file ? */
   char		swapname[MAXCHARS];	/* name of the swapfile */
   unsigned int	bodysum;		/* Checksum of the FITS body */
-
-  // CFITSIO
+#ifdef HAVE_CFITSIO
   fitsfile *infptr;                     /* a cfitsio pointer to the file */
   int hdunum;                           /* FITS HDU number for this 'table' */
   int isTileCompressed;                 /* is this a tile compressed image?  */
   long currentElement;                  /* tracks the current image pixel */
-
+#endif
   }		tabstruct;
 
 
@@ -282,7 +282,9 @@ extern int	about_cat(catstruct *cat, FILE *stream),
 		add_tab(tabstruct *tab, catstruct *cat, int pos),
 		blank_keys(tabstruct *tab),
 		close_cat(catstruct *cat),
+#ifdef	HAVE_CFITSIO
 		close_cfitsio(fitsfile *infptr),
+#endif
 		copy_key(tabstruct *tabin, char *keyname, tabstruct *tabout,
 			int pos),
 		copy_tab(catstruct *catin, char *tabname, int seg,

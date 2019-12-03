@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		02/12/2019
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -121,7 +121,9 @@ extern wcsstruct	*create_wcs(char **ctype, double *crval, double *crpix,
 			*read_wcs(tabstruct *tab);
 
 extern double		fmod_0_p360(double angle),
+			fmod_0_pmod(double angle, double mod),
 			fmod_m90_p90(double angle),
+			fmod_mmod_pmod(double angle, double mod),
 			sextodegal(char *hms),
 			sextodegde(char *dms),
 			wcs_dist(wcsstruct *wcs,

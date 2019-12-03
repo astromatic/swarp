@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2000-2019 IAP/CNRS/UPMC
+#	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 #
 #	SWarp is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		15/11/2019
+#	Last modified:		03/12/2019
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,7 +29,7 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(SWarp, 2.39.0, [astromatic@astromatic.net],
+AC_INIT(SWarp, 2.40.2, [astromatic@astromatic.net],
 	swarp, [http://astromatic.net/software/swarp])
 
 AC_CONFIG_SRCDIR(src/makeit.c)
@@ -131,6 +131,8 @@ AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
 # Provide special options for CFITSIO
+AC_ARG_WITH(cfitsio,
+        [Link with the CFITSIO library])
 AC_ARG_WITH(cfitsio-libdir,
         [AS_HELP_STRING([--with-cfitsio-libdir=<CFITSIO library path>],
         [Alternative directory for the CFITSIO library])])
@@ -194,12 +196,14 @@ fi
 AM_CONDITIONAL(USE_THREADS, test $use_pthreads = "yes")
 
 ########################## handle the CFITSIO library ########################
-ACX_CFITSIO($with_cfitsio_libdir,$with_cfitsio_incdir,
+if test "$with_cfitsio" != "no"; then
+  ACX_CFITSIO($with_cfitsio_libdir, $with_cfitsio_incdir,
 	[LIBS="$CFITSIO_LIBS $LIBS"]
 	if test "$CFITSIO_WARN" != ""; then
 	  AC_MSG_WARN([$CFITSIO_WARN])
 	fi,
 	AC_MSG_ERROR([$CFITSIO_ERROR Exiting.]))
+fi
 
 # Compile with profiling option
 if test "$enable_profiling" = "yes"; then

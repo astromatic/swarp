@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2014 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		10/03/2014
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -66,11 +66,15 @@ typedef struct
   int		ninfield;		/* Number of input images */
   char		*(inwfield_name[MAXINFIELD]);/* Filename(s) of input weights */
   int		ninwfield;		/* Number of input weight-maps */
+  char		*(inhead_name[MAXINFIELD]);/* Filename(s) of input headers */
+  int		ninhead_name;		/* Number of input headers */
   char		head_suffix[MAXCHAR];	/* Generic suffix for FITS headers */
   char		resamp_suffix[MAXCHAR];	/* Generic suffix for resampled FITS */
   char		weight_suffix[MAXCHAR];	/* Generic suffix for input weights */
   char		outfield_name[MAXCHAR];	/* Output image filename */
   char		outwfield_name[MAXCHAR];/* Output weight-map filename */
+  char		*(outhead_name[MAXINFIELD]);/* Output header filename */
+  int		nouthead_name;		/* 0 or 1 */
   int		outfield_bitpix;	/* Output image pixel type */
   weightenum	weight_type[MAXINFIELD];/* Weight type */
   int		nweight_type;		/* nb of params */
@@ -162,7 +166,9 @@ typedef struct
   char		sdate_end[12];		/* SWarp end date */
   char		stime_end[12];		/* SWarp end time */
   double	time_diff;		/* Execution time */
+#ifdef HAVE_CFITSIO
   int		tile_compress_flag;	/* Write tile-compressed output file? */
+#endif
   }	prefstruct;
 
 prefstruct	prefs;
