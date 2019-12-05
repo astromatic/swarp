@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		04/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -58,15 +58,6 @@
 #ifndef PI
 #define	PI		3.14159265359	/* never met before? */
 #endif
-
-#ifdef	HAVE_CFITSIO
-#define BITPIX_KEYWORD	"ZBITPIX "
-#define	NAXIS_KEYWORD	"ZNAXIS  "
-#else
-#define BITPIX_KEYWORD	"BITPIX  "
-#define	NAXIS_KEYWORD	"NAXIS   "
-#endif
-
 
 /* NOTES:
 We must have:		MAXCHARS >= 16

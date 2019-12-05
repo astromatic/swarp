@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		02/12/2019
+*	Last modified:		04/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -823,7 +823,7 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	16/11/2019
+VERSION	04/12/2019
  ***/
 void	invert_wcs(wcsstruct *wcs)
 
@@ -893,7 +893,7 @@ void	invert_wcs(wcsstruct *wcs)
   pixin[lng] += ARCSEC/DEG;
   linfwd(pixin, wcs->lin, raw);
   rawsize = sqrt((raw[lng]-rawmin[lng])*(raw[lng]-rawmin[lng])
-		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat]));
+		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat])) * DEG/ARCSEC;
   if (!rawsize)
     error(EXIT_FAILURE, "*Error*: incorrect linear conversion in ",
 		wcs->wcsprm->pcode);
@@ -928,7 +928,7 @@ void	invert_wcs(wcsstruct *wcs)
   pixin[lat] += ARCSEC/DEG;
   linfwd(pixin, wcs->lin, raw);
   rawsize = sqrt((raw[lng]-rawmin[lng])*(raw[lng]-rawmin[lng])
-		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat]));
+		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat])) * DEG/ARCSEC;
   if (!rawsize)
     error(EXIT_FAILURE, "*Error*: incorrect linear conversion in ",
 		wcs->wcsprm->pcode);
