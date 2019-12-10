@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		03/12/2019
+#	Last modified:		09/12/2019
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,14 +29,16 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(SWarp, 2.40.2, [astromatic@astromatic.net],
+AC_INIT(SWarp, 2.40.3, [astromatic@astromatic.net],
 	swarp, [http://astromatic.net/software/swarp])
 
-AC_CONFIG_SRCDIR(src/makeit.c)
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR(autoconf)
+AC_CONFIG_SRCDIR(src/makeit.c)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
 date=`date +%Y-%m-%d`
+date1=`date -R`
 date2=`date +"%a %b %d %Y"`
 date3=`date +"%B %Y"`
 AC_DEFINE_UNQUOTED(DATE, "$date", [Archive creation date])
@@ -47,8 +49,8 @@ AC_SUBST(DATE3, "$date3")
 
 # Include macros
 sinclude(acx_cfitsio.m4)
-sinclude(acx_pthread.m4)
 sinclude(acx_prog_cc_optim.m4)
+sinclude(acx_pthread.m4)
 sinclude(acx_urbi_resolve_dir.m4)
 
 # Provide a special option for setting the package release number
@@ -63,23 +65,21 @@ fi
 AC_SUBST(PACKAGE_RELEASE, "$with_release")
 
 # Display pakage and version number
-AC_MSG_RESULT([*********** Configuring:  $PACKAGE $VERSION - $PACKAGE_RELEASE ($date) ********])
+AC_MSG_RESULT([******** Configuring:  $PACKAGE_NAME $PACKAGE_VERSION - $PACKAGE_RELEASE ($date) ********])
 
 # Provide special option for choosing automatically the compilation flags.
 AC_MSG_CHECKING([if compilation flags are set automatically])
 AC_ARG_ENABLE(auto-flags,
 	[AS_HELP_STRING([--enable-auto-flags],
-	[Let the configure script choose the compilation flags \
-(off by default)])],
+	[Let the configure script choose the compilation flags (default = no)])],
 	AC_MSG_RESULT([yes]),
 	AC_MSG_RESULT([no]))
 
 # Provide special option for the Linux Intel C compiler
-AC_MSG_CHECKING([whether we should use the INTEL compiler])
+AC_MSG_CHECKING([whether the INTEL compiler is enabled])
 AC_ARG_ENABLE(icc,
 	[AS_HELP_STRING([--enable-icc],
-	[Enable special mode for compilation with the Intel compiler \
-(off by default)])],
+	[Use the Intel compiler (default = no)])],
         CC="icc"
 	AC_MSG_RESULT([yes]),
 	AC_MSG_RESULT([no]))
@@ -112,8 +112,8 @@ AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
 AC_TYPE_LONG_LONG_INT
 AC_TYPE_UNSIGNED_LONG_LONG_INT
-AC_TYPE_UID_T
 AC_STRUCT_TM
+AC_TYPE_UID_T
 
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
@@ -135,13 +135,13 @@ AC_ARG_WITH(cfitsio,
         [Link with the CFITSIO library])
 AC_ARG_WITH(cfitsio-libdir,
         [AS_HELP_STRING([--with-cfitsio-libdir=<CFITSIO library path>],
-        [Alternative directory for the CFITSIO library])])
+        [Provide an alternative path to the CFITSIO library])])
 AC_ARG_WITH(cfitsio-incdir,
         [AS_HELP_STRING([--with-cfitsio-incdir=<CFITSIO include dir>],
-        [Alternative directory for CFITSIO include files])])
+        [Provide an alternative path to the CFITSIO include directory])])
 
 # Provide a special option for the default XSLT URL
-with_xsl_url="file://"$(URBI_RESOLVE_DIR([$datadir]))"/$PACKAGE_NAME/$PACKAGE_NAME.xsl"
+with_xsl_url="file://"$(URBI_RESOLVE_DIR([$datadir]))"/$PACKAGE_TARNAME/$PACKAGE_TARNAME.xsl"
 AC_ARG_WITH(xsl_url,
 	[AS_HELP_STRING([--with-xsl_url=<default URL for XSLT filter>],
 	[Provide an alternative default URL of the XSLT filter])])
@@ -151,7 +151,7 @@ AC_DEFINE_UNQUOTED([XSL_URL], "$with_xsl_url",[Default URL of the XSLT filter])
 # Set flags for multithreading
 n_pthreads=1024
 AC_ARG_ENABLE(threads,
-        [AS_HELP_STRING([--enable-threads@<:@=<max_number_of_threads>@:>@],
+	[AS_HELP_STRING([--enable-threads@<:@=<max_number_of_threads>@:>@],
 	[Enable multhreading (on with up to 1024 threads by default)])],
     if test "$enableval" = "no"; then
       use_pthreads="no"
@@ -168,7 +168,7 @@ AC_ARG_ENABLE(threads,
 AC_MSG_CHECKING([for profiler mode])
 AC_ARG_ENABLE(profiling,
 	[AS_HELP_STRING([--enable-profiling],
-	[Enable special mode for profiling (off by default)])],
+	[Enable special mode for profiling (default = no)])]
 	AC_MSG_RESULT([yes]),
 	AC_MSG_RESULT([no]))
 
@@ -177,7 +177,7 @@ AC_MSG_CHECKING([best linking option])
 AC_ARG_ENABLE(best-link,
 	[AS_HELP_STRING([--enable-best-link],
 	[Choose the right combination of static and dynamic linking to make \
-the executable as portable as possible (off by default)])],
+the executable as portable as possible (default = no)])],
 	AC_MSG_RESULT([yes]),
 	AC_MSG_RESULT([no]))
 
@@ -191,7 +191,7 @@ if test "$use_pthreads" = "yes"; then
   ACX_PTHREAD
   CC="$PTHREAD_CC"
   [AM_CFLAGS="$AM_CFLAGS $PTHREAD_CFLAGS -D_REENTRANT"]
-  LIBS="$PTHREAD_LIBS $LIBS"
+  LIBS="$LIBS $PTHREAD_LIBS"
 fi
 AM_CONDITIONAL(USE_THREADS, test $use_pthreads = "yes")
 
@@ -219,9 +219,9 @@ fi
 if test "$enable_best_link" = "yes"; then
   if test "$enable_icc" = "yes"; then
     AM_LDFLAGS="-static-intel -qopenmp-link static -shared-libgcc \
-	-no-intel-extensions $AM_LDFLAGS"
+	-static-libtool-libs -no-intel-extensions -avoid-version $AM_LDFLAGS"
   else
-    AM_LDFLAGS="-static -shared-libgcc $AM_LDFLAGS"
+    AM_LDFLAGS="-shared-libgcc -static-libtool-libs -avoid-version $AM_LDFLAGS"
   fi
 fi
 
@@ -238,10 +238,15 @@ AC_MSG_RESULT([***************************************************************])
 
 AC_CONFIG_FILES([
 Makefile
+swarp.spec
+debian/Makefile
+debian/changelog
+doc/Makefile
+doc/src/conf.py
 man/Makefile
+man/swarp.1
 src/Makefile
 src/fits/Makefile
 src/wcs/Makefile
-swarp.spec
-man/swarp.1])
+])
 AC_OUTPUT

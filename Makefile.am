@@ -1,5 +1,5 @@
 #
-#				configure.ac
+#				Makefile.am
 #
 # Main Makefile. Process this file with automake to generate a Makefile
 #
@@ -20,24 +20,23 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		08/01/2018
+#	Last modified:		09/12/2019
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ACLOCAL_AMFLAGS		= -I m4
 AUTOMAKE_OPTIONS	= foreign no-dependencies
-SUBDIRS			= man src
+SUBDIRS			= src man doc debian
 dist_pkgdata_DATA	= xsl/swarp.xsl
-EXTRA_DIST		= doc AUTHORS BUGS ChangeLog COPYRIGHT HISTORY INSTALL \
-			  LICENSE README.md THANKS \
-			  acx_pthread.m4 acx_prog_cc_optim.m4 \
-			  acx_urbi_resolve_dir.m4 test/test.fits
+EXTRA_DIST		= autogen.sh AUTHORS BUGS ChangeLog COPYRIGHT \
+			  HISTORY INSTALL LICENSE README.md THANKS
+
 RPM_ROOTDIR		= `rpmbuild --nobuild -E %_topdir`
 RPM_SRCDIR		= $(RPM_ROOTDIR)/SOURCES
 DEB_SRCDIR		= ~/DEBIAN/SOURCES
 
 dist-hook:
-	rm -rf `find $(distdir) -name .svn`
+	rm -rf `find $(distdir) -type d \( -name .svn -o -name .git \)`
 
 rpm:	dist
 	cp -f $(PACKAGE_TARNAME)-$(PACKAGE_VERSION).tar.gz $(RPM_SRCDIR)
@@ -50,6 +49,12 @@ rpm-icc:	dist
 rpm-best:	dist
 	cp -f $(PACKAGE_TARNAME)-$(PACKAGE_VERSION).tar.gz $(RPM_SRCDIR)
 	USE_BEST="1" rpmbuild -ba --clean --nodeps $(PACKAGE_TARNAME).spec
+
+deb:	dist
+	mkdir -p $(DEB_SRCDIR)
+	tar -xvf $(PACKAGE_TARNAME)-$(PACKAGE_VERSION).tar.gz -C $(DEB_SRCDIR) 
+	cd $(DEB_SRCDIR)/$(PACKAGE_TARNAME)-$(PACKAGE_VERSION)
+	debuild --set-envvar=PACKAGE_RELEASE=$(PACKAGE_RELEASE) -j4 -b -us -uc
 
 deb-best:	dist
 	mkdir -p $(DEB_SRCDIR)

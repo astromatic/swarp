@@ -392,7 +392,9 @@ struct prjprm *prj;
       prj->flag = PRJSET;
    } 
 
-   for (k = 99; k >= 0 && prj->p[k] == 0.0 && prj->p[k+100] == 0.0; k--);
+   for (k = 99;
+	k >= 0 && fabs(prj->p[k]) <= 1e-30 && fabs(prj->p[k+100]) <= 1e-30;
+	k--);
    if (k < 0)
      k = 0;
 
@@ -422,8 +424,16 @@ double *x, *y;
    r =  prj->r0*wcs_cosd(theta)/s;
    xp[0] =  r*wcs_sind(phi);
    xp[1] = -r*wcs_cosd(phi);
-   *x = prj->inv_x? poly_func(prj->inv_x, xp) : xp[0];
-   *y = prj->inv_y? poly_func(prj->inv_y, xp) : xp[1];
+   if (prj->n) {
+     if ((prj->inv_x) && (prj->inv_y)) {
+       *x = prj->inv_x? poly_func(prj->inv_x, xp) : xp[0];
+       *y = prj->inv_y? poly_func(prj->inv_y, xp) : xp[1];
+     } else
+       pv_to_raw(prj, xp[0],xp[1], x,y);
+   } else {
+     *x = xp[0];
+     *y = xp[1];
+   }
 
    if (prj->flag == PRJSET && s < 0.0) {
       return 2;
@@ -3708,8 +3718,8 @@ int raw_to_pv(struct prjprm *prj, double x, double y, double *xo, double *yo)
 
 {
    int		k;
-   double	*a,*b,
-		r,r3,r5,r7,xy,x2,x3,x4,x5,x6,x7,y2,y3,y4,y5,y6,y7,xp,yp;
+   double	*a,*b;
+   long double	r,r3,r5,r7,xy,x2,x3,x4,x5,x6,x7,y2,y3,y4,y5,y6,y7,xp,yp;
 
    if (abs(prj->flag) != PRJSET) {
       if (tanset(prj)) return 1;
@@ -3846,3 +3856,193 @@ poly_end:
    return 0;
 }
 
+/*--------------------------------------------------------------------------*/
+
+int pv_to_raw(struct prjprm *prj, double x, double y, double *xo, double *yo)
+
+{
+  double	x1,y1;
+
+   if (abs(prj->flag) != PRJSET) {
+      if (tanset(prj)) return 1;
+   }
+
+  raw_to_pv(prj, x,y, xo,yo);
+  *xo = 2*x - *xo;
+  *yo=  2*y - *yo;
+  raw_to_pv(prj, *xo,*yo, &x1, &y1);
+  *xo -= x1 - x;
+  *yo -= y1 - y;
+  raw_to_pv(prj, *xo,*yo, &x1, &y1);
+  *xo -= x1 - x;
+  *yo -= y1 - y;
+
+   return 0;
+}
+/*--------------------------------------------------------------------------*/
+
+int raw_to_cv(struct prjprm *prj, double x, double y, double *xo, double *yo)
+
+{
+   int		k;
+   double	*a,*b;
+   long double	r,r3,r5,r7,xy,x2,x3,x4,x5,x6,x7,y2,y3,y4,y5,y6,y7,xp,yp;
+
+   if (abs(prj->flag) != PRJSET) {
+      if (tanset(prj)) return 1;
+   }
+
+   k=prj->n;
+   a = prj->p+100;		/* Latitude comes first for compatibility */
+   b = prj->p;			/* Longitude */
+   xp = *(a++);
+   xp += *(a++)*x;
+   yp = *(b++);
+   yp += *(b++)*y;
+   if (!--k) goto poly_end;
+   xp += *(a++)*y;
+   yp += *(b++)*x;
+   if (!--k) goto poly_end;
+   r = sqrt(x*x + y*y);
+   xp += *(a++)*r;
+   yp += *(b++)*r;
+   if (!--k) goto poly_end;
+   xp += *(a++)*(x2=2.0*x*x-1.0);
+   yp += *(b++)*(y2=2.0*y*y-1.0);
+   if (!--k) goto poly_end;
+   xp += *(a++)*(xy=x*y);
+   yp += *(b++)*xy;
+   if (!--k) goto poly_end;
+   xp += *(a++)*y2;
+   yp += *(b++)*x2;
+   if (!--k) goto poly_end;
+   xp += *(a++)*(x3=x*(2.0*x2-1.0));
+   yp += *(b++)*(y3=y*(2.0*y2-1.0));
+   if (!--k) goto poly_end;
+   xp += *(a++)*x2*y;
+   yp += *(b++)*y2*x;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x*y2;
+   yp += *(b++)*y*x2;
+   if (!--k) goto poly_end;
+   xp += *(a++)*y3;
+   yp += *(b++)*x3;
+   if (!--k) goto poly_end;
+   xp += *(a++)*(r3=r*r*r);
+   yp += *(b++)*r3;
+   if (!--k) goto poly_end;
+   xp += *(a++)*(x4=2.0*x*x3-x2);
+   yp += *(b++)*(y4=2.0*y*y3-y2);
+   if (!--k) goto poly_end;
+   xp += *(a++)*x3*y;
+   yp += *(b++)*y3*x;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x2*y2;
+   yp += *(b++)*x2*y2;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x*y3;
+   yp += *(b++)*y*x3;
+   if (!--k) goto poly_end;
+   xp += *(a++)*y4;
+   yp += *(b++)*x4;
+   if (!--k) goto poly_end;
+   xp += *(a++)*(x5=2.0*x*x4-x3);
+   yp += *(b++)*(y5=2.0*y*y4-y3);
+   if (!--k) goto poly_end;
+   xp += *(a++)*x4*y;
+   yp += *(b++)*y4*x;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x3*y2;
+   yp += *(b++)*y3*x2;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x2*y3;
+   yp += *(b++)*y2*x3;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x*y4;
+   yp += *(b++)*y*x4;
+   if (!--k) goto poly_end;
+   xp += *(a++)*y5;
+   yp += *(b++)*x5;
+   if (!--k) goto poly_end;
+   xp += *(a++)*(r5=r3*r*r);
+   yp += *(b++)*r5;
+   if (!--k) goto poly_end;
+   xp += *(a++)*(x6=2.0*x*x5-x4);
+   yp += *(b++)*(y6=2.0*y*y5-y4);
+   if (!--k) goto poly_end;
+   xp += *(a++)*x5*y;
+   yp += *(b++)*y5*x;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x4*y2;
+   yp += *(b++)*y4*x2;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x3*y3;
+   yp += *(b++)*y3*x3;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x2*y4;
+   yp += *(b++)*y2*x4;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x*y5;
+   yp += *(b++)*y*x5;
+   if (!--k) goto poly_end;
+   xp += *(a++)*y6;
+   yp += *(b++)*x6;
+   if (!--k) goto poly_end;
+   xp += *(a++)*(x7=2.0*x*x6-x5);
+   yp += *(b++)*(y7=2.0*y*y6-y5);
+   if (!--k) goto poly_end;
+   xp += *(a++)*x6*y;
+   yp += *(b++)*y6*x;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x5*y2;
+   yp += *(b++)*y5*x2;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x4*y3;
+   yp += *(b++)*y4*x3;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x3*y4;
+   yp += *(b++)*y3*x4;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x2*y5;
+   yp += *(b++)*y2*x5;
+   if (!--k) goto poly_end;
+   xp += *(a++)*x*y6;
+   yp += *(b++)*y*x6;
+   if (!--k) goto poly_end;
+   xp += *(a++)*y7;
+   yp += *(b++)*x7;
+   if (!--k) goto poly_end;
+   xp += *a*(r7=r5*r*r);
+   yp += *b*r7;
+
+poly_end:
+
+  *xo = xp;
+  *yo = yp;
+
+   return 0;
+}
+
+/*--------------------------------------------------------------------------*/
+
+int cv_to_raw(struct prjprm *prj, double x, double y, double *xo, double *yo)
+
+{
+  double	x1,y1;
+
+   if (abs(prj->flag) != PRJSET) {
+      if (tanset(prj)) return 1;
+   }
+
+  raw_to_cv(prj, x,y, xo,yo);
+  *xo = 2*x - *xo;
+  *yo=  2*y - *yo;
+  raw_to_cv(prj, *xo,*yo, &x1, &y1);
+  *xo -= x1 - x;
+  *yo -= y1 - y;
+  raw_to_pv(prj, *xo,*yo, &x1, &y1);
+  *xo -= x1 - x;
+  *yo -= y1 - y;
+
+   return 0;
+}

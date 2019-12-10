@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		04/12/2019
+*	Last modified:		06/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -57,7 +57,7 @@ OUTPUT	pointer to a copy of the input structure.
 NOTES	Actually, only FITS parameters are copied. Lower-level structures
 	such as those created by the WCS or TNX libraries are generated.
 AUTHOR	E. Bertin (IAP)
-VERSION	31/08/2002
+VERSION	06/12/2019
  ***/
 wcsstruct	*copy_wcs(wcsstruct *wcsin)
 
@@ -84,8 +84,11 @@ wcsstruct	*copy_wcs(wcsstruct *wcsin)
 
 /* Initialize other WCS structures */
   init_wcs(wcs);
-/* Invert projection corrections */
-  invert_wcs(wcs);
+/* Copy possible invert projection corrections */
+  if (wcsin->inv_x)
+    wcs->inv_x = wcs->prj->inv_x = poly_copy(wcsin->inv_x);
+  if (wcsin->inv_y)
+    wcs->inv_y = wcs->prj->inv_y = poly_copy(wcsin->inv_y);
 /* Find the range of coordinates */
   range_wcs(wcs);  
 
@@ -823,16 +826,17 @@ INPUT	WCS structure.
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	04/12/2019
+VERSION	06/12/2019
  ***/
 void	invert_wcs(wcsstruct *wcs)
 
   {
    polystruct		*poly;
-   double		pixin[NAXIS],raw[NAXIS],rawmin[NAXIS];
+   double		pixin[NAXIS],pixout[NAXIS], raw[NAXIS],rawmin[NAXIS];
    double		*outpos,*outpost, *lngpos,*lngpost,
 			*latpos,*latpost,
-			lngstep,latstep, rawsize, epsilon;
+			lngstep,latstep, rawsize, epsilon,
+			errlng, errlat, maxerrlng, maxerrlat;
    int			group[] = {1,1};
 				/* Don't ask, this is needed by poly_init()! */
    int		i,j,lng,lat,deg, tnxflag, maxflag, maxflagflag;
@@ -849,6 +853,14 @@ void	invert_wcs(wcsstruct *wcs)
   else
     return;
 
+/* Compute the error margin of the inversion in degrees */
+  for (i=0; i<wcs->naxis; i++)
+    raw[i] = (wcs->naxisn[i] + 1.0) / 2.0;
+  epsilon = WCS_INVACCURACY * wcs_scale(wcs, raw);
+  if (epsilon < TINY)
+    error(EXIT_FAILURE, "*Error*: incorrect pixel scale for ",
+		wcs->wcsprm->pcode);
+
 /* We define x as "longitude" and y as "latitude" projections */
 /* We assume that PCxx cross-terms with additional dimensions are small */
 /* Sample the whole image with a regular grid */
@@ -862,6 +874,8 @@ void	invert_wcs(wcsstruct *wcs)
   outpost = outpos;
   lngpost = lngpos;
   latpost = latpos;
+  maxflag = 0;
+  maxerrlng = maxerrlat = 0.0;
   for (j=WCS_NGRIDPOINTS; j--; raw[lat]+=latstep)
     {
     raw[lng] = rawmin[lng];
@@ -881,83 +895,78 @@ void	invert_wcs(wcsstruct *wcs)
         }
       else
         {
-        raw_to_pv(wcs->prj,pixin[lng],pixin[lat], outpost, outpost+1);
+        raw_to_pv(wcs->prj, pixin[lng],pixin[lat], outpost,outpost+1);
+        pv_to_raw(wcs->prj, *outpost,*(outpost+1), &pixout[lng], &pixout[lat]);
+printf("%d %g %g %g\n", maxflag, *outpost, *(outpost+1), (pixout[lng] - pixin[lng]) / WCS_INVACCURACY);
+printf("%d %g %g %g\n", maxflag, *outpost, *(outpost+1), (pixout[lat] - pixin[lat]) / WCS_INVACCURACY);
+        if ((errlng = fabs(pixout[lng] - pixin[lng])) > maxerrlng)
+          maxerrlng = errlng;
+        if ((errlat = fabs(pixout[lat] - pixin[lat])) > maxerrlat)
+          maxerrlat = errlat;
         outpost += 2;
         }
       }
     }
 
-/* Invert "longitude" */
-/* Compute the extent of the pixel in reduced projected coordinates */
-  linrev(rawmin, wcs->lin, pixin);
-  pixin[lng] += ARCSEC/DEG;
-  linfwd(pixin, wcs->lin, raw);
-  rawsize = sqrt((raw[lng]-rawmin[lng])*(raw[lng]-rawmin[lng])
-		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat])) * DEG/ARCSEC;
-  if (!rawsize)
-    error(EXIT_FAILURE, "*Error*: incorrect linear conversion in ",
-		wcs->wcsprm->pcode);
-  epsilon = WCS_INVACCURACY/rawsize;
-/* Find the lowest degree polynom */
-  poly = NULL;  /* to avoid gcc -Wall warnings */
-  maxflag = 1;
-  for (deg=1; deg<=WCS_INVMAXDEG && maxflag; deg++)
-    {
-    if (deg>1)
-      poly_end(poly);
-    poly = poly_init(group, 2, &deg, 1);
-    poly_fit(poly, outpos, lngpos, NULL, WCS_NGRIDPOINTS2, NULL, 0.0);
-    maxflag = 0;
-    outpost = outpos;
-    lngpost = lngpos;
-    for (i=WCS_NGRIDPOINTS2; i--; outpost+=2)
-      if (fabs(poly_func(poly, outpost)-*(lngpost++))>epsilon)
-        {
-        maxflag = 1;
-        break;
-        }
-    }
-/* Now link the created structure */
-  wcs->prj->inv_x = wcs->inv_x = poly;
+  maxflag |= (maxerrlng > WCS_INVACCURACY || maxerrlat > WCS_INVACCURACY);
 
-  maxflagflag = maxflag;
+/// Test if polynomial inversion is required
+  if (maxflag) {
+/*-- Invert "longitude" */
+/*-- Find the lowest degree polynom */
+    poly = NULL;  /* to avoid gcc -Wall warnings */
+    maxflag = 1;
+    for (deg=1; deg<=WCS_INVMAXDEG && maxflag; deg++)
+      {
+      if (deg>1)
+        poly_end(poly);
+      poly = poly_init(group, 2, &deg, 1);
+      poly_fit(poly, outpos, lngpos, NULL, WCS_NGRIDPOINTS2, NULL,
+	1.0e-9/WCS_NGRIDPOINTS2);
+      maxflag = 0;
+      outpost = outpos;
+      lngpost = lngpos;
+      for (i=WCS_NGRIDPOINTS2; i--; outpost+=2)
+        if (fabs(poly_func(poly, outpost)-*(lngpost++))>epsilon)
+          {
+          maxflag = 1;
+          break;
+          }
+      }
 
-/* Invert "latitude" */
-/* Compute the extent of the pixel in reduced projected coordinates */
-  linrev(rawmin, wcs->lin, pixin);
-  pixin[lat] += ARCSEC/DEG;
-  linfwd(pixin, wcs->lin, raw);
-  rawsize = sqrt((raw[lng]-rawmin[lng])*(raw[lng]-rawmin[lng])
-		+(raw[lat]-rawmin[lat])*(raw[lat]-rawmin[lat])) * DEG/ARCSEC;
-  if (!rawsize)
-    error(EXIT_FAILURE, "*Error*: incorrect linear conversion in ",
-		wcs->wcsprm->pcode);
-  epsilon = WCS_INVACCURACY/rawsize;
-/* Find the lowest degree polynom */
-  maxflag = 1;
-  for (deg=1; deg<=WCS_INVMAXDEG && maxflag; deg++)
-    {
-    if (deg>1)
-      poly_end(poly);
-    poly = poly_init(group, 2, &deg, 1);
-    poly_fit(poly, outpos, latpos, NULL, WCS_NGRIDPOINTS2, NULL, 0.0);
-    maxflag = 0;
-    outpost = outpos;
-    latpost = latpos;
-    for (i=WCS_NGRIDPOINTS2; i--; outpost+=2)
-      if (fabs(poly_func(poly, outpost)-*(latpost++))>epsilon)
-        {
-        maxflag = 1;
-        break;
-        }
-    }
-/* Now link the created structure */
-  wcs->prj->inv_y = wcs->inv_y = poly;
+/*-- Now link the created structure */
+    wcs->prj->inv_x = wcs->inv_x = poly;
 
-  maxflagflag |= maxflag;
+    maxflagflag = maxflag;
 
-  if (maxflagflag)
-    warning("Significant inaccuracy likely to occur in projection","");
+/*-- Invert "latitude" */
+/*-- Find the lowest degree polynom */
+    maxflag = 1;
+    for (deg=1; deg<=WCS_INVMAXDEG && maxflag; deg++)
+      {
+      if (deg>1)
+        poly_end(poly);
+      poly = poly_init(group, 2, &deg, 1);
+      poly_fit(poly, outpos, latpos, NULL, WCS_NGRIDPOINTS2, NULL,
+	1.0e-9/WCS_NGRIDPOINTS2);
+      maxflag = 0;
+      outpost = outpos;
+      latpost = latpos;
+      for (i=WCS_NGRIDPOINTS2; i--; outpost+=2)
+        if (fabs(poly_func(poly, outpost)-*(latpost++))>epsilon)
+          {
+          maxflag = 1;
+          break;
+          }
+      }
+/*-- Now link the created structure */
+    wcs->prj->inv_y = wcs->inv_y = poly;
+
+    maxflagflag |= maxflag;
+
+    if (maxflagflag)
+      warning("Significant inaccuracy likely to occur in projection","");
+  }
 
 /* Free memory */
   free(outpos);
