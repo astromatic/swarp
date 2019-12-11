@@ -1,0 +1,6 @@
+@PACKAGE_TARNAME@ (@PACKAGE_VERSION@-@PACKAGE_RELEASE@) UNRELEASED; urgency=low
+
+  * Automatic Debian release.
+
+ -- @PACKAGER@ <@PACKAGE_BUGREPORT@>  @DATE1@
+
