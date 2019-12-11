@@ -896,9 +896,7 @@ void	invert_wcs(wcsstruct *wcs)
       else
         {
         raw_to_pv(wcs->prj, pixin[lng],pixin[lat], outpost,outpost+1);
-        pv_to_raw(wcs->prj, *outpost,*(outpost+1), &pixout[lng], &pixout[lat]);
-printf("%d %g %g %g\n", maxflag, *outpost, *(outpost+1), (pixout[lng] - pixin[lng]) / WCS_INVACCURACY);
-printf("%d %g %g %g\n", maxflag, *outpost, *(outpost+1), (pixout[lat] - pixin[lat]) / WCS_INVACCURACY);
+        pv_to_raw(wcs->prj, *outpost,*(outpost+1), &pixout[lng],&pixout[lat]);
         if ((errlng = fabs(pixout[lng] - pixin[lng])) > maxerrlng)
           maxerrlng = errlng;
         if ((errlat = fabs(pixout[lat] - pixin[lat])) > maxerrlat)
