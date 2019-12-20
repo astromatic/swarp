@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		20/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -95,7 +95,8 @@ typedef struct wcs
   double	pixscale;		/* (Local) pixel scale */
   double	ap2000,dp2000;		/* J2000 coordinates of pole */
   double	ap1950,dp1950;		/* B1950 coordinates of pole */
-  double	obsdate;		/* Date of observations */
+  double	obsdate;		/* Starting date of observations */
+  double	obsend;			/* End date of observations */
   double	equinox;		/* Equinox of observations */
   double	epoch;			/* Epoch of observations (deprec.) */
   enum {RDSYS_ICRS, RDSYS_FK5, RDSYS_FK4, RDSYS_FK4_NO_E, RDSYS_GAPPT}
@@ -146,6 +147,7 @@ extern int		celsys_to_eq(wcsstruct *wcs, double *wcspos),
 			reaxe_wcs(wcsstruct *wcs, int lng, int lat),
 			red_to_raw(wcsstruct *wcs,
 				double *redpos, double *pixpos),
+			str_to_date_wcs(char *str, double *year),
 			wcs_chirality(wcsstruct *wcs),
 			wcs_supproj(char *name),
 			wcs_to_raw(wcsstruct *wcs,

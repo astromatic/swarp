@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		06/12/2019
+*	Last modified:		20/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -357,7 +357,7 @@ wcsstruct	*read_wcs(tabstruct *tab)
    double	drota;
    int		j, l, naxis;
    char		name[16],
-		*buf, *filename, *ptr;
+		*buf, *filename;
 
   buf = tab->headbuf;
   filename = (tab->cat? tab->cat->filename : strcpy(name, "internal header"));
@@ -444,54 +444,37 @@ wcsstruct	*read_wcs(tabstruct *tab)
   if (!wcsset(wcs->naxis,(const char(*)[9])wcs->ctype, wcs->wcsprm)
 	&& wcs->wcsprm->flag<999)
     {
-     char	*pstr, tstr[100];
-     double	dpar[6] = {0.0},
-		date, jdsec, tmp, biss;
-     int	sflag;
+     char	*pstr;
+     double	date;
 
 /*-- Coordinate reference frame */
-/*-- Search for an observation date expressed in Julian days */
+
+/*-- Search for an observation start date expressed in Julian days */
     FITSREADF(buf, "MJD-OBS ", date, -1.0);
     if (date<0.0)
       FITSREADF(buf, "MJDSTART", date, -1.0);
-/*-- Precession date (defined from Ephemerides du Bureau des Longitudes) */
 /*-- in Julian years from 2000.0 */
     if (date>0.0)
       wcs->obsdate = 2000.0 - (MJD2000 - date)/365.25;
     else
       {
-/*---- Search for an observation date expressed in "civilian" format */
+/*---- Search for an observation start date expressed in "civilian" format */
       FITSREADS(buf, "DATE-OBS", str, "");
-      if (*str)
-        {
-/*------ Decode DATE-OBS format: DD/MM/YYThh:mm:ss[.sss] or YYYY-MM-DDThh:mm:ss[.sss] */
-        sflag = strchr(str, '/') != NULL;
-        for (l=0; l<5 && (pstr = strtok_r(l ? NULL : str, "/-T: ", &ptr)); l++)
-          dpar[l] = atof(pstr);
-        if (l<3 || dpar[0] == 0.0 || dpar[1] == 0.0 || dpar[2] == 0.0)
-          {
-/*-------- If DATE-OBS value corrupted or incomplete, assume 2000-1-1 */
-          warning("Invalid DATE-OBS value in header: ", str);
-          dpar[0] = 2000.0; dpar[1] = 1.0; dpar[2] = 1.0;
-          }
-        else if (sflag && dpar[0] < 32.0 && dpar[2] < 100.0)
-          {
-          tmp = dpar[0];
-          dpar[0] = dpar[2] + 1900.0;
-          dpar[2] = tmp;
-          }
+      str_to_date_wcs(str, &wcs->obsdate);
+      }
 
-        biss = (((int)dpar[0]) % 4) ? 0.0 : 1.0;
-/*------ Convert date to MJD */
-        jdsec = (dpar[5] + dpar[4] * 60.0 + dpar[3] * 3600.0) / 86400.0;
-        date = ((365.0 * dpar[0] + dpar[0] / 4.0) - 678956.0 - biss
-		+ ((dpar[1] > 2.0? (floor((dpar[1] + 1.0) * 30.6) - 63.0 + biss)
-		: ((dpar[1] - 1.0) * (63.0 + biss)) / 2.0) + dpar[2])) + jdsec;
-        wcs->obsdate = 2000.0 - (MJD2000 - date) / 365.25;
-        }
-      else
-/*------ Well if really no date is found */
-        wcs->obsdate = 0.0;
+/*-- Search for an observation end date expressed in Julian days */
+    FITSREADF(buf, "MJD-END ", date, -1.0);
+    if (date<0.0)
+      FITSREADF(buf, "MJDSTOP ", date, -1.0);
+/*-- in Julian years from 2000.0 */
+    if (date>0.0)
+      wcs->obsend = 2000.0 - (MJD2000 - date)/365.25;
+    else
+      {
+/*---- Search for an observation start date expressed in "civilian" format */
+      FITSREADS(buf, "DATE-OBS", str, "");
+      str_to_date_wcs(str, &wcs->obsend);
       }
 
     FITSREADF(buf, "EPOCH", wcs->epoch, 2000.0);
@@ -632,7 +615,7 @@ INPUT	tab structure,
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	27/11/2013
+VERSION	20/12/2019
  ***/
 void	write_wcs(tabstruct *tab, wcsstruct *wcs)
 
@@ -658,7 +641,13 @@ void	write_wcs(tabstruct *tab, wcsstruct *wcs)
     {
     mjd = (wcs->obsdate-2000.0)*365.25 + MJD2000;
     addkeywordto_head(tab, "MJD-OBS ", "Modified Julian date at start");
-    fitswrite(tab->headbuf, "MJD-OBS ", &mjd, H_EXPO,T_DOUBLE);
+    fitswrite(tab->headbuf, "MJD-OBS ", &mjd, H_FLOAT,T_DOUBLE);
+    }
+  if (wcs->obsend!=0.0)
+    {
+    mjd = (wcs->obsend-2000.0)*365.25 + MJD2000;
+    addkeywordto_head(tab, "MJD-END ", "Modified Julian date at end");
+    fitswrite(tab->headbuf, "MJD-END ", &mjd, H_FLOAT,T_DOUBLE);
     }
   addkeywordto_head(tab, "RADESYS ", "Astrometric system");
   switch(wcs->radecsys)
@@ -2207,4 +2196,54 @@ int  fcmp_0_p360(double anglep, double anglem)
   return (int)((dval>0.0 && dval<180.0) || dval<-180.0);
   }
 
+/****** str_to_date_wcs *****************************************************/
+/*
+PROTO	int str_to_date_wcs(char *str, double *year)
+PURPOSE	Convert WCS DATE-OBS string to Julian Date (in years).
+INPUT	Input DATE-OBS string,
+	Output Julian date in years.
+OUTPUT	RETURN_OK if the date was read correctly, RETURN_ERROR otherwise.
+NOTES	-.
+AUTHOR	E. Bertin (IAP)
+VERSION	20/12/2019
+ ***/
+int	str_to_date_wcs(char *str, double *year) {
+
+   double	dpar[6] = {0.0},
+		date, jdsec, tmp, biss;
+   char		*pstr, *ptr;
+   int		l, sflag;
+
+  if (*str) {
+    *year = 0.0;
+    return RETURN_ERROR;
+  }
+
+/* Decode DATE-OBS format: DD/MM/YYThh:mm:ss[.sss] or YYYY-MM-DDThh:mm:ss[.sss] */
+  sflag = strchr(str, '/') != NULL;
+  for (l=0; l<5 && (pstr = strtok_r(l ? NULL : str, "/-T: ", &ptr)); l++)
+    dpar[l] = atof(pstr);
+
+  if (l<3 || dpar[0] == 0.0 || dpar[1] == 0.0 || dpar[2] == 0.0) {
+/*-- If DATE-OBS value corrupted or incomplete, assume 2000-1-1 */
+    warning("Invalid DATE-OBS value in header: ", str);
+    dpar[0] = 2000.0; dpar[1] = 1.0; dpar[2] = 1.0;
+    return RETURN_ERROR;
+  } else if (sflag && dpar[0] < 32.0 && dpar[2] < 100.0) {
+    tmp = dpar[0];
+    dpar[0] = dpar[2] + 1900.0;
+    dpar[2] = tmp;
+  }
+
+   biss = (((int)dpar[0]) % 4) ? 0.0 : 1.0;
+
+/* Convert date to MJD */
+  jdsec = (dpar[5] + dpar[4] * 60.0 + dpar[3] * 3600.0) / 86400.0;
+  date = ((365.0 * dpar[0] + dpar[0] / 4.0) - 678956.0 - biss
+	+ ((dpar[1] > 2.0? (floor((dpar[1] + 1.0) * 30.6) - 63.0 + biss)
+	: ((dpar[1] - 1.0) * (63.0 + biss)) / 2.0) + dpar[2])) + jdsec;
+  *year = 2000.0 - (MJD2000 - date) / 365.25;
+
+  return RETURN_OK;
+}
 

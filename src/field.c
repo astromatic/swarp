@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		20/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -374,7 +374,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   Global preferences are used.
 AUTHOR  E. Bertin (IAP)
-VERSION 26/11/2015
+VERSION 20/12/2019
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
 			char *hfilename)
@@ -385,7 +385,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
    tabstruct		*tab;
    wcsstruct		*wcs;
    double		pixscale[NAXIS],
-			val, epoch, obsdate;
+			val, epoch, obsdate, obsend;
    float		*scale;
    char			*ctype[NAXIS],
 			*pstr;
@@ -934,17 +934,22 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
 
   free(axis);
 
-/* Compute mean epoch */
+/* Compute mean epoch and observation start/end */
   epoch = 0.0;
   obsdate = BIG;
+  obsend = -BIG;
   for (j=0; j<ninput; j++)
     {
     epoch += infield[j]->wcs->epoch;
-    if (infield[j]->wcs->obsdate<obsdate)
+    if (infield[j]->wcs->obsdate != 0.0 && infield[j]->wcs->obsdate < obsdate)
       obsdate = infield[j]->wcs->obsdate;
+    if (infield[j]->wcs->obsend > obsend)
+      obsend = infield[j]->wcs->obsend;
     }
   field->wcs->epoch = epoch / ninput;
-  field->wcs->obsdate = obsdate;
+  field->wcs->obsdate = (obsdate < BIG ? obsdate : 0.0);
+  field->wcs->obsend = obsend;
+
   update_head(tab);
   write_wcs(tab, wcs);
 /* Insert additional header informations from the "header" file */
