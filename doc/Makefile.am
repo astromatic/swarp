@@ -14,9 +14,10 @@ SPHINXPROJ    = @PACKAGE_NAME@
 SOURCEDIR     = src
 BUILDDIR      = build
 
-.PHONY: all clean-am mostlyclean-am help html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf latexpdfja text man texinfo info gettext changes xml pseudoxml linkcheck doctest coverage
+.PHONY: all clean-am mostlyclean-am distdir-am help html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf latexpdfja text man texinfo info gettext changes xml pseudoxml linkcheck doctest coverage
 
 # Put it first so that "make" without argument is like "make help".
+
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
