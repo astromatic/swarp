@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2003-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2003-2019 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		19/07/2013
+*	Last modified:		20/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -36,7 +36,7 @@
 /*-------------------------------- macros -----------------------------------*/
 /*------------------------------- constants ---------------------------------*/
 
-#define	PROJAPP_NGRIDPOINTS    	16	/* Min number of control nodes/dim */
+#define	PROJAPP_NGRIDPOINTS    	32	/* Min number of control nodes/dim */
 #define	PROJAPP_MINSTEP		16	/* Min dist between nodes (pixels) */
 #define	PROJAPP_CHECKOVERSAMP	4	/* node oversampling for checking */
 
