@@ -7,7 +7,7 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2005-2019 IAP/CNRS/SorbonneU
+#	Copyright:		(C) 2005-2020 IAP/CNRS/SorbonneU
 #
 #	License:		GNU General Public License
 #
@@ -22,7 +22,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		03/12/2019
+#	Last modified:		02/01/2020
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -36,7 +36,7 @@ Summary: resample and combine astronomical FITS images
 Name: %{name}
 Version: %{version}
 Release: %{release}
-Source0: ftp://ftp.iap.fr/pub/from_users/bertin/%{name}/%{name}-%{version}.tar.gz
+Source0: http://astromatic.net/download/%{name}/%{name}-%{version}.tar.gz
 URL: http://astromatic.net/software/%{name}/
 License: GPL v3+
 Group: Sciences/Astronomy
@@ -52,11 +52,11 @@ astrometric projection recognized by the WCS standard.
 
 %build
 if test "$USE_BEST"; then
-%configure --enable-icc --enable-auto-flags --enable-best-link
+%configure --enable-icc --enable-auto-flags --enable-best-link --with-release=@PACKAGE_RELEASE@
 elif test "$USE_ICC"; then
-%configure --enable-icc
+%configure --enable-icc --with-release=@PACKAGE_RELEASE@
 else
-%configure
+%configure --with-release=@PACKAGE_RELEASE@
 fi
 make %{?_smp_mflags}
 
@@ -92,4 +92,3 @@ rm -rf $RPM_BUILD_ROOT
 - First RPM build
 
 # end of file
-
