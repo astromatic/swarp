@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		03/01/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -159,10 +159,17 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
  
 	if (disallow_negative_pixels) {
           // set quantisation method. We can use this to prevent <0 pixel values
-          status = 0; fits_set_quantize_method(outfield->cat->tab->infptr, SUBTRACTIVE_DITHER_2, &status);
+	  status = 0;
+#if CFITSIO_MAJOR >= 3
+  #if CFITSIO_MINOR >= 35
+	  fits_set_quantize_method(outfield->cat->tab->infptr, SUBTRACTIVE_DITHER_2, &status);
+  #else
+	  fits_set_quantize_dither(outfield->cat->tab->infptr, SUBTRACTIVE_DITHER_1, &status);
+  #endif
+#endif
  	  if (status != 0) {
 
- 	  	printf("CFITSIO ERROR error setting CFitsIO quantise methos\n");
+ 	  	printf("CFITSIO ERROR error setting CFitsIO quantize method\n");
  	  	fits_report_error(stderr, status);
  	  	return 0;
  	  }
