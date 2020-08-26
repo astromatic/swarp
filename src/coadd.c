@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/01/2020
+*	Last modified:		26/08/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -77,8 +77,7 @@ static double		gammln();
 		coadd_wthresh, *coadd_pixstack, *coadd_pixfstack;
  unsigned int	*multinbuf,*multiobuf;
  int		coadd_nomax, coadd_width, iflag;
- char		padbuf[FBSIZE];
- FILE		*cliplog;
+  FILE		*cliplog;
  fieldstruct	**infields;
 
 #ifdef USE_THREADS
@@ -288,7 +287,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 10/03/2014
+VERSION 26/08/2020
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -314,7 +313,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			y, y2,dy, ybuf,ybufmax,
 			outwidth, width, height,min,max,
 			naxis, nlines, nlinesmax,
-			nbuflines,nbuflines2,nbuflinesmax, size, omax,omax2,
+			nbuflines,nbuflines2,nbuflinesmax, omax,omax2,
 			offbeg, offend, fieldno, nopenfiles, closeflag;
 
 #ifdef HAVE_CFITSIO
@@ -826,12 +825,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 
 
 /* FITS padding*/
-  size = PADEXTRA(outfield->tab->tabsize);
-  if (size)
-    QFWRITE(padbuf, (size_t)size, outfield->cat->file, outfield->filename);
-  size = PADEXTRA(outwfield->tab->tabsize);
-  if (size)
-    QFWRITE(padbuf, (size_t)size, outwfield->cat->file, outwfield->filename);
+  pad_tab(outfield->cat, outfield->tab->tabsize);
+  pad_tab(outwfield->cat, outwfield->tab->tabsize);
 
 /* Close files */
   close_cat(outfield->cat);

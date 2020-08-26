@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		26/08/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -58,7 +58,7 @@
 #include "wcs/wcs.h"
 
 #ifdef USE_THREADS
- pthread_t		*thread;
+ pthread_t		*rthread;
  pthread_mutex_t	linemutex;
  pthread_cond_t		*linecond;
  tabstruct		*ftab, *wtab;
@@ -77,12 +77,11 @@
 			**rawposp, **rawbuf, **oversampbuf,**oversampwbuf,
 			**rawbufarea,
 			ascale;
- PIXTYPE		**outbuf,**outwbuf;
- FLAGTYPE		**outibuf,**outwibuf, **oversampibuf,**oversampwibuf;
+ PIXTYPE		**routbuf,**routwbuf;
+ FLAGTYPE		**routibuf,**routwibuf, **oversampibuf,**oversampwibuf;
  int			**oversampnbuf, *oversamp,
 			noversamp, oversampflag, width, height, naxis, nlines,
-			approxflag, dispstep, iflag;
- char			padbuf[FBSIZE];
+			approxflag, dispstep, riflag;
 
 /*------------------------------ function -----------------------------------*/
 #ifdef USE_THREADS
@@ -107,7 +106,7 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	03/12/2019
+VERSION	26/08/2020
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct *outfield, fieldstruct *outwfield,
@@ -125,7 +124,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 			resampext1[MAXCHAR], resampext2[MAXCHAR];
    char			*pstr;
    double		ascale1, projerr;
-   int			d,size, l;
+   int			d, l;
 
   infield = *pinfield;
   inwfield = *pinwfield;
@@ -166,7 +165,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   field->fscale = infield->fscale;
   field->headflag = infield->headflag;
   strcpy(field->ident, infield->ident);
-  iflag = (outfield->bitpix>0);
+  riflag = (outfield->bitpix>0);
 
 /* Now modify some characteristics of the output file */
 /* We use a small "dirty" trick to frame the output */
@@ -304,15 +303,15 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 
 /*-- Allocate memory for buffer pointers */
   QMALLOC(rawposp, double *, nlines);
-  if (iflag)
+  if (riflag)
     {
-    QMALLOC(outibuf, FLAGTYPE *, nlines);
-    QMALLOC(outwibuf, FLAGTYPE *, nlines);
+    QMALLOC(routibuf, FLAGTYPE *, nlines);
+    QMALLOC(routwibuf, FLAGTYPE *, nlines);
     }
   else
     {
-    QMALLOC(outbuf, PIXTYPE *, nlines)
-    QMALLOC(outwbuf, PIXTYPE *, nlines);
+    QMALLOC(routbuf, PIXTYPE *, nlines)
+    QMALLOC(routwbuf, PIXTYPE *, nlines);
     }
   QMALLOC(rawbuf, double *, nlines);
   QCALLOC(rawbufarea, double *, nlines);
@@ -321,7 +320,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   QMALLOC(wcsoutp, wcsstruct *, nlines);
   if (oversampflag)
     {
-    if (iflag)
+    if (riflag)
       {
       QMALLOC(oversampibuf, FLAGTYPE *, nlines)
       QMALLOC(oversampwibuf, FLAGTYPE *, nlines);
@@ -338,20 +337,20 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
     {
 /*-- Allocate memory for the output buffers that contain the final data in */
 /*-- internal format (PIXTYPE) */
-    if (iflag)
+    if (riflag)
       {
-      QMALLOC(outibuf[l], FLAGTYPE, width)
-      QMALLOC(outwibuf[l], FLAGTYPE, width);
+      QMALLOC(routibuf[l], FLAGTYPE, width)
+      QMALLOC(routwibuf[l], FLAGTYPE, width);
       }
     else
       {
-      QMALLOC(outbuf[l], PIXTYPE, width)
-      QMALLOC(outwbuf[l], PIXTYPE, width);
+      QMALLOC(routbuf[l], PIXTYPE, width)
+      QMALLOC(routwbuf[l], PIXTYPE, width);
       }
     if (oversampflag)
 /*---- Provide memory space for integrating the content of oversampled pixels*/
       {
-      if (iflag)
+      if (riflag)
         {
         QMALLOC(oversampibuf[l], FLAGTYPE, width)
         QMALLOC(oversampwibuf[l], FLAGTYPE, width);
@@ -385,14 +384,14 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   QCALLOC(writeflag, int, nlines);
   QCALLOC(queue, int, nlines);
   QMALLOC(proc, int, nproc);
-  QMALLOC(thread, pthread_t, nproc);
+  QMALLOC(rthread, pthread_t, nproc);
   ftab = field->tab;
   wtab = wfield->tab;
   writeline = absline = procline = 0;
   for (p=0; p<nproc; p++)
     {
     proc[p] = p;
-    QPTHREAD_CREATE(&thread[p], &pthread_attr, &pthread_warp_lines, &proc[p]);
+    QPTHREAD_CREATE(&rthread[p], &pthread_attr, &pthread_warp_lines, &proc[p]);
     }
 #else
 /* The old single-threaded way */
@@ -410,22 +409,22 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
       NPRINTF(OUTPUT, "\33[1M> Resampling line:%7d / %-7d\n\33[1A",
 	y, height);
     warp_line(0);
-    if (iflag)
+    if (riflag)
       {
-      write_ibody(field->tab, outibuf[0], width);
-      write_ibody(wfield->tab, outwibuf[0], width);
+      write_ibody(field->tab, routibuf[0], width);
+      write_ibody(wfield->tab, routwibuf[0], width);
       }
     else
       {
-      write_body(field->tab, outbuf[0], width);
-      write_body(wfield->tab, outwbuf[0], width);
+      write_body(field->tab, routbuf[0], width);
+      write_body(wfield->tab, routwbuf[0], width);
       }
     }
 #endif
 
 #ifdef USE_THREADS
   for (p=0; p<nproc; p++)
-    QPTHREAD_JOIN(thread[p], NULL);
+    QPTHREAD_JOIN(rthread[p], NULL);
   QPTHREAD_MUTEX_DESTROY(&linemutex);
   for (l=0; l<nlines; l++)
     {
@@ -436,16 +435,12 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   free(writeflag);
   free(queue);
   free(proc);
-  free(thread);
+  free(rthread);
 #endif
 
 /* FITS padding*/
-  size = PADEXTRA(field->tab->tabsize);
-  if (size)
-    QFWRITE(padbuf, (size_t)size, field->cat->file, field->filename);
-  size = PADEXTRA(wfield->tab->tabsize);
-  if (size)
-    QFWRITE(padbuf, (size_t)size, wfield->cat->file, wfield->filename);
+  pad_tab(field->cat, field->tab->tabsize);
+  pad_tab(wfield->cat, wfield->tab->tabsize);
 
 /* Close files */
   close_cat(field->cat);
@@ -459,12 +454,12 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
   for (l=0; l<nlines; l++)
     {
     free(rawposp[l]);
-    free(iflag? (void *)outibuf[l] : (void *)outbuf[l]);
-    free(iflag? (void *)outwibuf[l]: (void *)outwbuf[l]);
+    free(riflag? (void *)routibuf[l] : (void *)routbuf[l]);
+    free(riflag? (void *)routwibuf[l]: (void *)routwbuf[l]);
     if (oversampflag)
       {
-      free(iflag? (void *)oversampibuf[l] : (void *)oversampbuf[l]);
-      free(iflag? (void *)oversampwibuf[l]: (void *)oversampwbuf[l]);
+      free(riflag? (void *)oversampibuf[l] : (void *)oversampbuf[l]);
+      free(riflag? (void *)oversampwibuf[l]: (void *)oversampwbuf[l]);
       free(oversampnbuf[l]);
       }
     free(rawbuf[l]);
@@ -475,12 +470,12 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
     end_wcs(wcsoutp[l]);
     }
   free(rawposp);
-  free(iflag? (void *)outibuf : (void *)outbuf);
-  free(iflag? (void *)outwibuf: (void *)outwbuf);
+  free(riflag? (void *)routibuf : (void *)routbuf);
+  free(riflag? (void *)routwibuf: (void *)routwbuf);
   if (oversampflag)
     {
-    free(iflag? (void *)oversampibuf : (void *)oversampbuf);
-    free(iflag? (void *)oversampwibuf: (void *)oversampwbuf);
+    free(riflag? (void *)oversampibuf : (void *)oversampbuf);
+    free(riflag? (void *)oversampwibuf: (void *)oversampwbuf);
     free(oversampnbuf);
     }
   free(rawbuf);
@@ -532,7 +527,7 @@ INPUT	-.
 OUTPUT	Next available line index.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	03/02/2012
+VERSION	26/08/2020
  ***/
 int	pthread_nextline(int l)
   {
@@ -548,15 +543,15 @@ int	pthread_nextline(int l)
     {
     while (writeflag[writeline]==2)
       {
-      if (iflag)
+      if (riflag)
         {
-        write_ibody(ftab, outibuf[writeline], width);
-        write_ibody(wtab, outwibuf[writeline], width);
+        write_ibody(ftab, routibuf[writeline], width);
+        write_ibody(wtab, routwibuf[writeline], width);
         }
       else
         {
-        write_body(ftab, outbuf[writeline], width);
-        write_body(wtab, outwbuf[writeline], width);
+        write_body(ftab, routbuf[writeline], width);
+        write_body(wtab, routwbuf[writeline], width);
         }
       writeflag[writeline] = 0;
       QPTHREAD_COND_BROADCAST(&linecond[writeline]);
@@ -612,7 +607,7 @@ void    cancel_resample_threads(void)
    int  p;
 
   for (p=0; p<nproc; p++)
-    QPTHREAD_CANCEL(thread[p]);
+    QPTHREAD_CANCEL(rthread[p]);
 
   return;
   }
@@ -626,7 +621,7 @@ INPUT	Thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	05/02/2012
+VERSION	26/08/2020
  ***/
 void	warp_line(int p)
   {
@@ -642,15 +637,15 @@ void	warp_line(int p)
 			*oversampnt,
 			d, o, x, ninput, swapflag;
 
-  if (iflag)
+  if (riflag)
     {
-    outi = outibuf[p];
-    outwi = outwibuf[p];
+    outi = routibuf[p];
+    outwi = routwibuf[p];
     }
   else
     {
-    out = outbuf[p];
-    outw = outwbuf[p];
+    out = routbuf[p];
+    outw = routwbuf[p];
     }
   rawpos = rawposp[p];
   wcsin = wcsinp[p];
@@ -670,7 +665,7 @@ void	warp_line(int p)
       stepcount[d] = nstepover[d] = 0;
       rawposover[d] = rawpos[d];
       }
-    if (iflag)
+    if (riflag)
       {
       memset(oversampibuf[p], 0, sizeof(FLAGTYPE)*width);
       memset(oversampwibuf[p], 0, sizeof(FLAGTYPE)*width);
@@ -714,7 +709,7 @@ void	warp_line(int p)
           }
 	}
 /*---- Resample the current line */
-      if (iflag)
+      if (riflag)
         {
         oversampit = oversampibuf[p];
         oversampwit = oversampwibuf[p];
@@ -782,7 +777,7 @@ void	warp_line(int p)
         }
       }
 /*-- Now transfer to the output line */
-    if (iflag)
+    if (riflag)
       {
       oversampit = oversampibuf[p];
       oversampwit = oversampwibuf[p];
@@ -851,7 +846,7 @@ void	warp_line(int p)
 /*-- Resample the line */
     rawbufc = rawbuf[p];
     rawbufareac = rawbufarea[p];
-    if (iflag)
+    if (riflag)
       for (x=width; x--; rawbufc+=naxis)
         {
         if (rawbufareac)
