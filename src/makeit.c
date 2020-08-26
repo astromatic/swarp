@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		26/08/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -57,6 +57,7 @@
 
 static int	selectext(char *filename);
 time_t		thetime, thetime2;
+char		gstr[MAXCHAR];
 
 /********************************** makeit ***********************************/
 void	makeit(void)
