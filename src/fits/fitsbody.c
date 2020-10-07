@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2019 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 1995-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		26/08/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -395,7 +395,7 @@ INPUT	A pointer to the tab structure,
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	02/10/2017
+VERSION	26/08/2020
  ***/
 void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
   {
@@ -404,14 +404,14 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
   unsigned char		cuval, cublank;
   char			*bufdata,
 			cval, cblank;
-  unsigned short	suval, sublank;
+  unsigned short	suval, sublank, ashort=1;
   short			val16, sval, sblank;
 #ifdef HAVE_LONG_LONG_INT
   ULONGLONG		lluval, llublank;
   SLONGLONG		llval, llblank;
 #endif
   unsigned int		iuval, iublank;
-  int			curval, dval, blankflag, ival, iblank;
+  int			curval, dval, blankflag, bswapflag, ival, iblank;
   
   size_t	i, bowl, spoonful, npix;
   double	bs,bz;
@@ -424,6 +424,7 @@ void	read_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
   bz = tab->bzero;
 
   blankflag = tab->blankflag;
+  bswapflag = *((char *)&ashort);	// Byte-swapping flag
 
   switch(tab->compress_type)
     {
@@ -751,19 +752,22 @@ INPUT	A pointer to the tab structure,
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	28/03/2013
+VERSION	26/08/2020
  ***/
 void	read_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
   {
-   catstruct	*cat;
-   static int	bufdata0[DATA_BUFSIZE/sizeof(int)];
-   char		*bufdata;
-   short	val16;
-   int		i, bowl, spoonful, npix, curval, dval;
+   catstruct		*cat;
+   static int		bufdata0[DATA_BUFSIZE/sizeof(int)];
+   char			*bufdata;
+   short		val16;
+   unsigned short	ashort = 1;
+   int			i, bowl, spoonful, npix, curval, dval, bswapflag;
 
 /* a NULL cat structure indicates that no data can be read */
   if (!(cat = tab->cat))
     return;
+
+  bswapflag = *((char *)&ashort);	// Byte-swapping flag
 
   switch(tab->compress_type)
     {
@@ -951,19 +955,22 @@ INPUT	A pointer to the tab structure,
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	28/03/2013
+VERSION	26/08/2020
  ***/
 void	write_body(tabstruct *tab, PIXTYPE *ptr, size_t size)
   {
-  static double	bufdata0[DATA_BUFSIZE/sizeof(double)];
-  catstruct	*cat;
-  char		*cbufdata0;
-  size_t	i, bowl, spoonful;
-  PIXTYPE	bs,bz;
+   static double	bufdata0[DATA_BUFSIZE/sizeof(double)];
+   catstruct		*cat;
+   char			*cbufdata0;
+   size_t		i, bowl, spoonful;
+   PIXTYPE		bs,bz;
+   unsigned short	ashort = 1;
+   int			bswapflag;
+
+  bswapflag = *((char *)&ashort);	// Byte-swapping flag
 
   bs = (PIXTYPE)tab->bscale;
   bz = (PIXTYPE)tab->bzero;
-
   cat = tab->cat;
   if (!cat)
     error(EXIT_FAILURE, "*Internal Error*: no parent cat structure for table ",
@@ -1173,7 +1180,7 @@ INPUT	A pointer to the tab structure,
 OUTPUT	-.
 NOTES	.
 AUTHOR	E. Bertin (IAP)
-VERSION	28/03/2013
+VERSION	11/02/2020
  ***/
 void	write_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
   {
@@ -1181,7 +1188,11 @@ void	write_ibody(tabstruct *tab, FLAGTYPE *ptr, size_t size)
    catstruct		*cat;
    char			*cbufdata0;
    size_t		i, bowl, spoonful;
+   unsigned short	ashort = 1;
    double		bs,bz;
+   int			bswapflag;
+
+  bswapflag = *((char *)&ashort);	// Byte-swapping flag
 
   bs = tab->bscale;
   bz = tab->bzero;

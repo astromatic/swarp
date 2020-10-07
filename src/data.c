@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		30/01/2012
+*	Last modified:		04/02/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -70,10 +70,11 @@ INPUT	Input field ptr,
 OUTPUT	-.
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 30/01/2012
+VERSION 04/02/2020
  ***/
 void	read_data(fieldstruct *field, fieldstruct *wfield, int bitpix)
   {
+   char	str[MAXCHAR];
 
 /* Prepare static (global) variables */
   convert_width = field->width;
@@ -99,18 +100,23 @@ void	read_data(fieldstruct *field, fieldstruct *wfield, int bitpix)
   else
     convert_backsubflag = 0;
 
-  if (bitpix>0)
-    {
-    if (!(field->ipix = alloc_ibody(field->tab, NULL)))
-      error(EXIT_FAILURE, "*Error*: Not enough memory "
-		"(either in RAM or mapped to disk) to store ",field->rfilename);
+  if (bitpix>0) {
+    if (!(field->ipix = alloc_ibody(field->tab, NULL))) {
+      sprintf(str, "*Error*: Not enough memory "
+		"(either in RAM or mapped to disk) to store %s;",
+		field->rfilename);
+      error(EXIT_FAILURE, str,
+		" try to increase MEM_MAX or VMEM_MAX");
     }
-  else
-    {
-    if (!(field->pix = alloc_body(field->tab, convert_data)))
-      error(EXIT_FAILURE, "*Error*: Not enough memory "
-		"(either in RAM or mapped to disk) to store ",field->rfilename);
+  } else {
+    if (!(field->pix = alloc_body(field->tab, convert_data))) {
+      sprintf(str, "*Error*: Not enough memory "
+		"(either in RAM or mapped to disk) to store %s;",
+		field->rfilename);
+      error(EXIT_FAILURE, str,
+		" try to increase MEM_MAX or VMEM_MAX");
     }
+  }
 /* Free allocated buffers */
   if (convert_interpflag)
     {

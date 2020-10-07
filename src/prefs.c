@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		26/08/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -60,6 +60,8 @@
 #include	"fitswcs.h"
 #include 	"prefs.h"
 #include	"preflist.h"
+
+prefstruct	prefs;
 
 /********************************* dumpprefs ********************************/
 /*
@@ -483,10 +485,6 @@ void	useprefs(void)
 #ifdef USE_THREADS
    int			nproc;
 #endif
-
-
-/* Test if byteswapping will be needed */
-  bswapflag = *((char *)&ashort);
 
 /* Multithreading */
 #ifdef USE_THREADS

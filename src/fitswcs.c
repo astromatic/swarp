@@ -460,7 +460,9 @@ wcsstruct	*read_wcs(tabstruct *tab)
       {
 /*---- Search for an observation start date expressed in "civilian" format */
       FITSREADS(buf, "DATE-OBS", str, "");
-      str_to_date_wcs(str, &wcs->obsdate);
+      wcs->obsdate = 0.0;
+      if (*str && str_to_date_wcs(str, &wcs->obsdate) != RETURN_OK)
+        warning("Invalid DATE-OBS value in header: ", str);
       }
 
 /*-- Search for an observation end date expressed in Julian days */
@@ -472,9 +474,11 @@ wcsstruct	*read_wcs(tabstruct *tab)
       wcs->obsend = 2000.0 - (MJD2000 - date)/365.25;
     else
       {
+      wcs->obsend = 0.0;
 /*---- Search for an observation start date expressed in "civilian" format */
-      FITSREADS(buf, "DATE-OBS", str, "");
-      str_to_date_wcs(str, &wcs->obsend);
+      FITSREADS(buf, "DATE-END", str, "");
+      if (*str && str_to_date_wcs(str, &wcs->obsend) != RETURN_OK)
+        warning("Invalid DATE-END value in header: ", str);
       }
 
     FITSREADF(buf, "EPOCH", wcs->epoch, 2000.0);
@@ -2211,23 +2215,19 @@ int	str_to_date_wcs(char *str, double *year) {
 
    double	dpar[6] = {0.0},
 		date, jdsec, tmp, biss;
-   char		*pstr, *ptr;
+   char		str2[80], *pstr, *ptr;
    int		l, sflag;
 
-  if (*str) {
-    *year = 0.0;
-    return RETURN_ERROR;
-  }
+  strncpy(str2, str, 72);
 
 /* Decode DATE-OBS format: DD/MM/YYThh:mm:ss[.sss] or YYYY-MM-DDThh:mm:ss[.sss] */
-  sflag = strchr(str, '/') != NULL;
-  for (l=0; l<5 && (pstr = strtok_r(l ? NULL : str, "/-T: ", &ptr)); l++)
+  sflag = strchr(str2, '/') != NULL;
+  for (l=0; l<5 && (pstr = strtok_r(l ? NULL : str2, "/-T: ", &ptr)); l++)
     dpar[l] = atof(pstr);
 
   if (l<3 || dpar[0] == 0.0 || dpar[1] == 0.0 || dpar[2] == 0.0) {
 /*-- If DATE-OBS value corrupted or incomplete, assume 2000-1-1 */
-    warning("Invalid DATE-OBS value in header: ", str);
-    dpar[0] = 2000.0; dpar[1] = 1.0; dpar[2] = 1.0;
+    *year = 2000.0;
     return RETURN_ERROR;
   } else if (sflag && dpar[0] < 32.0 && dpar[2] < 100.0) {
     tmp = dpar[0];
