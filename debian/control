@@ -20,7 +20,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SCAMP.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		09/12/2019
+#	Last modified:		20/12/2019
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -28,7 +28,7 @@ Source: swarp
 Section: science
 Priority: optional
 Maintainer: Emmanuel Bertin <bertin@iap.fr>
-Build-Depends: debhelper (>= 9)
+Build-Depends: debhelper (>= 9), cfitsio-dev
 Homepage: http://astromatic.net/software/swarp
 
 Package: swarp
