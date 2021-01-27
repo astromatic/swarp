@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2021 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/08/2020
+*	Last modified:		27/01/2021
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -65,7 +65,7 @@
  int			*queue,*proc,*writeflag,
 			absline,procline,writeline;
 #else
- int			nproc;
+ extern int		nproc;
 #endif
 
  fieldstruct		*infield,*inwfield, *field, *wfield;
