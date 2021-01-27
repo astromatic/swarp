@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2021 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/08/2020
+*	Last modified:		27/01/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -287,7 +287,7 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 26/08/2020
+VERSION 27/01/2021
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -530,7 +530,7 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
       }
     QMALLOC(multiwbuf, PIXTYPE, nbuflinesmax*multiwidth);
     }
-  QMALLOC(multinbuf, unsigned int, nbuflinesmax*outwidth);
+  QMALLOC(multinbuf, unsigned int, nbuflinesmax*(size_t)outwidth);
 /* Allocate memory for the output buffers that contain "empty data" */
   if (iflag)
     {
@@ -553,8 +553,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
     {
     QMALLOC(outbuf, PIXTYPE, nbuflinesmax*(size_t)outwidth);
     QMALLOC(outwbuf, PIXTYPE, nbuflinesmax*(size_t)outwidth);
-    QMALLOC(coadd_pixstack, PIXTYPE, nbuflinesmax*coadd_nomax);
-    QMALLOC(coadd_pixfstack, PIXTYPE, nbuflinesmax*coadd_nomax);
+    QMALLOC(coadd_pixstack, PIXTYPE, nbuflinesmax*(size_t)coadd_nomax);
+    QMALLOC(coadd_pixfstack, PIXTYPE, nbuflinesmax*(size_t)coadd_nomax);
     }
   QCALLOC(cflag, unsigned int, ninput);
 
@@ -605,7 +605,8 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
   nopenfiles = 0;
 
 /* Loop over output ``lines'': this can be over more than 1 (Y) dimension */
-  for (y=ybufmax=0; y<height; y+=nlines)
+  ybufmax = 0;
+  for (y=0; y<height; y+=nlines)
     {
     NPRINTF(OUTPUT, "\33[1M> Preparing line:%7d / %-7d\n\33[1A", y+1, height);
 /*-- Skip empty lines */
@@ -677,7 +678,6 @@ int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 		inwfield[n]->filename);
         nopenfiles++;
         }
-
 /*---- Refill the buffers with new data */
       if ((iflag && coadd_iload(infield[n], inwfield[n],
 			multiibuf+dy*multiwidth, multiwibuf+dy*multiwidth,
@@ -1169,21 +1169,22 @@ INPUT	Current line number.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   Requires many global variables (for multithreading).
 AUTHOR  E. Bertin (IAP)
-VERSION	03/02/2012
+VERSION	27/01/2021
  ***/
 int coadd_iline(int l)
 
   {
    FLAGTYPE		*inipix,*inipixt,*outipix, *inwipix,*inwipixt,*outwipix,
 			ival;
-   unsigned int		*inn;
+   unsigned int	*inn;
+   size_t		lcoadd_width = l * (size_t)coadd_width;
    int			i,x, ninput,ninput2;
 
-  inipix = multiibuf+l*coadd_width*coadd_nomax;
-  inwipix = multiwibuf+l*coadd_width*coadd_nomax;
-  inn = multinbuf+l*coadd_width;
-  outipix = outibuf+l*coadd_width;
-  outwipix = outwibuf+l*coadd_width;
+  inipix = multiibuf + lcoadd_width * coadd_nomax;
+  inwipix = multiwibuf + lcoadd_width * coadd_nomax;
+  inn = multinbuf + lcoadd_width;
+  outipix = outibuf + lcoadd_width;
+  outwipix = outwibuf + lcoadd_width;
   switch(coadd_type)
     {
     case COADD_AND:
@@ -1248,12 +1249,12 @@ PROTO	int coadd_line(int l, int b, int *bufmin)
 PURPOSE	Coadd a line of pixels.
 INPUT	Current line number within the buffer,
 	buffer base line number,
-	offset of arrays w.r.t. final output (required for correct clipped pixel
-	coordinates)
+	offset of arrays w.r.t. final output (required for correcting
+	clipped pixel coordinates)
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
-NOTES   Requires many global variables (for multithreading).
-AUTHOR  E. Bertin (IAP), D. Gruen (USM)
-VERSION	23/10/2015
+NOTES	Requires many global variables (for multithreading).
+AUTHOR	E. Bertin (IAP), D. Gruen (USM)
+VERSION	27/01/2021
  ***/
 int	coadd_line(int l, int b, int *bufmin)
 
@@ -1264,16 +1265,18 @@ int	coadd_line(int l, int b, int *bufmin)
 			fval2, mu;
    double		val,val0,val2,val3, wval,wval0,wval2,wval3;
    unsigned int		*inn, *inorigin, *inorigint, *pixostack, *pixot;
+   size_t		lcoadd_width = l * (size_t)coadd_width;
    int			i,x, ninput, ninput2, blankflag, origin2;
 
+
   blankflag = prefs.blank_flag;
-  inpix = multibuf+l*coadd_width*coadd_nomax;
-  inwpix = multiwbuf+l*coadd_width*coadd_nomax;
-  inn = multinbuf+l*coadd_width;
-  outpix = outbuf+l*coadd_width;
-  outwpix = outwbuf+l*coadd_width;
-  pixstack = coadd_pixstack+l*coadd_nomax;
-  pixfstack = coadd_pixfstack+l*coadd_nomax;
+  inpix = multibuf + lcoadd_width * coadd_nomax;
+  inwpix = multiwbuf + lcoadd_width * coadd_nomax;
+  inn = multinbuf + lcoadd_width;
+  outpix = outbuf + lcoadd_width;
+  outwpix = outwbuf + lcoadd_width;
+  pixstack = coadd_pixstack + (size_t)l * coadd_nomax;
+  pixfstack = coadd_pixfstack + (size_t)l * coadd_nomax;
   switch(coadd_type)
     {
     case COADD_WEIGHTED:
@@ -1317,7 +1320,7 @@ int	coadd_line(int l, int b, int *bufmin)
       QMALLOC(pixwstack, PIXTYPE, coadd_nomax);
       QMALLOC(pixstackbuf, PIXTYPE, coadd_nomax);
       QMALLOC(pixostack, unsigned int, coadd_nomax);
-      inorigin = multiobuf + l*coadd_width*coadd_nomax;
+      inorigin = multiobuf + lcoadd_width * coadd_nomax;
       for (x=coadd_width; x--; inpix+=coadd_nomax, inwpix+=coadd_nomax,
 		inorigin += coadd_nomax) // for each pixel in the line
         {
