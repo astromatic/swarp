@@ -7,9 +7,11 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2000-2021 IAP/CNRS/SorbonneU
+#	Copyright:		(C) 2002-2023 CFHT/IAP/CNRS/SorbonneU
 #
-#	SWarp is free software: you can redistribute it and/or modify
+#	License:		GNU General Public License
+#
+#	SExtractor is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
 #	the Free Software Foundation, either version 3 of the License, or
 # 	(at your option) any later version.
@@ -20,7 +22,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		27/01/2021
+#	Last modified:		26/04/2023
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,7 +31,7 @@ define([AC_CACHE_LOAD],)
 define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
-AC_INIT(SWarp, 2.41.5, [astromatic@astromatic.net],
+AC_INIT(SWarp, 2.42.0, [astromatic@astromatic.net],
 	swarp, [http://astromatic.net/software/swarp])
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -75,12 +77,23 @@ AC_ARG_ENABLE(auto-flags,
 	AC_MSG_RESULT([yes]),
 	AC_MSG_RESULT([no]))
 
-# Provide special option for the Linux Intel C compiler
-AC_MSG_CHECKING([whether the INTEL compiler is enabled])
+# Provide special option for the Linux Intel C "classic" compiler
+AC_MSG_CHECKING([whether the classic INTEL compiler is enabled])
 AC_ARG_ENABLE(icc,
 	[AS_HELP_STRING([--enable-icc],
 	[Use the Intel compiler (default = no)])],
         CC="icc"
+        enable_iccx="yes"
+	AC_MSG_RESULT([yes]),
+	AC_MSG_RESULT([no]))
+
+# Provide special option for the Linux Intel OneAPI C compiler
+AC_MSG_CHECKING([whether the INTEL compiler is enabled])
+AC_ARG_ENABLE(icx,
+	[AS_HELP_STRING([--enable-icx],
+	[Use the Intel compiler (default = no)])],
+        CC="icx"
+        enable_iccx="yes"
 	AC_MSG_RESULT([yes]),
 	AC_MSG_RESULT([no]))
 
@@ -100,9 +113,9 @@ AC_PROG_INSTALL
 AC_CHECK_LIB(m, sin)
 
 # Checks for header files.
-AC_HEADER_STDC
 AC_CHECK_HEADERS(malloc.h unistd.h sys/mman.h)
-if test "$enable_icc" = "yes"; then
+# Checks for INTEL math header files.
+if test "$enable_iccx" = "yes"; then
   AC_CHECK_HEADERS(mathimf.h)
 fi
 
@@ -176,7 +189,7 @@ AC_ARG_ENABLE(threads,
 AC_MSG_CHECKING([for profiler mode])
 AC_ARG_ENABLE(profiling,
 	[AS_HELP_STRING([--enable-profiling],
-	[Enable special mode for profiling (default = no)])]
+	[Enable special mode for profiling (default = no)])],
 	AC_MSG_RESULT([yes]),
 	AC_MSG_RESULT([no]))
 
@@ -215,7 +228,7 @@ fi
 
 # Compile with profiling option
 if test "$enable_profiling" = "yes"; then
-  if test "$enable_icc" = "yes"; then
+  if test "$enable_iccx" = "yes"; then
     AM_CFLAGS="$AM_CFLAGS -pq"
   else
     AM_CFLAGS="$AM_CFLAGS -pg"
@@ -225,9 +238,9 @@ fi
 
 # "Best" linking option
 if test "$enable_best_link" = "yes"; then
-  if test "$enable_icc" = "yes"; then
-    AM_LDFLAGS="-static-intel -qopenmp-link static -shared-libgcc \
-	-static-libtool-libs -no-intel-extensions -avoid-version $AM_LDFLAGS"
+  if test "$enable_iccx" = "yes"; then
+    AM_LDFLAGS="-static-intel -qopenmp-link=static -shared-libgcc \
+	-static-libtool-libs -avoid-version $AM_LDFLAGS"
   else
     AM_LDFLAGS="-shared-libgcc -static-libtool-libs -avoid-version $AM_LDFLAGS"
   fi

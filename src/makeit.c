@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2023 IAP/CFHT/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		25/11/2020
+*	Last modified:		26/04/2023
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -456,9 +456,9 @@ INPUT	a character string,
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/07/2006
+VERSION	26/04/2023
  ***/
-void    write_error(char *msg1, char *msg2)
+void    write_error(const char *msg1, const char *msg2)
   {
    char		error[MAXCHAR];
 
