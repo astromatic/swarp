@@ -43,6 +43,7 @@
 #define		VAR_FIELD	0x10	/* Weighting with variances */
 #define		WEIGHT_FIELD	0x20	/* Weighting with weights */
 #define		BACKRMS_FIELD	0x40	/* Weighting from a backrms matrix */
+#define		DGEO_FIELD	0x80	/* Differential geometry map */
 
 #define		FIELD_READ	0x100	/* Field available for read access */
 #define		FIELD_WRITE	0x200	/* Field available for read access */
