@@ -130,15 +130,23 @@ AC_CHECK_FUNC([isnan], AC_DEFINE_UNQUOTED([HAVE_ISNAN2], 1,
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
-# Provide special options for CFITSIO
-AC_ARG_WITH(cfitsio,
-        [Link with the CFITSIO library])
+# Provide special option for CFITSIO
+AC_MSG_CHECKING([whether CFITSIO support should be disabled (default=enabled)])
+AC_ARG_ENABLE(cfitsio,
+	[AS_HELP_STRING([--disable-cfitsio],
+	[Disable support for compressed FITS files through the CFITSIO library (default=enabled)])],
+	if test "$enable_cfitsio" = "no"; then
+	  AC_MSG_RESULT([yes])
+	else
+	  AC_MSG_RESULT([no])
+	fi,
+	AC_MSG_RESULT([no]))
 AC_ARG_WITH(cfitsio-libdir,
-        [AS_HELP_STRING([--with-cfitsio-libdir=<CFITSIO library path>],
-        [Provide an alternative path to the CFITSIO library])])
+	[AS_HELP_STRING([--with-cfitsio-libdir=<CFITSIO library path>],
+	[Provide an alternative path to the CFITSIO library])])
 AC_ARG_WITH(cfitsio-incdir,
-        [AS_HELP_STRING([--with-cfitsio-incdir=<CFITSIO include dir>],
-        [Provide an alternative path to the CFITSIO include directory])])
+	[AS_HELP_STRING([--with-cfitsio-incdir=<CFITSIO include dir>],
+	[Provide an alternative path to the CFITSIO include directory])])
 
 # Provide a special option for the default XSLT URL
 with_xsl_url="file://"$(URBI_RESOLVE_DIR([$datadir]))"/$PACKAGE_TARNAME/$PACKAGE_TARNAME.xsl"
@@ -196,7 +204,7 @@ fi
 AM_CONDITIONAL(USE_THREADS, test $use_pthreads = "yes")
 
 ########################## handle the CFITSIO library ########################
-if test "$with_cfitsio" != "no"; then
+if test "$enable_cfitsio" != "no"; then
   ACX_CFITSIO($with_cfitsio_libdir, $with_cfitsio_incdir,
 	[LIBS="$CFITSIO_LIBS $LIBS"]
 	if test "$CFITSIO_WARN" != ""; then
