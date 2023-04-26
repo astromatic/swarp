@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/12/2019
+*	Last modified:		25/11/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -85,6 +85,12 @@ pkeystruct key[] =
   {"COPY_KEYWORDS", P_STRINGLIST, prefs.copy_keywords, 0,0, 0.0, 0.0,
    {""}, 0, 1024, &prefs.ncopy_keywords},
   {"DELETE_TMPFILES", P_BOOL, &prefs.removetmp_flag},
+  {"DGEO_IMAGE", P_STRINGLIST, prefs.indgeo_name, 0,0, 0.0,0.0,
+   {""}, 0, MAXINFIELD, &prefs.nindgeo_name},
+  {"DGEO_SUFFIX", P_STRING, prefs.dgeo_suffix},
+  {"DGEO_TYPE", P_KEYLIST, prefs.dgeo_type, 0,0, 0.0,0.0,
+   {"NONE", "PIXEL", ""},
+   1, MAXINFIELD, &prefs.ndgeo_type},
   {"FSCALASTRO_TYPE", P_KEY, &prefs.fscalastro_type, 0,0, 0.0,0.0,
    {"NONE", "FIXED", "VARIABLE", ""}},
   {"FSCALE_DEFAULT", P_FLOATLIST, prefs.fscale_default, 0,0, -BIG, BIG,
@@ -146,7 +152,7 @@ pkeystruct key[] =
   {"WEIGHT_THRESH", P_FLOATLIST, prefs.weight_thresh, 0,0, 0.0, BIG,
    {""}, 0, MAXINFIELD, &prefs.nweight_thresh},
   {"WEIGHT_TYPE", P_KEYLIST, prefs.weight_type, 0,0, 0.0,0.0,
-   {"NONE", "BACKGROUND", "MAP_RMS", "MAP_VARIANCE", "MAP_WEIGHT",""},
+   {"NONE", "BACKGROUND", "MAP_RMS", "MAP_VARIANCE", "MAP_WEIGHT", ""},
    1, MAXINFIELD, &prefs.nweight_type},
   {"WRITE_FILEINFO", P_BOOL, &prefs.writefileinfo_flag},
   {"WRITE_XML", P_BOOL, &prefs.xml_flag},
@@ -185,6 +191,14 @@ char *default_prefs[] =
 "                                       # (all or for each weight-map)",
 "*WEIGHT_THRESH                         # Bad pixel weight-threshold",
 " ",
+"*#----------------------- Differential Geometry Maps ---------------------------",
+"*",
+"*DGEO_TYPE              NONE            # Differential geometry map type: NONE",
+"*                                       # or PIXEL",
+"*DGEO_SUFFIX            .dgeo.fits      # Suffix for input diff. geometry maps",
+"*DGEO_IMAGE                             # Differential geometry map filename if",
+"*                                       # suffix not used (all or for each map)",
+"*",
 "#------------------------------- Co-addition ----------------------------------",
 " ",
 "COMBINE                Y               # Combine resampled images (Y/N)?",

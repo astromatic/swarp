@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/02/2019
+*	Last modified:		04/11/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -121,7 +121,7 @@ extern fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
 
 extern void		end_field(fieldstruct *field),
 			printinfo_field(fieldstruct *field,
-					fieldstruct *wfield),
+				fieldstruct *wfield, fieldstruct *dgeofield),
 			scale_field(fieldstruct *field, fieldstruct *reffield,
 					int scaleflag);
 #endif
