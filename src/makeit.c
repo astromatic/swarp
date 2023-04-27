@@ -159,9 +159,23 @@ void	makeit(void)
     tab=cat->tab;
     for (j=0; j<cat->ntab; j++,tab=tab->nexttab)
       {
-      if ((jima>=0 && j!=jima)
-	|| (jima<0 && (!tab->naxis || (tab->tfields && tab->bitpix==8))))
+#ifdef HAVE_CFITSIO
+      if ((jima>=0 && j!=jima) || (jima < 0 && (!tab->naxis ||
+	!(tab->isTileCompressed || (tab->naxis >= 2
+		&& strncmp(tab->xtension, "BINTABLE", 8)
+		&& strncmp(tab->xtension, "ASCTABLE", 8))))))
         continue;
+#else
+      if ((jima>=0 && j!=jima) || (jima < 0 && (!tab->naxis ||
+	(tab->naxis >= 2
+	&& strncmp(tab->xtension, "BINTABLE", 8)
+	&& strncmp(tab->xtension, "ASCTABLE", 8))))) {
+        if (tab->isTileCompressed)
+	  warning(BANNER " has been compiled without CFITSIO support: "
+		"compressed image skipped in ", prefs.infield_name[i]);
+        continue;
+      }
+#endif
       if (k >= nfield)
         {
         nfield += NFIELD;
