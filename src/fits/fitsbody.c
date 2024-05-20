@@ -7,7 +7,7 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2023 CFHT/IAP/CNRS/SorbonneU
+*	Copyright:		(C) 1995-2024 CFHT/IAP/CNRS/SorbonneU/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +23,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		25/02/2023
+*	Last modified:		20/05/2024
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -63,8 +63,8 @@ PURPOSE	Allocate memory for and read a FITS data body (read-only). If not
 INPUT	Table (tab) structure.
 OUTPUT	Pointer to the mapped data if OK, or NULL otherwise.
 NOTES	The file pointer must be positioned at the beginning of the data.
-AUTHOR	E. Bertin (IAP)
-VERSION	02/10/2017
+AUTHOR	E. Bertin (UParisSaclay/CEA/AIM)
+VERSION	20/05/2024
  ***/
 PIXTYPE	*alloc_body(tabstruct *tab, void (*func)(PIXTYPE *ptr, int npix))
   {
@@ -90,7 +90,7 @@ PIXTYPE	*alloc_body(tabstruct *tab, void (*func)(PIXTYPE *ptr, int npix))
 
 /* Decide if the data will go in physical memory or on swap-space */
 #ifdef	HAVE_CFITSIO
-  npix = tab->naxisn[0] * tab->naxisn[1];
+  npix = (size_t)tab->naxisn[0] * (size_t)tab->naxisn[1];
 #else
   npix = tab->tabsize/tab->bytepix;
 #endif
