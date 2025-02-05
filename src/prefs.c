@@ -8,6 +8,8 @@
 *	This file part of:	SWarp
 *
 *	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*                   (C) 2021-2023 CFHT/CNRS
+*                   (C) 2024-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/08/2020
+*	Last modified:		05/02/2024
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -92,12 +94,12 @@ void    readprefs(char *filename, char **argkey, char **argval, int narg)
 
   {
    FILE		*infile;
-   char		*cp, str[MAXCHARL], *keyword, *value, **dp;
+   char		*cp, str[MAXCHARL], *keyword, *value,  *listbuf, **dp;
    int		i, ival, nkey, warn, argi, flagc, flagd, flage, flagz;
    double	dval;
 #ifdef	HAVE_GETENV
    static char	value2[MAXCHARL],envname[MAXCHAR];
-   char		*dolpos, *listbuf;
+   char		*dolpos;
 #endif
 
 
