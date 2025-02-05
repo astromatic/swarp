@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		04/11/2020
+*	Last modified:		03/02/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -43,7 +43,6 @@
 #define		VAR_FIELD	0x10	/* Weighting with variances */
 #define		WEIGHT_FIELD	0x20	/* Weighting with weights */
 #define		BACKRMS_FIELD	0x40	/* Weighting from a backrms matrix */
-#define		DGEO_FIELD	0x80	/* Differential geometry map */
 
 #define		FIELD_READ	0x100	/* Field available for read access */
 #define		FIELD_WRITE	0x200	/* Field available for read access */
@@ -122,7 +121,7 @@ extern fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
 
 extern void		end_field(fieldstruct *field),
 			printinfo_field(fieldstruct *field,
-				fieldstruct *wfield, fieldstruct *dgeofield),
+					fieldstruct *wfield),
 			scale_field(fieldstruct *field, fieldstruct *reffield,
 					int scaleflag);
 #endif

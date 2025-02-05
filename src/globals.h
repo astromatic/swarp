@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2002-2023 IAP/CFHT/CNRS/SorbonneU
+*	Copyright:		(C) 2002-2020 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/04/2023
+*	Last modified:		26/08/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -33,4 +33,4 @@ extern char	gstr[MAXCHAR];
 
 /*------------------------------- functions ---------------------------------*/
 extern	void	makeit(void),
-		write_error(const char *msg1, const char *msg2);
+		write_error(char *msg1, char *msg2);
