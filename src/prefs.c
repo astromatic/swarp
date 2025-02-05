@@ -7,9 +7,9 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2021 IAP/CNRS/SorbonneU
 *                   (C) 2021-2023 CFHT/CNRS
-*                   (C) 2024-2025 CEA/AIM/UParisSaclay
+*                   (C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
