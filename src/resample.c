@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2021 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2023 IAP/CFHT/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		27/01/2021
+*	Last modified:		26/04/2023
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -68,7 +68,7 @@
  extern int		nproc;
 #endif
 
- fieldstruct		*infield,*inwfield, *field, *wfield;
+ fieldstruct		*infield, *inwfield, *indgeofield, *field, *wfield;
  ikernelstruct		**ikernel;
  wcsstruct		**wcsinp, **wcsoutp;
  projappstruct		*projapp;
@@ -93,11 +93,13 @@ static void		warp_line(int p);
 
 /****** resample_field *******************************************************
 PROTO	void resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
+			fieldstruct **pindgeofield,
 			fieldstruct *outfield, fieldstruct *outwfield,
 			interpenum *interptype)
 PURPOSE	Resample an image.
 INPUT	Input pointer to field structure pointer,
-	Input pointer weight-map field structure pointer,
+	Input pointer to weight-map field structure pointers,
+	Input pointer to dgeo map field structure pointers,
 	Output total field structure pointer,
 	Output total weight-map field structure pointer,
 	Interpolation type.
@@ -106,9 +108,10 @@ OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/08/2020
+VERSION	18/11/2020
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
+		fieldstruct **pindgeofield,
 		fieldstruct *outfield, fieldstruct *outwfield,
 		interpenum *interptype)
   {
@@ -128,6 +131,7 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 
   infield = *pinfield;
   inwfield = *pinwfield;
+  indgeofield = *pindgeofield;
 
 /* Create new file name */
   strcpy(filename2, infield->rfilename);
@@ -621,7 +625,7 @@ INPUT	Thread number.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/08/2020
+VERSION	18/11/2020
  ***/
 void	warp_line(int p)
   {
@@ -721,8 +725,8 @@ void	warp_line(int p)
           if (rawbufareac)
             area = *(rawbufareac++);
           if (*rawbufc != WCS_NOCOORD
-		&& interpolate_ipix(infield, inwfield, rawbufc,&ipix,&ipixw)
-			== RETURN_OK)
+		&& interpolate_ipix(infield, inwfield, indgeofield, rawbufc,
+			&ipix,&ipixw) == RETURN_OK)
             {
             *(oversampit++) |= ipix;
             *(oversampwit++) |= 1;
@@ -748,8 +752,8 @@ void	warp_line(int p)
           if (rawbufareac)
             area = *(rawbufareac++);
           if (*rawbufc != WCS_NOCOORD
-		&& (interpolate_pix(infield, inwfield, ikernel[p],rawbufc,
-			&pix,&pixw),pixw<BIG))
+		&& (interpolate_pix(infield, inwfield, indgeofield, ikernel[p],
+			rawbufc, &pix,&pixw),pixw<BIG))
             {
             *(oversampt++) += area * (double)pix;
             *(oversampwt++) += (double)pixw * area*area;
@@ -852,7 +856,8 @@ void	warp_line(int p)
         if (rawbufareac)
           area = *(rawbufareac++);
         if (*rawbufc != WCS_NOCOORD)
-          interpolate_ipix(infield, inwfield, rawbufc,outi++,outwi++);
+          interpolate_ipix(infield, inwfield, indgeofield, rawbufc,
+          	outi++, outwi++);
         else
           *(outwi++) = *(outi++) = 0;
         }
@@ -863,7 +868,8 @@ void	warp_line(int p)
           area = *(rawbufareac++);
         if (*rawbufc != WCS_NOCOORD)
           {
-          interpolate_pix(infield, inwfield, ikernel[p], rawbufc,out,outw);
+          interpolate_pix(infield, inwfield, indgeofield, ikernel[p], rawbufc,
+          	out,outw);
           *(out++) *= area;
 /*------- Convert variance to weight */
           *outw = (*outw < BIG) ? 1.0/(*outw*area*area) : 0.0;

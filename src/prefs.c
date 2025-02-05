@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/08/2020
+*	Last modified:		04/11/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -481,7 +481,7 @@ void	useprefs(void)
   {
    unsigned short	ashort=1;
    char			*pstr;
-   int			i,j, weight_flag;
+   int			i,j, dgeo_flag, weight_flag;
 #ifdef USE_THREADS
    int			nproc;
 #endif
@@ -579,15 +579,15 @@ void	useprefs(void)
       }
     }   
 
-/* Force weight flag */
-  weight_flag = 0;
-  for (i=0; i<prefs.nweight_type; i++)
-    weight_flag |= (prefs.weight_type[i]!=WEIGHT_NONE);
-
 /* Check header filenames */ 
   if (prefs.ninhead_name && prefs.ninhead_name != prefs.ninfield)
       warning("The numbers of input headers and images do not match: ",
 		"the last images will rely only on the header suffix");
+
+/* Force weight flag */
+  weight_flag = 0;
+  for (i=0; i<prefs.nweight_type; i++)
+    weight_flag |= (prefs.weight_type[i]!=WEIGHT_NONE);
 
 /* If Weights are needed... */
   if (weight_flag)
@@ -657,6 +657,62 @@ void	useprefs(void)
       prefs.wscale_flag[i] = prefs.wscale_flag[prefs.nwscale_flag-1];
     prefs.nwscale_flag = prefs.ninfield;
     }
+
+/* Force differential geometry flag */
+  dgeo_flag = 0;
+  for (i=0; i<prefs.ndgeo_type; i++)
+    dgeo_flag |= (prefs.dgeo_type[i] != DGEO_NONE);
+
+/* If differential geometry maps are needed... */
+  if (dgeo_flag)
+    {
+/*-- Use the DGEO_SUFFIX to identify the differential geometry maps */
+    if (!prefs.nindgeo_name)
+      {
+      for (i=0; i<prefs.ninfield; i++)
+        {
+        QMALLOC(prefs.indgeo_name[i], char, MAXCHAR);
+/*------ Create a file name with a new extension */
+        strcpy(prefs.indgeo_name[i], prefs.infield_name[i]);
+        if (!(pstr = strrchr(prefs.indgeo_name[i], '.')))
+          pstr = prefs.indgeo_name[i] + strlen(prefs.indgeo_name[i]);
+        sprintf(pstr, "%s", prefs.dgeo_suffix);
+        }
+      prefs.nindgeo_name = prefs.ninfield;
+      }
+
+    if (prefs.ndgeo_type > prefs.nindgeo_name)
+      {  
+/*---- Now check that we haven't gone too far!! */
+      if (prefs.nindgeo_name > prefs.ndgeo_type)
+        error(EXIT_FAILURE, "*Error*: the number of DGEO_TYPEs and ",
+		"dgeo maps do not match");
+      }
+
+    if (prefs.nindgeo_name != prefs.ninfield)
+      {
+/*---- DGeo maps given through the DGEO_IMAGE keyword */
+      if (prefs.nindgeo_name == 1)
+	{
+	  warning("Several input images and a single dgeo map found: ",
+		"applying the same dgeo map to all images");
+	  prefs.nindgeo_name = prefs.ninfield;
+	  for (i=1; i<prefs.nindgeo_name; i++)
+	    {
+	      QMALLOC(prefs.indgeo_name[i], char, MAXCHAR);
+	      strcpy(prefs.indgeo_name[i],prefs.indgeo_name[0]);
+	    }
+	}
+      else
+        error(EXIT_FAILURE, "*Error*: the number of input images and ",
+		"dgeo maps do not match");
+      }
+/*-- Weight types */
+    for (i=prefs.ndgeo_type; i<prefs.nindgeo_name; i++)
+      prefs.dgeo_type[i] = prefs.dgeo_type[prefs.ndgeo_type-1];
+    prefs.ndgeo_type = prefs.nindgeo_name;
+    }
+
 
 /* If flags and types are less than images, copy the last one */
 /* Background subtraction flag */
