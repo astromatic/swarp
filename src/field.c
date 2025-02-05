@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2023 IAP/CFHT/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/04/2023
+*	Last modified:		20/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -277,19 +277,15 @@ void	end_field(fieldstruct *field)
 
 
 /****** printinfo_field ******************************************************
-PROTO	void printinfo_field(fieldstruct *field, fieldstruct *wfield,
-		fieldstruct *dgeofield))
+PROTO	void printinfo_field(fieldstruct *field)
 PURPOSE	Print info about a field
-INPUT	Pointer to the data field,
-	pointer to the weight map field,
-	pointer to the dgeo field.
+INPUT	Pointer to the field.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	04/11/2020
+VERSION	08/03/2007
  ***/
-void	printinfo_field(fieldstruct *field, fieldstruct *wfield,
-		fieldstruct *dgeofield)
+void	printinfo_field(fieldstruct *field, fieldstruct *wfield)
 
   {
    wcsstruct		*wcs;
@@ -304,10 +300,9 @@ void	printinfo_field(fieldstruct *field, fieldstruct *wfield,
       sprintf(gstr, "Extension #%d:", field->frameno);
     else
       *gstr ='\0';
-  QPRINTF(OUTPUT, "  %s  \"%.20s\"  %s%s  %s  %dx%d  %d bits (%s)\n",
+  QPRINTF(OUTPUT, "  %s  \"%.20s\"  %s  %s  %dx%d  %d bits (%s)\n",
 	gstr, *field->ident? field->ident: "no ident",
-	wfield? "WEIGHTED" : "unweighted",
-	dgeofield? " DGEOMapped" : "",
+	wfield? "WEIGHTED" : "unweighted",	
 	field->headflag? "EXT. HEADER" : "no ext. header",	
 	field->width, field->height, field->tab->bytepix*8,
 	field->tab->bitpix>0?

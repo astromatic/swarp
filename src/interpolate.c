@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		18/11/2020
+*	Last modified:		03/02/2012
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -51,25 +51,24 @@ int		interp_kernwidth[6]={1,1,2,4,6,8};
 
 /****** interpolate_pix *******************************************************
 PROTO	int interpolate_pix(fieldstruct *field, fieldstruct *wfield,
-		fieldstruct *dgeofield, ikernelstruct ikernel, double *pos,
+		ikernelstruct ikernel, double *pos,
 		PIXTYPE *pixout, PIXTYPE *wpixout)
 PURPOSE	Interpolate pixel data through sinc interpolation.
-INPUT	Pointer to image field,
-	pointer to weight field,
-	pointer to differentiel geometry field,
-	pointer to interpolation kernel,
-	position vector,
-	pointer to the output pixel,
-	pointer to the output weight.
+INPUT	Field structure pointer,
+	Weight field structure pointer,
+	Interpolation kernel structure pointer,
+	Position vector,
+	Pointer to the output pixel,
+	Pointer to the output weight.
 OUTPUT	RETURN_OK if pixel falls within the input frame, RETURN_ERROR
 	otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	18/11/2020
+VERSION	30/01/2012
  ***/
 int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
-		fieldstruct *dgeofield, ikernelstruct *ikernel, double *pos,
-		PIXTYPE *outpix, PIXTYPE *woutpix)
+		ikernelstruct *ikernel, double *pos, PIXTYPE *outpix,
+		PIXTYPE *woutpix)
 
   {
    PIXTYPE		*pixin,*pixout,
@@ -87,30 +86,8 @@ int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
   naxis = field->tab->naxis;
   naxisn = field->tab->naxisn;
   width = field->width;
-
   start = 0;
   fac = 1;
-  if (dgeofield) {
-    pixin = dgeofield->pix;
-    for (n=0; n<naxis; n++) {
-      ival = (int)(pos[n]-0.50001);
-      if (ival < 0 || ival >= naxisn[n]) {
-        start = -1;
-        break;
-      }
-      start += ival * fac;
-      fac *= naxisn[n];
-    }
-    if (start >= 0)
-      for (n=0; n<naxis; n++) {
-        pos[n] += (double)pixin[start];
-        start += fac;
-      }
-  }
-
-  start = 0;
-  fac = 1;
-
   for (n=0; n<naxis; n++)
     {
     val = *(pos++);
@@ -234,8 +211,7 @@ int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
 
 /****** interpolate_ipix ******************************************************
 PROTO	int interpolate_ipix(fieldstruct *field, fieldstruct *wfield,
-		fieldstruct *dgeofield, double *pos,
-		FLAGTYPE *outipix, PIXTYPE *woutpix)
+		double *pos, FLAGTYPE *outipix, PIXTYPE *woutpix)
 PURPOSE	"Interpolate" flag data.
 INPUT	Field structure pointer,
 	Weight field structure pointer,
@@ -246,14 +222,12 @@ OUTPUT	RETURN_OK if pixel falls within the input frame, RETURN_ERROR
 	otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	18/11/2020
+VERSION	03/02/2012
  ***/
 int	interpolate_ipix(fieldstruct *field, fieldstruct *wfield,
-		fieldstruct *dgeofield, double *pos,
-		FLAGTYPE *outipix, FLAGTYPE *woutpix)
+		double *pos, FLAGTYPE *outipix, FLAGTYPE *woutpix)
 
   {
-   PIXTYPE		*pixin;
    long			start, fac;
    int			*naxisn,
 			n, ival, naxis, width;
@@ -261,27 +235,6 @@ int	interpolate_ipix(fieldstruct *field, fieldstruct *wfield,
   naxis = field->tab->naxis;
   naxisn = field->tab->naxisn;
   width = field->width;
-
-  start = 0;
-  fac = 1;
-  if (dgeofield) {
-    pixin = dgeofield->pix;
-    for (n=0; n<naxis; n++) {
-      ival = (int)(pos[n]-0.50001);
-      if (ival < 0 || ival >= naxisn[n]) {
-        start = -1;
-        break;
-      }
-      start += ival * fac;
-      fac *= naxisn[n];
-    }
-    if (start >= 0)
-      for (n=0; n<naxis; n++) {
-        pos[n] += (double)pixin[start];
-        start += fac;
-      }
-  }
-
   start = 0;
   fac = 1;
   for (n=0; n<naxis; n++)

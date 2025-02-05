@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2023 IAP/CFHT/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/04/2023
+*	Last modified:		30/04/2013
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -54,17 +54,16 @@ int		weight_type, weight_width, weight_y;
 
 /******* load_weight *********************************************************
 PROTO	fieldstruct load_weight(catstruct *cat, fieldstruct *reffield,
-			int frameno, int fieldno, weightenum wtype)
+			int frameno, weightenum wtype)
 PURPOSE	Load a weight-map field
-INPUT	Cat structure pointer,
+INPUT	Cat structurep pointer,
 	Reference field pointer,
 	FITS extension no,
-	field no,
 	Weight type.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
 AUTHOR  E. Bertin (IAP)
-VERSION 26/04/2023
+VERSION 05/10/2010
  ***/
 fieldstruct	*load_weight(catstruct *cat, fieldstruct *reffield,
 			int frameno, int fieldno, weightenum wtype)

@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2023 IAP/CFHT/CNRS/SorbonneU
+*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		24/06/2023
+*	Last modified:		03/12/2019
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -60,10 +60,11 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
    backstruct	*backmesh,*wbackmesh, *bm,*wbm;
    tabstruct	*tab, *wtab;
    PIXTYPE	*buf,*wbuf, *buft,*wbuft;
-   size_t	bufsize, bufsize2, size, meshsize;
-   off_t	fcurpos,wfcurpos, wfcurpos2,fcurpos2, bufshift, jumpsize;
+   size_t	bufsize, bufsize2,
+		bufshift, size,meshsize,jumpsize;
+   off_t	fcurpos,wfcurpos, wfcurpos2,fcurpos2;
 #ifdef HAVE_CFITSIO
-   off_t	currentElement, wcurrentElement, currentElement2, wcurrentElement2;
+   off_t	cfitsio_fcurpos,cfitsio_wfcurpos, cfitsio_wfcurpos2,cfitsio_fcurpos2;
 #endif // HAVE_CFITSIO
    int		i,j,k,m,n, step, nlines,
 		w,bw, bh, nx,ny,nb,
@@ -98,7 +99,9 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
   QFSEEK(tab->cat->file, tab->bodypos, SEEK_SET, field->filename);
   QFTELL(fcurpos, tab->cat->file, field->filename);
 #ifdef HAVE_CFITSIO
-  currentElement = (tab->currentElement == 0) ? 1 : tab->currentElement;
+  cfitsio_wfcurpos = cfitsio_wfcurpos2 = 0;	/* to avoid gcc -Wall warnings */
+  tab->currentElement = 1; // CFITSIO
+  cfitsio_fcurpos = (fcurpos - tab->bodypos)/tab->bytepix;
 #endif // HAVE_CFITSIO
 
   if (wfield)
@@ -106,7 +109,8 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
     QFSEEK(wtab->cat->file, wtab->bodypos, SEEK_SET, wfield->filename);
     QFTELL(wfcurpos, wtab->cat->file, wfield->filename);
 #ifdef HAVE_CFITSIO
-    wcurrentElement = (wtab->currentElement == 0) ? 1 : wtab->currentElement;
+    wtab->currentElement = 1;
+    cfitsio_wfcurpos = (wfcurpos - wtab->bodypos)/wtab->bytepix;
 #endif // HAVE_CFITSIO
     }
 
@@ -196,13 +200,14 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
 /*---- Image size too big, we have to skip a few data !*/
       QFTELL(fcurpos2, tab->cat->file, field->filename);
 #ifdef HAVE_CFITSIO
-      currentElement2 = (tab->currentElement == 0) ? 1 : tab->currentElement;
+      cfitsio_fcurpos2 = (fcurpos2 - tab->bodypos)/tab->bytepix;
 #endif // HAVE_CFITSIO
+
       if (wfield)
         {
         QFTELL(wfcurpos2, wtab->cat->file, wfield->filename);
 #ifdef HAVE_CFITSIO
-        wcurrentElement2 = (wtab->currentElement == 0) ? 1 : wtab->currentElement;
+        cfitsio_wfcurpos2 = (wfcurpos2 - wtab->bodypos)/wtab->bytepix;
 #endif // HAVE_CFITSIO
         }
       if (j == ny-1 && (n=field->height%field->backh))
@@ -267,7 +272,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
 	wfield?wfield->var_thresh:0.0);
       QFSEEK(tab->cat->file, fcurpos2, SEEK_SET, field->filename);
 #ifdef HAVE_CFITSIO
-      tab->currentElement = currentElement2;
+      tab->currentElement = (cfitsio_fcurpos2 == 0) ? 1 : cfitsio_fcurpos2;
 #endif // HAVE_CFITSIO
       bm = backmesh;
       for (m=nx; m--; bm++)
@@ -279,7 +284,7 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
         {
         QFSEEK(wtab->cat->file, wfcurpos2, SEEK_SET, wfield->filename);
 #ifdef HAVE_CFITSIO
-        wtab->currentElement = wcurrentElement2;
+        wtab->currentElement = (cfitsio_wfcurpos2 == 0) ? 1 : cfitsio_wfcurpos2;
 #endif // HAVE_CFITSIO
         wbm = wbackmesh;
         for (m=nx; m--; wbm++)
@@ -336,13 +341,13 @@ void	make_back(fieldstruct *field, fieldstruct *wfield, int wscale_flag)
 /* Go back to the original position */
   QFSEEK(field->tab->cat->file, fcurpos, SEEK_SET, field->filename);
 #ifdef HAVE_CFITSIO
-  field->tab->currentElement = currentElement;
+  field->tab->currentElement = (cfitsio_fcurpos == 0) ? 1 : cfitsio_fcurpos;
 #endif // HAVE_CFITSIO
 
   if (wfield) {
     QFSEEK(wfield->tab->cat->file, wfcurpos, SEEK_SET, wfield->filename);
 #ifdef HAVE_CFITSIO
-    wfield->tab->currentElement =  wcurrentElement;
+    wfield->tab->currentElement = (cfitsio_wfcurpos == 0) ? 1 : cfitsio_wfcurpos;
 #endif // HAVE_CFITSIO
   }
 
