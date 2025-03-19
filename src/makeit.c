@@ -7,7 +7,9 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2023 IAP/CFHT/CNRS/SorbonneU
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C)	2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/04/2023
+*	Last modified:		19/05/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -66,6 +68,7 @@ void	makeit(void)
    			*outfield,*outwfield;
    catstruct		*cat, *dcat, *wcat;
    tabstruct		*tab;
+   keystruct		*key;
    struct tm		*tm;
    double		dtime, dtimef;
    char			*rfilename;
@@ -76,6 +79,10 @@ void	makeit(void)
 /* Install error logging */
   error_installfunc(write_error);
 
+/* Dummy add_key() call to get around stupid INTEL OneAPI compiler bug */
+  add_key(key=new_key("DUMMY"), tab=new_tab("dummy"), 0);
+  free_tab(tab);
+  
 /* Processing start date and time */
   thetime = time(NULL);
   tm = localtime(&thetime);

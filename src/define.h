@@ -7,7 +7,9 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C)	2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		25/04/2012
+*	Last modified:		19/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -36,15 +38,15 @@
 
 /*------------------------ what, who, when and where ------------------------*/
 
-#define         BANNER          "SWarp"
+#define		BANNER		"SWarp"
 #define		MYVERSION	VERSION
-#define         COPYRIGHT       "2010-2012 IAP/CNRS/UPMC"
+#define		COPYRIGHT	"2002-2021 IAP/CNRS/SorbonneU/CFHT/CEA/AIM/UParisSaclay"
 #define		DISCLAIMER	BANNER " comes with ABSOLUTELY NO WARRANTY\n" \
 		"You may redistribute copies of " BANNER "\n" \
 		"under the terms of the GNU General Public License."
-#define		AUTHORS		"Emmanuel BERTIN <bertin@iap.fr>"
+#define		AUTHORS		"Emmanuel BERTIN <bertin@universite-paris-saclay.fr>"
 #define		WEBSITE		"http://astromatic.net/software/swarp/"
-#define         INSTITUTE       "IAP  http://www.iap.fr"
+#define		INSTITUTE	"AIM https://irfu.cea.fr/dap/"
 
 /*----------------------------- Physical constants --------------------------*/
 

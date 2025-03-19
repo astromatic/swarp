@@ -7,7 +7,9 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2002-2023 CFHT/IAP/CNRS/SorbonneU
+#	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+#	          		(C) 2021-2023 CFHT/CNRS
+#	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 #
 #	License:		GNU General Public License
 #
@@ -22,7 +24,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		26/04/2023
+#	Last modified:		19/03/2025
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
