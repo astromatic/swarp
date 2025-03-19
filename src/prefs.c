@@ -8,6 +8,8 @@
 *	This file part of:	SWarp
 *
 *	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*	          		(C) 2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -92,12 +94,12 @@ void    readprefs(char *filename, char **argkey, char **argval, int narg)
 
   {
    FILE		*infile;
-   char		*cp, str[MAXCHARL], *keyword, *value, **dp;
+   char		*cp, str[MAXCHARL], *keyword, *value, **dp, *listbuf;
    int		i, ival, nkey, warn, argi, flagc, flagd, flage, flagz;
    double	dval;
 #ifdef	HAVE_GETENV
    static char	value2[MAXCHARL],envname[MAXCHAR];
-   char		*dolpos, *listbuf;
+   char		*dolpos;
 #endif
 
 
