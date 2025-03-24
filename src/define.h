@@ -103,11 +103,11 @@
 		  error(EXIT_FAILURE, "*Error* while writing ", fname)
 
 #define	QFSEEK(afile, offset, pos, fname) \
-		if (fseek(afile, (offset), pos)) \
+		if (FSEEKO(afile, (offset), pos)) \
 		  error(EXIT_FAILURE,"*Error*: file positioning failed in ", \
 			fname)
 
-#define	QFTELL(pos, afile, fname) \
+#define	QFTELL(afile, pos, fname) \
 		if ((pos=FTELLO(afile))==-1) \
 		  error(EXIT_FAILURE,"*Error*: file position unknown in ", \
 			fname)
@@ -115,7 +115,7 @@
 #define	QCALLOC(ptr, typ, nel) \
 		{if (!(ptr = (typ *)calloc((size_t)(nel),sizeof(typ)))) \
 		   { \
-		   sprintf(gstr, #ptr " (" #nel " elements=%ld bytes) " \
+		   sprintf(gstr, #ptr " (" #nel "=%zd elements) " \
 			"at line %d in module " __FILE__ " !", \
 			(size_t)(nel)*sizeof(typ), __LINE__); \
 		   error(EXIT_FAILURE, "Could not allocate memory for ", gstr);\
@@ -125,7 +125,17 @@
 #define	QMALLOC(ptr, typ, nel) \
 		{if (!(ptr = (typ *)malloc((size_t)(nel)*sizeof(typ)))) \
 		   { \
-		   sprintf(gstr, #ptr " (" #nel " elements=%ld bytes) " \
+		   sprintf(gstr, #ptr " (" #nel "=%zd elements) " \
+			"at line %d in module " __FILE__ " !", \
+			(size_t)(nel)*sizeof(typ), __LINE__); \
+		   error(EXIT_FAILURE, "Could not allocate memory for ", gstr);\
+                   }; \
+                 }
+
+#define	QMALLOC16(ptr, typ, nel) \
+		{if (posix_memalign((void **)&ptr, 16, (size_t)(nel)*sizeof(typ))) \
+		   { \
+		   sprintf(gstr, #ptr " (" #nel "=%zd elements) " \
 			"at line %d in module " __FILE__ " !", \
 			(size_t)(nel)*sizeof(typ), __LINE__); \
 		   error(EXIT_FAILURE, "Could not allocate memory for ", gstr);\
@@ -135,7 +145,7 @@
 #define	QREALLOC(ptr, typ, nel) \
 		{if (!(ptr = (typ *)realloc(ptr, (size_t)(nel)*sizeof(typ))))\
 		   { \
-		   sprintf(gstr, #ptr " (" #nel " elements=%ld bytes) " \
+		   sprintf(gstr, #ptr " (" #nel "=%zd elements) " \
 			"at line %d in module " __FILE__ " !", \
 			(size_t)(nel)*sizeof(typ), __LINE__); \
 		   error(EXIT_FAILURE, "Could not allocate memory for ", gstr);\
@@ -144,16 +154,16 @@
 
 #define QMEMCPY(ptrin, ptrout, typ, nel) \
 		{if (ptrin) \
-                 {if (!(ptrout = (typ *)malloc((size_t)(nel)*sizeof(typ)))) \
-		  { \
-		  sprintf(gstr, #ptrout " (" #nel " elements=%ld bytes) " \
+                  {if (!(ptrout = (typ *)malloc((size_t)(nel)*sizeof(typ)))) \
+		     { \
+		     sprintf(gstr, #ptrout " (" #nel "=%zd elements) " \
 			"at line %d in module " __FILE__ " !", \
 			(size_t)(nel)*sizeof(typ), __LINE__); \
-		  error(EXIT_FAILURE,"Could not allocate memory for ",gstr);\
-                  }; \
-                 memcpy(ptrout, ptrin, (size_t)(nel)*sizeof(typ)); \
-                 }; \
-                }
+		     error(EXIT_FAILURE,"Could not allocate memory for ",gstr);\
+                     }; \
+                   memcpy(ptrout, ptrin, (size_t)(nel)*sizeof(typ)); \
+                   }; \
+                 }
 
 #define	RINT(x)	(int)(floor(x+0.5))
 

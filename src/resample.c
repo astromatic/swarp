@@ -7,7 +7,9 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2023 IAP/CFHT/CNRS/SorbonneU
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C) 2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/04/2023
+*	Last modified:		20/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -107,8 +109,8 @@ INPUT	Input pointer to field structure pointer,
 OUTPUT	-.
 NOTES	The structure pointers pointed by pinfield and and pinwfield are
 	updated and point to the resampled fields on output.
-AUTHOR	E. Bertin (IAP)
-VERSION	18/11/2020
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	20/03/2025
  ***/
 void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
 		fieldstruct **pindgeofield,
@@ -212,10 +214,10 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
       error(EXIT_FAILURE, "*Error*: cannot open for writing ", filename);
   if (prefs.removetmp_flag && prefs.combine_flag)
     add_cleanupfilename(filename);
-  QFTELL(field->tab->headpos, field->cat->file, filename);
+  QFTELL(field->cat->file, field->tab->headpos, filename);
   QFWRITE(field->tab->headbuf, field->tab->headnblock*FBSIZE,
 	field->cat->file, filename);
-  QFTELL(field->tab->bodypos, field->cat->file, filename);
+  QFTELL(field->cat->file, field->tab->bodypos, filename);
 
 /* Get resampled suffix extension if available */
   strcpy(resampext1, prefs.resamp_suffix);
@@ -252,10 +254,10 @@ void	resample_field(fieldstruct **pinfield, fieldstruct **pinwfield,
     error(EXIT_FAILURE, "*Error*: cannot open for writing ", filename);
   if (prefs.removetmp_flag && prefs.combine_flag)
     add_cleanupfilename(filename);
-  QFTELL(wfield->tab->headpos, wfield->cat->file, filename);
+  QFTELL(wfield->cat->file, wfield->tab->headpos, filename);
   QFWRITE(wfield->tab->headbuf, wfield->tab->headnblock*FBSIZE,
 	wfield->cat->file, filename);
-  QFTELL(wfield->tab->bodypos, wfield->cat->file, filename);
+  QFTELL(wfield->cat->file, wfield->tab->bodypos, filename);
 
 /* Prepare oversampling stuff */
   ascale = 1.0;

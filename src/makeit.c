@@ -220,7 +220,7 @@ void	makeit(void)
     ntinfield += next[i];
     if (!next[i])
       warning("No suitable data found in ", cat->filename);
-    free_cat(&cat, 1);
+    //free_cat(&cat, 1);
     if (wcat)
       free_cat(&wcat, 1);
     if (dcat)
