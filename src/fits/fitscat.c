@@ -187,7 +187,7 @@ INPUT	Pointer to the catalog.
 OUTPUT	RETURN_OK if everything went as expected (exit in error otherwise).
 NOTES	-.
 AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
-VERSION	21/03/2025
+VERSION	25/03/2025
 ***/
 int	open_cfitsio(catstruct *cat, access_type_t at) {
 
@@ -195,7 +195,12 @@ int	open_cfitsio(catstruct *cat, access_type_t at) {
 
   if (cat->cfitsio_flag && !cat->cfitsio_infptr) {
     // Trigger CFITSIO file opening
-    fits_open_file(&cat->cfitsio_infptr, cat->filename, at, &status);
+    fits_open_file(
+        &cat->cfitsio_infptr,
+        cat->filename,
+        at==WRITE_ONLY? 1 : 0,
+        &status
+    );
     if (status != 0) {
       fits_report_error(stderr, status);
       return RETURN_ERROR;

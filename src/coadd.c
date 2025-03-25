@@ -138,7 +138,6 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 	if (!prefs.tile_compress_flag) {
 
 		outfield->cat->cfitsio_infptr = NULL;
- 		//printf("DEBUG CFITSIO NOT creating tile-compressed output image file\n");
 		return 0;
 	}
 
@@ -150,7 +149,7 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
  	int status = 0; fits_create_file(&outfield->cat->cfitsio_infptr, compressedFilename, &status);
  	if (status != 0) {
 
- 		printf("CFITSIO ERROR creating output image file\n");
+ 		fprintf(stderr, "CFITSIO ERROR creating output image file\n");
  		fits_report_error(stderr, status);
  		return 0;
  	}
@@ -170,7 +169,7 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 #endif
  	  if (status != 0) {
 
- 	  	printf("CFITSIO ERROR error setting CFitsIO quantize method\n");
+ 	  	fprintf(stderr, "CFITSIO ERROR error setting CFitsIO quantize method\n");
  	  	fits_report_error(stderr, status);
  	  	return 0;
  	  }
@@ -180,15 +179,13 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 	status = 0; fits_create_img(outfield->cat->cfitsio_infptr, FLOAT_IMG, 2, naxis, &status);
  	if (status != 0) {
 
- 		printf("CFITSIO ERROR creating output image extension\n");
+ 		fprintf(stderr, "CFITSIO ERROR creating output image extension\n");
  		fits_report_error(stderr, status);
  		return 0;
  	}
 
  	// point to the first element in the image, ready for writing
  	outfield->tab->cfitsio_currentElement = 1;
-
- 	//printf("DEBUG CFITSIO successfully created tile-compressed output image file, %s\n", compressedFilename);
 
  	// now, change original filename to temp one (.tmp suffix)
  	sprintf(outfield->cat->filename, "%s.tmp", outfield->cat->filename);
@@ -211,7 +208,9 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 	 int status = 0; fits_open_file(&infptr, outfield->cat->filename, READONLY, &status);
 	 if (status != 0) {
 
-		 printf("ERROR cfitsio could not open FITS file for header copying: %s\n", outfield->cat->filename);
+		 fprintf(stderr,
+		    "ERROR: CFITSIO could not open FITS file for header copying: %s\n",
+		    outfield->cat->filename);
 		 fits_report_error(stderr, status);
 		 return 0;
 	 }
@@ -230,10 +229,7 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 		 if (fits_get_keyclass(card) > TYP_CMPRS_KEY) {
 
 			 fits_write_record(outfield->cat->cfitsio_infptr, card, &status);
-			 //printf("DEBUG    WRITING %s\n", card);
 		 }
-		 //else
-	     //printf("DEBUG NOT WRITING %s\n", card);
 	 }
 
 	 return 1;
@@ -256,17 +252,16 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
  	 int status = 0; fits_close_file(outfield->cat->cfitsio_infptr, &status);
  	 if (status != 0) {
 
- 		 printf("CFITSIO ERROR closing tile-compressed image file\n");
+ 		 fprintf(stderr, "CFITSIO ERROR closing tile-compressed image file\n");
  		 fits_report_error(stderr, status);
  		 return 0;
  	 }
 
- 	 //printf("CFITSIO successfully closed tile-compressed output image file\n");
-
  	 // now delete temp file
  	 if (unlink (outfield->cat->filename) != 0) {
 
- 		 printf("CFITSIO ERROR could not delete %s\n", outfield->cat->filename);
+ 		 fprintf(stderr,
+ 		    "CFITSIO ERROR: could not delete %s\n", outfield->cat->filename);
  	 }
 
  	 return 1;

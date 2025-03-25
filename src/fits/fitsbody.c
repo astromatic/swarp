@@ -27,7 +27,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		21/03/2025
+*	Last modified:		25/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -68,12 +68,13 @@ INPUT	Table (tab) structure.
 OUTPUT	Pointer to the mapped data if OK, or NULL otherwise.
 NOTES	The file pointer must be positioned at the beginning of the data.
 AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
-VERSION	21/03/2025
+VERSION	25/03/2025
  ***/
 PIXTYPE	*alloc_body(tabstruct *tab, void (*func)(PIXTYPE *ptr, int npix))
   {
    FILE		*file;
    PIXTYPE	*buffer;
+   int  n;
    size_t	npix, size, sizeleft, spoonful;
 
   if (!body_ramflag)
@@ -94,7 +95,12 @@ PIXTYPE	*alloc_body(tabstruct *tab, void (*func)(PIXTYPE *ptr, int npix))
 
 /* Decide if the data will go in physical memory or on swap-space */
 #ifdef	HAVE_CFITSIO
-  npix = (size_t)tab->naxisn[0] * (size_t)tab->naxisn[1];
+  if (tab->isTileCompressed) {
+    npix = (size_t)tab->naxisn[0];
+    for (n=1; n<tab->naxis; n++)
+      npix *= (size_t)tab->naxisn[n];
+  } else
+  npix = tab->tabsize/tab->bytepix;
 #else
   npix = tab->tabsize/tab->bytepix;
 #endif

@@ -93,7 +93,7 @@ int	interpolate_pix(fieldstruct *field, fieldstruct *wfield,
   if (dgeofield) {
     pixin = dgeofield->pix;
     for (n=0; n<naxis; n++) {
-      ival = (int)(pos[n]-0.50001);
+      ival = (int)(pos[n]-0.50001); // We take the shift of the nearest pixel
       if (ival < 0 || ival >= naxisn[n]) {
         start = -1;
         break;

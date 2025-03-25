@@ -442,8 +442,8 @@ INPUT	Filename character string.
 OUTPUT	Extension number, or RETURN_ERROR if nos extension specified.
 NOTES	The bracket and its extension number are removed from the filename if
 	found.
-AUTHOR	E. Bertin (IAP)
-VERSION	09/10/2007
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	25/03/2025
  ***/
 static int	selectext(char *filename)
   {
@@ -456,12 +456,7 @@ static int	selectext(char *filename)
     if ((bracr=strrchr(bracl+1, ']')))
       *bracr = '\0';
     next = strtol(bracl+1, NULL, 0);
-#ifdef HAVE_CFITSIO
-    // CFITSIO : VERY BAD HACK to check if this is tile-compressed,
-    // if so, add +1 to extension number requested
-    if (strstr(filename, ".fits.fz") != NULL)
-      next = next + 1;
-#endif
+
     return next;
     }
 

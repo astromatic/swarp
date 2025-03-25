@@ -126,10 +126,6 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno,
     error(EXIT_FAILURE, "*Error*: Zero-dimensional table in ",field->filename);
 
 /* Force data to be at least 2D */
-#ifdef	HAVE_CFITSIO
-// CFITSIO: only valid when NOT tile compressed
-  if(!tab->isTileCompressed)
-#endif // HAVE_CFITSIO
   if (tab->naxis<2)
     {
     tab->naxis = 2;

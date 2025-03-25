@@ -7,7 +7,9 @@
 *
 *       This file part of:      SWarp
 *
-*       Copyright:              (C) 2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C) 2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *       License:                GNU General Public License
 *
@@ -21,6 +23,8 @@
 *       GNU General Public License for more details.
 *       You should have received a copy of the GNU General Public License
 *       along with SWarp. If not, see <http://www.gnu.org/licenses/>.
+*
+*	Last modified:		25/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -50,15 +54,15 @@ INPUT	Cat structure pointer,
 	dgeo type.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
-AUTHOR  E. Bertin (IAP)
-VERSION 04/11/2020
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	25/03/2025
  ***/
 fieldstruct *load_dgeo(catstruct *cat, fieldstruct *reffield,
 			int frameno, int fieldno, dgeoenum dgeotype)
   {
    fieldstruct	*dgeofield;
    tabstruct	*tab, *intab;
-   int		i, dgeoflags;
+   int	i, dgeoflags;
 
   dgeoflags = 0;	/* to avoid gcc -Wall warnings */
   switch(dgeotype)
@@ -98,19 +102,20 @@ fieldstruct *load_dgeo(catstruct *cat, fieldstruct *reffield,
   dgeofield->cat = new_cat(1);
   strcpy(dgeofield->cat->filename, dgeofield->filename);
   intab = cat->tab;
-  for (i=frameno; i--;)
-    intab = intab->nexttab;
+    for (i=frameno; i--;)
+      intab = intab->nexttab;
+    if (intab->naxis < 3)
+      error(EXIT_FAILURE,
+        "*Error*: Wrong extension or missing 3D map in ",
+        dgeofield->filename
+      );
   copy_tab_fromptr(intab, dgeofield->cat, 0);
   tab = dgeofield->tab = dgeofield->cat->tab;
+#ifdef	HAVE_CFITSIO
+  dgeofield->cat->cfitsio_flag = tab->cat->cfitsio_flag;
+#endif // HAVE_CFITSIO
   tab->cat = dgeofield->cat;
 
-  if (tab->naxis != 3)
-    error(EXIT_FAILURE, "*Error*: Differential geometry map should be 3D in ",
-		dgeofield->filename);
-
-  if (tab->naxisn[2] != 2)
-    error(EXIT_FAILURE, "*Error*: dgeo map should have 2 components per pixel ",
-		dgeofield->filename);
 /* Set field width and field height (the latter can be "virtual") */
   dgeofield->width = tab->naxisn[0];
   dgeofield->height = tab->naxisn[1];
