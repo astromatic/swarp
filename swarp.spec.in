@@ -7,7 +7,9 @@
 #
 #	This file part of:	SWarp
 #
-#	Copyright:		(C) 2005-2020 IAP/CNRS/SorbonneU
+#	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+#	          		(C) 2021-2023 CFHT/CNRS
+#	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 #
 #	License:		GNU General Public License
 #
@@ -22,7 +24,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 #
-#	Last modified:		02/01/2020
+#	Last modified:		26/03/2025
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -53,7 +55,7 @@ astrometric projection recognized by the WCS standard.
 
 %build
 if test "$USE_BEST"; then
-%configure --enable-icc --enable-auto-flags --enable-best-link --with-release=@PACKAGE_RELEASE@
+%configure --enable-icx --enable-auto-flags --enable-best-link --with-release=@PACKAGE_RELEASE@
 elif test "$USE_ICC"; then
 %configure --enable-icc --with-release=@PACKAGE_RELEASE@
 else
