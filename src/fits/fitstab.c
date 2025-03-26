@@ -7,7 +7,9 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2010 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C) 2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +25,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		11/09/2012
+*	Last modified:		21/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -270,8 +272,8 @@ INPUT	Pointer to the original catalog,
 	Position (1= first after the primary HDU, <=0 = at the end)
 OUTPUT	-.
 NOTES	-.
-AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	22/06/2001
+AUTHOR	E. Bertin (IAP/SorbonneU)
+VERSION	20/03/2025
  ***/
 void	copy_tab_fromptr(tabstruct *tabin, catstruct *catout, int pos)
 
@@ -396,8 +398,8 @@ PURPOSE	Free memory associated to a table pointer.
 INPUT	Pointer to the table.
 OUTPUT	-.
 NOTES	-.
-AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	28/02/2000
+AUTHOR	E. Bertin (CFHT/IAP/CNRS/SorbonneU)
+VERSION	25/02/2023
  ***/
 void	free_tab(tabstruct *tab)
 

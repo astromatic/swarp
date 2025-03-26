@@ -7,7 +7,9 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2019 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C) 2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		20/12/2019
+*	Last modified:		21/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -63,8 +65,8 @@ INPUT	Cat structure,
 	FITS header filename (null=none).
 OUTPUT	The new field pointer if OK, NULL otherwise.
 NOTES	-.
-AUTHOR	E. Bertin (IAP)
-VERSION	26/11/2015
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno,
 			char *hfilename)
@@ -91,6 +93,9 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno,
     intab = intab->nexttab;
   copy_tab_fromptr(intab, field->cat, 0);
   tab = field->tab = field->cat->tab;
+#ifdef	HAVE_CFITSIO
+  field->cat->cfitsio_flag = tab->cat->cfitsio_flag;
+#endif // HAVE_CFITSIO
   tab->cat = field->cat;
 
 /* A short, "relative" version of the filename */
@@ -121,10 +126,6 @@ fieldstruct	*load_field(catstruct *cat, int frameno, int fieldno,
     error(EXIT_FAILURE, "*Error*: Zero-dimensional table in ",field->filename);
 
 /* Force data to be at least 2D */
-#ifdef CFITSTIO_SUPPORT
-// CFITSIO: only valid when NOT tile compressed
-  if(!tab->isTileCompressed)
-#endif // HAVE_CFITSIO
   if (tab->naxis<2)
     {
     tab->naxis = 2;
@@ -203,13 +204,20 @@ INPUT	Reference field pointer.
 	flags.
 OUTPUT	The new field pointer if OK, NULL otherwise.
 NOTES	-.
-AUTHOR	E. Bertin (IAP)
-VERSION	24/01/2012
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 fieldstruct	*inherit_field(char *filename, fieldstruct *reffield,
 				int flags)
   {
    fieldstruct	*field;
+   char *pstr;
+
+/* Check filename */
+  if ((pstr = strrchr(filename, '.')) && !strcmp(pstr, ".fz"))
+    error (EXIT_FAILURE, "*Error*: this version of "
+        BANNER " does not support fpacked FITS for output files: ",
+        filename);
 
 /* First allocate memory for the new field (and nullify pointers) */
   QCALLOC(field, fieldstruct, 1);
@@ -277,15 +285,19 @@ void	end_field(fieldstruct *field)
 
 
 /****** printinfo_field ******************************************************
-PROTO	void printinfo_field(fieldstruct *field)
+PROTO	void printinfo_field(fieldstruct *field, fieldstruct *wfield,
+		fieldstruct *dgeofield))
 PURPOSE	Print info about a field
-INPUT	Pointer to the field.
+INPUT	Pointer to the data field,
+	pointer to the weight map field,
+	pointer to the dgeo field.
 OUTPUT	-.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	08/03/2007
+VERSION	04/11/2020
  ***/
-void	printinfo_field(fieldstruct *field, fieldstruct *wfield)
+void	printinfo_field(fieldstruct *field, fieldstruct *wfield,
+		fieldstruct *dgeofield)
 
   {
    wcsstruct		*wcs;
@@ -300,9 +312,10 @@ void	printinfo_field(fieldstruct *field, fieldstruct *wfield)
       sprintf(gstr, "Extension #%d:", field->frameno);
     else
       *gstr ='\0';
-  QPRINTF(OUTPUT, "  %s  \"%.20s\"  %s  %s  %dx%d  %d bits (%s)\n",
+  QPRINTF(OUTPUT, "  %s  \"%.20s\"  %s%s  %s  %dx%d  %d bits (%s)\n",
 	gstr, *field->ident? field->ident: "no ident",
-	wfield? "WEIGHTED" : "unweighted",	
+	wfield? "WEIGHTED" : "unweighted",
+	dgeofield? " DGEOMapped" : "",
 	field->headflag? "EXT. HEADER" : "no ext. header",	
 	field->width, field->height, field->tab->bytepix*8,
 	field->tab->bitpix>0?
@@ -373,8 +386,8 @@ INPUT	Input field ptr array,
 	FITS header filename (null=none).
 OUTPUT	Pointer to the new output field.
 NOTES   Global preferences are used.
-AUTHOR  E. Bertin (IAP)
-VERSION 20/12/2019
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
 			char *hfilename)
@@ -392,6 +405,11 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
    int			*axis,
 			i,j,n,npstr, lng,lat, naxis, countmin0,countmax0,
 			countmin,countmax;
+
+/* Check filename */
+  if ((pstr = strrchr(filename, '.')) && !strcmp(pstr, ".fz"))
+    error (EXIT_FAILURE, "*Error*: this version of ",
+        BANNER " does not support fpacked FITS for output files.");
 
 /* First allocate memory for the new field */
   QCALLOC(field,fieldstruct, 1);

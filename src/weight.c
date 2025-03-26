@@ -7,7 +7,9 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2013 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C) 2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		30/04/2013
+*	Last modified:		25/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -54,16 +56,17 @@ int		weight_type, weight_width, weight_y;
 
 /******* load_weight *********************************************************
 PROTO	fieldstruct load_weight(catstruct *cat, fieldstruct *reffield,
-			int frameno, weightenum wtype)
+			int frameno, int fieldno, weightenum wtype)
 PURPOSE	Load a weight-map field
-INPUT	Cat structurep pointer,
+INPUT	Cat structure pointer,
 	Reference field pointer,
 	FITS extension no,
+	field no,
 	Weight type.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
-AUTHOR  E. Bertin (IAP)
-VERSION 05/10/2010
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	25/03/2025
  ***/
 fieldstruct	*load_weight(catstruct *cat, fieldstruct *reffield,
 			int frameno, int fieldno, weightenum wtype)
@@ -127,16 +130,24 @@ fieldstruct	*load_weight(catstruct *cat, fieldstruct *reffield,
     intab = cat->tab;
     for (i=frameno; i--;)
       intab = intab->nexttab;
+    if (intab->naxis < 1)
+      error(EXIT_FAILURE,
+        "*Error*: Wrong extension or missing weight map in ",
+        wfield->filename
+      );
     copy_tab_fromptr(intab, wfield->cat, 0);
     tab = wfield->tab = wfield->cat->tab;
+#ifdef	HAVE_CFITSIO
+    wfield->cat->cfitsio_flag = tab->cat->cfitsio_flag;
+#endif // HAVE_CFITSIO
     tab->cat = wfield->cat;
 
-    if (tab->naxis<1)
-      error(EXIT_FAILURE, "*Error*: Zero-dimensional table in ",
-		wfield->filename);
-
 /*-- Force data to be at least 2D */
-    if (tab->naxis<2)
+ #ifdef	HAVE_CFITSIO
+// CFITSIO: only valid when NOT tile compressed
+  if(!tab->isTileCompressed)
+#endif // HAVE_CFITSIO
+   if (tab->naxis<2)
       {
       tab->naxis = 2;
       QREALLOC(tab->naxisn, int, 2);

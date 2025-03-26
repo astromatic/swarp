@@ -7,7 +7,11 @@
 *
 *	This file part of:	AstrOmatic FITS/LDAC library
 *
-*	Copyright:		(C) 1995-2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 1994,1997 ESO
+*	          		(C) 1995,1996 Leiden Observatory 
+*	          		(C) 1998-2021 IAP/CNRS/SorbonneU
+*	          		(C) 2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -23,7 +27,7 @@
 *	along with AstrOmatic software.
 *	If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/08/2020
+*	Last modified:		21/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -41,6 +45,8 @@
 
 #include	"fitscat_defs.h"
 #include	"fitscat.h"
+
+extern	float *fits_rand_value;
 
 char		fits_str[MAXCHAR];
 
@@ -150,47 +156,88 @@ PURPOSE	Close a FITS catalog.
 INPUT	catalog structure.
 OUTPUT	RETURN_OK if everything went as expected, RETURN_ERROR otherwise.
 NOTES	the file structure member is set to NULL;
-AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	22/06/2001
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 int	close_cat(catstruct *cat)
 
   {
+   int status = RETURN_OK;
+  
   if (cat->file && fclose(cat->file))
-    {
-    cat->file = NULL;
-    return RETURN_ERROR;
-    }
+    status = RETURN_ERROR;   
 
   cat->file = NULL;
 
-  return RETURN_OK;
+  if (cat->cfitsio_infptr && close_cfitsio(cat))
+    status = RETURN_ERROR;
+
+  cat->cfitsio_infptr = NULL;
+
+  return status;
   }
 
+
 #ifdef	HAVE_CFITSIO
-/****** close_cfitsio **************************************************************
-
-Closes a file previously opened by cfitsio 
-
+/****** open_cfitsio ***********************************************************
+PROTO	int close_cfitsio(catstruct *cat)
+PURPOSE	Open a file with cfitsio 
+INPUT	Pointer to the catalog.
+    access type (can be WRITE_ONLY or READ_ONLY).
+OUTPUT	RETURN_OK if everything went as expected (exit in error otherwise).
+NOTES	-.
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	25/03/2025
 ***/
-int	close_cfitsio(fitsfile *infptr)
-{
+int	open_cfitsio(catstruct *cat, access_type_t at) {
 
-	if (infptr != NULL) {
+   int status;
 
-		int status = 0; fits_close_file(infptr, &status);
-		if (status != 0) {
-			fits_report_error(stderr, status);
-			printf("ERROR could not close FITS file with cfitsio\n");
-		}
-		else {
-			//printf("Successfully closed FITS file with cfitsio\n");
-			infptr == NULL;
-		}
-	}
-	else {
-	    //printf("ERROR no cfitsio file to close\n");
-	}
+  if (cat->cfitsio_flag && !cat->cfitsio_infptr) {
+    // Trigger CFITSIO file opening
+    fits_open_file(
+        &cat->cfitsio_infptr,
+        cat->filename,
+        at==WRITE_ONLY? 1 : 0,
+        &status
+    );
+    if (status != 0) {
+      fits_report_error(stderr, status);
+      return RETURN_ERROR;
+    }
+  }
+
+  return RETURN_OK;
+}
+
+
+/****** close_cfitsio **********************************************************
+PROTO	int close_cfitsio(catstruct *cat)
+PURPOSE	Close a file previously opened by cfitsio 
+INPUT	Catalog structure.
+OUTPUT	RETURN_OK if everything went as expected (exit in error otherwise).
+NOTES	- .
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
+***/
+int	close_cfitsio(catstruct *cat) {
+
+  if ((cat) && (cat->cfitsio_infptr)) {
+    int status = 0; fits_close_file(cat->cfitsio_infptr, &status);
+
+    if (status != 0) {
+      fits_report_error(stderr, status);
+      error(EXIT_FAILURE, "Could not close FITS file with cfitsio: ",
+      	cat->filename);
+    } else {
+      // Successfully closed FITS file with cfitsio
+      cat->cfitsio_infptr = NULL;
+      // Free random seed in CFITSIO.
+      QFREE(fits_rand_value);
+    }
+  } else
+    return RETURN_ERROR;
+  return RETURN_OK;
 }
 #endif // HAVE_CFITSIO
 
@@ -202,8 +249,8 @@ INPUT	Pointer to a catalog structure,
 	Number of catalogs.
 OUTPUT	-.
 NOTES	Unallocated pointers should have been put to NULL.
-AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	05/12/2009
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 void	free_cat(catstruct **cat, int ncat)
 
@@ -338,14 +385,17 @@ PURPOSE	Explores the whole FITS file
 INPUT	catalog structure.
 OUTPUT	RETURN_OK if at least one table was found, RETURN_ERROR otherwise.
 NOTES	Memory space for the array of fits structures is reallocated.
-AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	14/12/2002
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 int	map_cat(catstruct *cat)
 
   {
-   int			ntab;
    tabstruct		*tab, *prevtab;
+   int			ntab;
+#ifdef	HAVE_CFITSIO
+   int  hdunum = 1;
+#endif // HAVE_CFITSIO
 
 /*scan through the file until we reach the end*/
   prevtab = NULL;
@@ -353,18 +403,6 @@ int	map_cat(catstruct *cat)
   tab->cat = cat;
   QFTELL(cat->file, tab->headpos, cat->filename);
 
-#ifdef	HAVE_CFITSIO
-   fitsfile *infptr;
-   int status, hdutype, hdunum;
-   status = 0; fits_open_file(&infptr, cat->filename, READONLY, &status);
-   if (status != 0) {
-     fits_report_error(stderr, status);
-     printf("ERROR could not open FITS file with cfitsio: %s\n", cat->filename);
-   }
-   hdunum = 1;
-
-  int any_tile_compressed = 0;
-#endif // HAVE_CFITSIO
 
   for (ntab=0; !get_head(tab); ntab++)
     {
@@ -374,32 +412,14 @@ int	map_cat(catstruct *cat)
     tab->nseg = tab->seg = 1;
 
 #ifdef	HAVE_CFITSIO
-    if (tab->isTileCompressed) {
-
-      any_tile_compressed = 1;
-      tab->hdunum = hdunum;
-      tab->infptr = infptr;
-
-      status = 0; fits_movabs_hdu(tab->infptr, tab->hdunum, &hdutype, &status);
-      if (status != 0) printf("ERROR could not move to hdu %d in file %s\n", tab->hdunum, cat->filename);
-
-      if (tab->tabsize)
-        fseek(cat->file, infptr->Fptr->headstart[hdunum], SEEK_SET);
-    }
-    // NOT tile-compressed
-    else {
-
-      tab->infptr = NULL;
-
-      if (tab->tabsize)
-        QFSEEK(cat->file, PADTOTAL(tab->tabsize), SEEK_CUR, cat->filename);
-    }
-
-    hdunum++;
-#else
+    if (tab->isTileCompressed && !cat->cfitsio_flag) {
+      cat->cfitsio_flag = 1;
+      open_cfitsio(cat, READ_ONLY);
+   }
+   tab->cfitsio_hdunum = hdunum++;
+#endif // HAVE_CFITSIO
     if (tab->tabsize)
       QFSEEK(cat->file, PADTOTAL(tab->tabsize), SEEK_CUR, cat->filename);
-#endif // HAVE_CFITSIO
 
     if (prevtab)
       {
@@ -414,12 +434,6 @@ int	map_cat(catstruct *cat)
     QFTELL(cat->file, tab->headpos, cat->filename);
     }
 
-#ifdef	HAVE_CFITSIO
-  // we will not need CFitsIO, so close CFitsIO file pointer now
-  if (!any_tile_compressed)
-    close_cfitsio(infptr);
-#endif
-
   cat->ntab = ntab;
   free(tab);
   if (prevtab)
@@ -429,11 +443,6 @@ int	map_cat(catstruct *cat)
     }
   else
     return RETURN_ERROR;
-
-/*rewind to the beginning*/
-/*
-  QFSEEK(cat->file, 0, SEEK_SET, cat->filename);
-*/
 
   return RETURN_OK;
   }
@@ -468,12 +477,13 @@ INPUT	catalog structure,
 	access type (can be WRITE_ONLY or READ_ONLY).
 OUTPUT	RETURN_OK if the cat is found, RETURN_ERROR otherwise.
 NOTES	If the file was already opened by this catalog, nothing is done.
-AUTHOR	E. Bertin (IAP & Leiden observatory)
-VERSION	29/08/2012
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 int	open_cat(catstruct *cat, access_type_t at)
 
   {
+   int status = RETURN_OK;
 
   if  (cat->access_type == READ_ONLY && at == WRITE_ONLY)
     error(EXIT_FAILURE, "*Internal Error*: Trying to write to the "
@@ -482,11 +492,16 @@ int	open_cat(catstruct *cat, access_type_t at)
   if (!cat->file)
     {
     if ((cat->file = fopen(cat->filename, at==WRITE_ONLY?"wb":"rb")) == NULL)
-      return RETURN_ERROR;
+      status = RETURN_ERROR;
     cat->access_type = at;
     }
 
-  return RETURN_OK;
+#ifdef	HAVE_CFITSIO
+  if (cat->cfitsio_flag && open_cfitsio(cat, at))
+    status = RETURN_ERROR;
+#endif // HAVE_CFITSIO
+
+  return status;
   }
 
 

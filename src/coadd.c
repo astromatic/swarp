@@ -7,7 +7,9 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2021 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C) 2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		27/01/2020
+*	Last modified:		21/03/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -135,8 +137,7 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 
 	if (!prefs.tile_compress_flag) {
 
-		outfield->cat->tab->infptr = NULL;
- 		//printf("DEBUG CFITSIO NOT creating tile-compressed output image file\n");
+		outfield->cat->cfitsio_infptr = NULL;
 		return 0;
 	}
 
@@ -145,10 +146,10 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
  	sprintf(compressedFilename, "!%s.fz[compress]", outfield->cat->filename);
 
  	// now create file
- 	int status = 0; fits_create_file(&outfield->cat->tab->infptr, compressedFilename, &status);
+ 	int status = 0; fits_create_file(&outfield->cat->cfitsio_infptr, compressedFilename, &status);
  	if (status != 0) {
 
- 		printf("CFITSIO ERROR creating output image file\n");
+ 		fprintf(stderr, "CFITSIO ERROR creating output image file\n");
  		fits_report_error(stderr, status);
  		return 0;
  	}
@@ -161,32 +162,30 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 	  status = 0;
 #if CFITSIO_MAJOR >= 3
   #if CFITSIO_MINOR >= 35
-	  fits_set_quantize_method(outfield->cat->tab->infptr, SUBTRACTIVE_DITHER_2, &status);
+	  fits_set_quantize_method(outfield->cat->cfitsio_infptr, SUBTRACTIVE_DITHER_2, &status);
   #else
-	  fits_set_quantize_dither(outfield->cat->tab->infptr, SUBTRACTIVE_DITHER_1, &status);
+	  fits_set_quantize_dither(outfield->cat->cfitsio_infptr, SUBTRACTIVE_DITHER_1, &status);
   #endif
 #endif
  	  if (status != 0) {
 
- 	  	printf("CFITSIO ERROR error setting CFitsIO quantize method\n");
+ 	  	fprintf(stderr, "CFITSIO ERROR error setting CFitsIO quantize method\n");
  	  	fits_report_error(stderr, status);
  	  	return 0;
  	  }
         }
 
 	// actually create the image
-	status = 0; fits_create_img(outfield->cat->tab->infptr, FLOAT_IMG, 2, naxis, &status);
+	status = 0; fits_create_img(outfield->cat->cfitsio_infptr, FLOAT_IMG, 2, naxis, &status);
  	if (status != 0) {
 
- 		printf("CFITSIO ERROR creating output image extension\n");
+ 		fprintf(stderr, "CFITSIO ERROR creating output image extension\n");
  		fits_report_error(stderr, status);
  		return 0;
  	}
 
  	// point to the first element in the image, ready for writing
- 	outfield->tab->currentElement = 1;
-
- 	//printf("DEBUG CFITSIO successfully created tile-compressed output image file, %s\n", compressedFilename);
+ 	outfield->tab->cfitsio_currentElement = 1;
 
  	// now, change original filename to temp one (.tmp suffix)
  	sprintf(outfield->cat->filename, "%s.tmp", outfield->cat->filename);
@@ -202,14 +201,16 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
    */
  int copyHeaderToTileCompressedFile(fieldstruct *outfield) {
 
-	 if (outfield->tab->infptr == NULL) return 0;
+	 if (outfield->tab->cat->cfitsio_infptr == NULL) return 0;
 
 	 // use cfitsio to open input file from which to copy header
 	 fitsfile *infptr;
 	 int status = 0; fits_open_file(&infptr, outfield->cat->filename, READONLY, &status);
 	 if (status != 0) {
 
-		 printf("ERROR cfitsio could not open FITS file for header copying: %s\n", outfield->cat->filename);
+		 fprintf(stderr,
+		    "ERROR: CFITSIO could not open FITS file for header copying: %s\n",
+		    outfield->cat->filename);
 		 fits_report_error(stderr, status);
 		 return 0;
 	 }
@@ -227,11 +228,8 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
 
 		 if (fits_get_keyclass(card) > TYP_CMPRS_KEY) {
 
-			 fits_write_record(outfield->tab->infptr, card, &status);
-			 //printf("DEBUG    WRITING %s\n", card);
+			 fits_write_record(outfield->cat->cfitsio_infptr, card, &status);
 		 }
-		 //else
-	     //printf("DEBUG NOT WRITING %s\n", card);
 	 }
 
 	 return 1;
@@ -246,25 +244,24 @@ static void	max_clique_recur(unsigned int *array, int nnode, int *old,
    */
   int closeTileCompressedFile(fieldstruct *outfield) {
 
- 	 if (outfield->tab->infptr == NULL) return 0;
+ 	 if (outfield->cat->cfitsio_infptr == NULL) return 0;
 
  	 // first copy header from non-tile compressed file
  	 copyHeaderToTileCompressedFile(outfield);
 
- 	 int status = 0; fits_close_file(outfield->tab->infptr, &status);
+ 	 int status = 0; fits_close_file(outfield->cat->cfitsio_infptr, &status);
  	 if (status != 0) {
 
- 		 printf("CFITSIO ERROR closing tile-compressed image file\n");
+ 		 fprintf(stderr, "CFITSIO ERROR closing tile-compressed image file\n");
  		 fits_report_error(stderr, status);
  		 return 0;
  	 }
 
- 	 //printf("CFITSIO successfully closed tile-compressed output image file\n");
-
  	 // now delete temp file
  	 if (unlink (outfield->cat->filename) != 0) {
 
- 		 printf("CFITSIO ERROR could not delete %s\n", outfield->cat->filename);
+ 		 fprintf(stderr,
+ 		    "CFITSIO ERROR: could not delete %s\n", outfield->cat->filename);
  	 }
 
  	 return 1;
@@ -286,8 +283,8 @@ INPUT	Input field ptr array,
 	Coaddition type.
 OUTPUT	RETURN_OK if no error, or RETURN_ERROR in case of non-fatal error(s).
 NOTES   -.
-AUTHOR  E. Bertin (IAP)
-VERSION 27/01/2021
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 int coadd_fields(fieldstruct **infield, fieldstruct **inwfield, int ninput,
 			fieldstruct *outfield, fieldstruct *outwfield,
@@ -1951,8 +1948,8 @@ INPUT	Input field ptr array,
 OUTPUT	RETURN_ERROR in case no more data are worth reading,
 	RETURN_OK otherwise.
 NOTES   -.
-AUTHOR  E. Bertin (IAP)
-VERSION 25/04/2012
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	21/03/2025
  ***/
 int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
 			FLAGTYPE *multiibuf, FLAGTYPE *multiwibuf,
@@ -2031,7 +2028,7 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
 		field->tab->bodypos+offset*field->tab->bytepix,
 		SEEK_SET, field->filename);
 #ifdef HAVE_CFITSIO
-        field->tab->currentElement = (offset == 0) ? 1 : offset;
+        field->tab->cfitsio_currentElement = (offset == 0) ? 1 : offset;
 #endif // HAVE_CFITSIO
         }
 #ifdef USE_THREADS
@@ -2098,7 +2095,7 @@ int	coadd_iload(fieldstruct *field, fieldstruct *wfield,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
 #ifdef HAVE_CFITSIO
-          wfield->tab->currentElement = (offset == 0) ? 1 : offset;
+          wfield->tab->cfitsio_currentElement = (offset == 0) ? 1 : offset;
 #endif // HAVE_CFITSIO
           }
         read_ibody(wfield->tab, linei, field->width);
@@ -2249,7 +2246,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 		field->tab->bodypos+offset*field->tab->bytepix,
 		SEEK_SET, field->filename);
 #ifdef HAVE_CFITSIO
-        field->tab->currentElement = (offset == 0) ? 1 : offset;
+        field->tab->cfitsio_currentElement = (offset == 0) ? 1 : offset;
 #endif // HAVE_CFITSIO
         }
 #ifdef USE_THREADS
@@ -2320,7 +2317,7 @@ int	coadd_load(fieldstruct *field, fieldstruct *wfield,
 		wfield->tab->bodypos+offset*wfield->tab->bytepix,
 		SEEK_SET, wfield->filename);
 #ifdef HAVE_CFITSIO
-      	wfield->tab->currentElement = (offset == 0) ? 1 : offset;
+      	wfield->tab->cfitsio_currentElement = (offset == 0) ? 1 : offset;
 #endif // HAVE_CFITSIO
           }
         read_body(wfield->tab, line, field->width);

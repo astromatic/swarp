@@ -7,7 +7,7 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2012 Emmanuel Bertin -- IAP/CNRS/UPMC
+*	Copyright:		(C) 2000-2012 IAP/CNRS/SorbonneU
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +22,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		03/02/2012
+*	Last modified:		18/11/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -57,10 +57,11 @@ typedef struct ikernel
 /*-------------------------------- protos -----------------------------------*/
 
 extern int	interpolate_ipix(fieldstruct *field, fieldstruct *wfield,
-			double *pos, FLAGTYPE *outipix, FLAGTYPE *woutpix),
+			fieldstruct *dgeofield, double *pos,
+			FLAGTYPE *outipix, FLAGTYPE *woutpix),
 		interpolate_pix(fieldstruct *field, fieldstruct *wfield,
-			ikernelstruct *ikernel, double *pos,
-			PIXTYPE *outipix, PIXTYPE *woutpix);
+			fieldstruct *dgeofield, ikernelstruct *ikernel,
+			double *pos, PIXTYPE *outipix, PIXTYPE *woutpix);
 
 extern ikernelstruct	*init_ikernel(interpenum *interptype, int naxis);
 

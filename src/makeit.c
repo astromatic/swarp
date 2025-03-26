@@ -7,7 +7,9 @@
 *
 *	This file part of:	SWarp
 *
-*	Copyright:		(C) 2000-2020 IAP/CNRS/SorbonneU
+*	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
+*	          		(C)	2021-2023 CFHT/CNRS
+*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -22,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/08/2020
+*	Last modified:		19/05/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -62,19 +64,25 @@ char		gstr[MAXCHAR];
 /********************************** makeit ***********************************/
 void	makeit(void)
   {
-   fieldstruct		**infield,**inwfield, *outfield,*outwfield;
-   catstruct		*cat, *wcat;
+   fieldstruct		**infield, **inwfield, **indgeofield,
+   			*outfield,*outwfield;
+   catstruct		*cat, *dcat, *wcat;
    tabstruct		*tab;
+   keystruct		*key;
    struct tm		*tm;
    double		dtime, dtimef;
    char			*rfilename;
    int		       	*next;
    int			i,j,k,l, ninfield, ntinfield,ntinfield2,
-			nfield,	jima,jweight, version;
+			nfield,	jima, jweight, jdgeo, version;
 
 /* Install error logging */
   error_installfunc(write_error);
 
+/* Dummy add_key() call to get around stupid INTEL OneAPI compiler bug */
+  add_key(key=new_key("DUMMY"), tab=new_tab("dummy"), 0);
+  free_tab(tab);
+  
 /* Processing start date and time */
   thetime = time(NULL);
   tm = localtime(&thetime);
@@ -108,6 +116,7 @@ void	makeit(void)
   QCALLOC(next, int, ninfield);
   QMALLOC(infield, fieldstruct *, nfield);
   QMALLOC(inwfield, fieldstruct *, nfield);
+  QMALLOC(indgeofield, fieldstruct *, nfield);
   NFPRINTF(OUTPUT, "Examining input data ...")
   for (i=0; i<ninfield; i++)
     {
@@ -122,6 +131,7 @@ void	makeit(void)
         error(EXIT_FAILURE, "Not enough valid FITS image extensions in ",
 		prefs.infield_name[i]);
 /*-- Examine all extensions */
+//-- Weights
     wcat = NULL;
     jweight= RETURN_ERROR;		/* to avoid gcc -Wall warnings */
     if (prefs.weight_type[i] && prefs.weight_type[i] != WEIGHT_FROMBACK)
@@ -136,21 +146,55 @@ void	makeit(void)
         error(EXIT_FAILURE, "Not enough valid FITS image extensions in ",
 		prefs.inwfield_name[i]);
       }
+      
+//-- Dgeo maps
+    dcat = NULL;
+    jdgeo = RETURN_ERROR;		/* to avoid gcc -Wall warnings */
+    if (prefs.dgeo_type[i])
+      {
+      jdgeo = selectext(prefs.indgeo_name[i]);
+      if (!(dcat=read_cat(prefs.indgeo_name[i])))
+        {
+        sprintf(gstr, "*Error*: %s not found", prefs.indgeo_name[i]);
+        error(EXIT_FAILURE, gstr,"");
+        }
+      if (jdgeo >= dcat->ntab)
+        error(EXIT_FAILURE, "Not enough valid FITS image extensions in ",
+		prefs.indgeo_name[i]);
+      }
+
     tab=cat->tab;
     for (j=0; j<cat->ntab; j++,tab=tab->nexttab)
       {
-      if ((jima>=0 && j!=jima)
-	|| (jima<0 && (!tab->naxis || (tab->tfields && tab->bitpix==8))))
+#ifdef HAVE_CFITSIO
+      if ((jima>=0 && j!=jima) || (jima < 0 && (!tab->naxis ||
+	!(tab->isTileCompressed || (tab->naxis >= 2
+		&& strncmp(tab->xtension, "BINTABLE", 8)
+		&& strncmp(tab->xtension, "ASCTABLE", 8))))))
         continue;
+#else
+      if ((jima>=0 && j!=jima) || (jima < 0 && (!tab->naxis ||
+	(tab->naxis >= 2
+	&& strncmp(tab->xtension, "BINTABLE", 8)
+	&& strncmp(tab->xtension, "ASCTABLE", 8))))) {
+        if (tab->isTileCompressed)
+	  warning(BANNER " has been compiled without CFITSIO support: "
+		"compressed image skipped in ", prefs.infield_name[i]);
+        continue;
+      }
+#endif
       if (k >= nfield)
         {
         nfield += NFIELD;
         QREALLOC(infield, fieldstruct *, nfield);
         QREALLOC(inwfield,fieldstruct *, nfield);
+        QREALLOC(indgeofield,fieldstruct *, nfield);
         }
       infield[k] = load_field(cat, j, i, prefs.inhead_name[i]);
       inwfield[k] = load_weight(wcat, infield[k], jweight<0? j:jweight, i,
 				prefs.weight_type[i]);
+      indgeofield[k] = load_dgeo(dcat, infield[k], jdgeo<0? j:jdgeo, i,
+				prefs.dgeo_type[i]);
       next[i]++;
       k++;
       }
@@ -176,9 +220,11 @@ void	makeit(void)
     ntinfield += next[i];
     if (!next[i])
       warning("No suitable data found in ", cat->filename);
-    free_cat(&cat, 1);
+    //free_cat(&cat, 1);
     if (wcat)
       free_cat(&wcat, 1);
+    if (dcat)
+      free_cat(&dcat, 1);
     }
 
 /* Initialize the XML stack */
@@ -194,7 +240,7 @@ void	makeit(void)
   outwfield = init_weight(prefs.outwfield_name, outfield);
   NFPRINTF(OUTPUT, "")
   QPRINTF(OUTPUT, "------- Output File %s:\n", outfield->rfilename);
-  printinfo_field(outfield, outwfield);
+  printinfo_field(outfield, outwfield, NULL);
   QPRINTF(OUTPUT, "\n");
 
 /* The first field in the XML stack is the output field */
@@ -240,7 +286,7 @@ void	makeit(void)
         scale_field(infield[k],outfield,prefs.fscalastro_type!=FSCALASTRO_NONE);
         }
 
-      printinfo_field(infield[k], inwfield[k]);
+      printinfo_field(infield[k], inwfield[k], indgeofield[k]);
 
       if (prefs.resample_flag)
         {
@@ -252,6 +298,12 @@ void	makeit(void)
           if (open_cat(inwfield[k]->cat, READ_ONLY) != RETURN_OK)
             error(EXIT_FAILURE, "*Error*: Cannot re-open ",
 			inwfield[k]->filename);
+          }
+        if (indgeofield[k])
+          {
+          if (open_cat(indgeofield[k]->cat, READ_ONLY) != RETURN_OK)
+            error(EXIT_FAILURE, "*Error*: Cannot re-open ",
+			indgeofield[k]->filename);
           }
 /*------ Pre-compute the background map */
         if (prefs.outfield_bitpix<0)
@@ -277,6 +329,13 @@ void	makeit(void)
           NFPRINTF(OUTPUT, gstr)
           read_weight(inwfield[k]);
           }
+/*------ Read (and convert) the weight data */
+        if (indgeofield[k])
+          {
+          sprintf(gstr, "Reading %s ...", indgeofield[k]->filename);
+          NFPRINTF(OUTPUT, gstr)
+          read_dgeo(indgeofield[k]);
+          }
 /*------ Read (and convert) the data */
         sprintf(gstr, "Reading %s", infield[k]->filename);
         NFPRINTF(OUTPUT, gstr)
@@ -284,8 +343,11 @@ void	makeit(void)
 /*------ Resample the data (no need to close catalogs) */
         sprintf(gstr, "Resampling %s ...", infield[k]->filename);
         NFPRINTF(OUTPUT, gstr)
-        resample_field(&infield[k], &inwfield[k], outfield, outwfield,
-		prefs.resamp_type);
+        resample_field(&infield[k], &inwfield[k],  &indgeofield[k],
+        	outfield, outwfield, prefs.resamp_type);
+/*------ Free only dgeofields (fields and weight fields left for later) */
+        if (indgeofield[k])
+          end_field(indgeofield[k]);
         }
       thetime2 = time(NULL);
       tm = localtime(&thetime2);
@@ -298,6 +360,8 @@ void	makeit(void)
         update_xml(infield[k], inwfield[k]);
       }
     }
+
+  free(indgeofield);
 
   if (!prefs.combine_flag)
     goto the_end;
@@ -378,8 +442,8 @@ INPUT	Filename character string.
 OUTPUT	Extension number, or RETURN_ERROR if nos extension specified.
 NOTES	The bracket and its extension number are removed from the filename if
 	found.
-AUTHOR	E. Bertin (IAP)
-VERSION	09/10/2007
+AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
+VERSION	25/03/2025
  ***/
 static int	selectext(char *filename)
   {
@@ -392,12 +456,7 @@ static int	selectext(char *filename)
     if ((bracr=strrchr(bracl+1, ']')))
       *bracr = '\0';
     next = strtol(bracl+1, NULL, 0);
-#ifdef HAVE_CFITSIO
-    // CFITSIO : VERY BAD HACK to check if this is tile-compressed,
-    // if so, add +1 to extension number requested
-    if (strstr(filename, ".fits.fz") != NULL)
-      next = next + 1;
-#endif
+
     return next;
     }
 
@@ -413,9 +472,9 @@ INPUT	a character string,
 OUTPUT	RETURN_OK if everything went fine, RETURN_ERROR otherwise.
 NOTES	-.
 AUTHOR	E. Bertin (IAP)
-VERSION	26/07/2006
+VERSION	26/04/2023
  ***/
-void    write_error(char *msg1, char *msg2)
+void    write_error(const char *msg1, const char *msg2)
   {
    char		error[MAXCHAR];
 

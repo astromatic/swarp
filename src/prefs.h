@@ -22,9 +22,13 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		26/08/2020
+*	Last modified:		28/10/2020
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+#ifndef _DGEO_H_
+#include "dgeo.h"
+#endif
 
 #ifndef _FIELD_H_
 #include "field.h"
@@ -66,22 +70,31 @@ typedef struct
   int		ninfield;		/* Number of input images */
   char		*(inwfield_name[MAXINFIELD]);/* Filename(s) of input weights */
   int		ninwfield;		/* Number of input weight-maps */
+  char		*(indgeo_name[MAXINFIELD]);/* Filename(s) of input dgeo maps */
+  int		nindgeo_name;		/* Number of input dgeo maps */
   char		*(inhead_name[MAXINFIELD]);/* Filename(s) of input headers */
   int		ninhead_name;		/* Number of input headers */
+// Suffixes
   char		head_suffix[MAXCHAR];	/* Generic suffix for FITS headers */
   char		resamp_suffix[MAXCHAR];	/* Generic suffix for resampled FITS */
   char		weight_suffix[MAXCHAR];	/* Generic suffix for input weights */
+  char		dgeo_suffix[MAXCHAR];	/* Generic suffix for dgeo maps */
+// Output data
   char		outfield_name[MAXCHAR];	/* Output image filename */
   char		outwfield_name[MAXCHAR];/* Output weight-map filename */
   char		*(outhead_name[MAXINFIELD]);/* Output header filename */
   int		nouthead_name;		/* 0 or 1 */
   int		outfield_bitpix;	/* Output image pixel type */
+// Weight settings
   weightenum	weight_type[MAXINFIELD];/* Weight type */
   int		nweight_type;		/* nb of params */
   double	weight_thresh[MAXINFIELD];/* Weight threshold */
   int		nweight_thresh;		/* nb of params */
   int		wscale_flag[MAXINFIELD];/* Weight rescaling flag */
   int		nwscale_flag;		/* nb of params */
+// Differential geometry map settings
+  dgeoenum	dgeo_type[MAXINFIELD];	/* Differential geometry map type */
+  int		ndgeo_type;		/* nb of params */
   int		interp_flag[MAXINFIELD];/* Interpolation flag */
   int		ninterp_flag;		/* nb of params */
   int		subback_flag[MAXINFIELD];/* Background-subtraction flag */
