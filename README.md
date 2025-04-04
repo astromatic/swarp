@@ -6,7 +6,7 @@
 
 [Swarp] resamples and coadds FITS images to an arbitrary astrometric projection
 
-Check out the on-line [documentation], the [official web page], and the [user forum].
+Check out the on-line [documentation] and the [official web page].
 
 [SWarp]: https://astromatic.net/software/swarp
 [documentation]: https://raw.githubusercontent.com/astromatic/swarp/refs/heads/legacy_doc/prevdoc/swarp.pdf
