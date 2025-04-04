@@ -7,7 +7,9 @@
 #
 #	This file part of:	an AstrOmatic package
 #
-#	Copyright:		(C) 2017 IAP/CNRS/UPMC
+#	Copyright:		(C) 2005-2021 IAP/CNRS/SorbonneU
+#	          		(C) 2021-2023 CFHT/CNRS
+#	          		(C) 2023-2025 CEA/AIM/UParisSaclay
 #
 #	License:		GNU General Public License
 #
@@ -21,9 +23,9 @@
 #	GNU General Public License for more details.
 #	You should have received a copy of the GNU General Public License
 #	along with AstrOmatic software. If not, see
-#	<http://www.gnu.org/licenses/>.
+#	<https://www.gnu.org/licenses/>.
 #
-#	Last modified:		13/06/2017
+#	Last modified:		04/04/2025
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
