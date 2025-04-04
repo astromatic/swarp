@@ -24,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		19/03/2025
+*	Last modified:		04/04/2025
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -40,12 +40,12 @@
 
 #define		BANNER		"SWarp"
 #define		MYVERSION	VERSION
-#define		COPYRIGHT	"2002-2021 IAP/CNRS/SorbonneU/CFHT/CEA/AIM/UParisSaclay"
+#define		COPYRIGHT	"2002-2025 IAP/CNRS/SorbonneU/CFHT/CEA/AIM/UParisSaclay"
 #define		DISCLAIMER	BANNER " comes with ABSOLUTELY NO WARRANTY\n" \
 		"You may redistribute copies of " BANNER "\n" \
 		"under the terms of the GNU General Public License."
 #define		AUTHORS		"Emmanuel BERTIN <bertin@universite-paris-saclay.fr>"
-#define		WEBSITE		"http://astromatic.net/software/swarp/"
+#define		WEBSITE		"https://astromatic.net/software/swarp/"
 #define		INSTITUTE	"AIM https://irfu.cea.fr/dap/"
 
 /*----------------------------- Physical constants --------------------------*/

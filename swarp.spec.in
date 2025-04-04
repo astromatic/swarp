@@ -22,9 +22,9 @@
 #	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #	GNU General Public License for more details.
 #	You should have received a copy of the GNU General Public License
-#	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
+#	along with SWarp. If not, see <https://www.gnu.org/licenses/>.
 #
-#	Last modified:		26/03/2025
+#	Last modified:		04/04/2025
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -38,8 +38,8 @@ Summary: resample and combine astronomical FITS images
 Name: %{name}
 Version: %{version}
 Release: %{release}
-Source0: http://astromatic.net/download/%{name}/%{name}-%{version}.tar.gz
-URL: http://astromatic.net/software/%{name}/
+Source0: https://repo.astromatic.net/sources/%{name}/%{name}-%{version}.tar.gz
+URL: https://astromatic.net/software/%{name}/
 License: GPL v3+
 Group: Sciences/Astronomy
 BuildRoot: %{_tmppath}/%{name}-buildroot

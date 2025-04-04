@@ -22,7 +22,7 @@
 #	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #	GNU General Public License for more details.
 #	You should have received a copy of the GNU General Public License
-#	along with SWarp.  If not, see <http://www.gnu.org/licenses/>.
+#	along with SWarp.  If not, see <https://www.gnu.org/licenses/>.
 #
 #	Last modified:		19/03/2025
 #
@@ -34,7 +34,7 @@ define([AC_CACHE_SAVE],)
 
 # This is your standard Bertin source code...
 AC_INIT(SWarp, 2.42.0, [astromatic@astromatic.net],
-	swarp, [http://astromatic.net/software/swarp])
+	swarp, [https://astromatic.net/software/swarp])
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR(autoconf)

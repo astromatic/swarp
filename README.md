@@ -8,8 +8,7 @@
 
 Check out the on-line [documentation], the [official web page], and the [user forum].
 
-[SWarp]: http://astromatic.net/software/swarp
-[documentation]: https://www.astromatic.net/pubsvn/software/swarp/trunk/doc/swarp.pdf
-[official web page]: http://astromatic.net/software/swarp
-[user forum]: http://astromatic.net/forum/forumdisplay.php?fid=5
+[SWarp]: https://astromatic.net/software/swarp
+[documentation]: https://raw.githubusercontent.com/astromatic/swarp/refs/heads/legacy_doc/prevdoc/swarp.pdf
+[official web page]: https://astromatic.net/software/swarp
 
