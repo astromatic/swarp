@@ -69,7 +69,7 @@
 #define	LOGGAMMA	lgamma
 #else
 #define	LOGGAMMA	gammln
-static double		gammln();
+static double		gammln(double xx);
 #endif
 
  coaddenum	coadd_type;
