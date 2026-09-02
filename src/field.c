@@ -888,7 +888,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
           wcs->naxisn[n] = (int)(crpixmax-crpixmin + 1.01);
           if (wcs->naxisn[n]<1)
             wcs->naxisn[n] = 1;
-          tab->naxisn[0] = wcs->naxisn[n];
+          tab->naxisn[n] = wcs->naxisn[n];
           break;
 
         case CENTER_ALL:
