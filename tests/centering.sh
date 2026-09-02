@@ -7,8 +7,7 @@
 
 set -eu
 
-workdir=${TMPDIR:-/tmp}/swarp-centering-$$
-mkdir "$workdir"
+workdir=$(mktemp -d "${TMPDIR:-/tmp}/swarp-centering-XXXXXX")
 trap 'rm -rf "$workdir"' EXIT HUP INT TERM
 
 fits_value()
