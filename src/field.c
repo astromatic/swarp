@@ -9,7 +9,7 @@
 *
 *	Copyright:		(C) 2002-2021 IAP/CNRS/SorbonneU
 *	          		(C) 2021-2023 CFHT/CNRS
-*	          		(C) 2023-2025 CEA/AIM/UParisSaclay
+*	          		(C) 2023-2026 CEA/AIM/UParisSaclay
 *
 *	License:		GNU General Public License
 *
@@ -24,7 +24,7 @@
 *	You should have received a copy of the GNU General Public License
 *	along with SWarp. If not, see <http://www.gnu.org/licenses/>.
 *
-*	Last modified:		21/03/2025
+*	Last modified:		02/09/2026
 *
 *%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -387,7 +387,7 @@ INPUT	Input field ptr array,
 OUTPUT	Pointer to the new output field.
 NOTES   Global preferences are used.
 AUTHOR	E. Bertin (CEA/AIM/UParisSaclay)
-VERSION	21/03/2025
+VERSION	02/09/2026
  ***/
 fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
 			char *hfilename)
@@ -648,7 +648,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
               npstr = lng;
             }
           pstr = prefs.image_center[npstr];
-  	  wcs->crval[n] = strchr(pstr, ':') ?
+          wcs->crval[n] = strchr(pstr, ':') ?
 			((lat!=lng && n==lng)?sextodegal(pstr):sextodegde(pstr))
 			: atof(pstr);
          break;
@@ -761,7 +761,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
             wcs->crpix[n] = (int)(val/pixscale[n]) + 1.0;
             tab->naxisn[n] = wcs->naxisn[n]
 		= (int)(fabs(wcsmax[n]-wcsmin[n])*1.05/pixscale[n]) + 1;
-	    }
+            }
           }
         else
           {
@@ -943,10 +943,10 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
         wcscenter[n] = strchr(pstr, ':') ?
 			  (n==lng?sextodegal(pstr):sextodegde(pstr))
 			: atof(pstr);
-	}
+        }
       wcs_to_raw(wcs, wcscenter, rawcenter);
       for (n=0; n<naxis; n++)
-        wcs->crpix[n] += (int)(wcs->naxisn[n]/2 - rawcenter[n] +0.9999);
+        wcs->crpix[n] += ceil(wcs->naxisn[n]/2.0 - rawcenter[n]);
       }
     }
 
