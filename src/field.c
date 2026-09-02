@@ -946,7 +946,7 @@ fieldstruct *init_field(fieldstruct **infield, int ninput, char *filename,
 	}
       wcs_to_raw(wcs, wcscenter, rawcenter);
       for (n=0; n<naxis; n++)
-        wcs->crpix[n] += (int)(wcs->naxisn[n]/2 - rawcenter[n] +0.9999);
+        wcs->crpix[n] += ceil(wcs->naxisn[n]/2.0 - rawcenter[n]);
       }
     }
 
